@@ -41,7 +41,7 @@ config ◄── used by game and features
 - **Options:** steppers for session time and spawn interval, saved on every change (`storage/optionsStorage.ts`).
 - **Captain's Log:** `Ranking` and `Match History` tabs (WAI-ARIA tabs, arrow-key switching). The ranking is filtered by the current options; history shows the local player (`config/player.ts`). Both use 5 rows per page.
 - **Player name:** Play opens the `PlayerNameDialog` modal when no name is saved yet. It uses a native `<dialog>` (`showModal()` traps focus, makes the page inert and restores focus on close) inside the same `Panel`. The input is framed with the secondary button sprite. The name is validated (2–16 chars; letters, numbers, spaces, `'`, `-`, `_`), saved, and the match starts. `playerId` stays fixed as `local-player`.
-- **Match:** Play freezes a snapshot of the options and opens the match screen. For now it is a placeholder that reports the started state; `GameCanvas` will mount here.
+- **Match:** Play freezes a snapshot of the options and opens the full-viewport match screen: `GameCanvas` (the Pixi arena with the player's ship) plus a Main Menu button and a keyboard controls hint rendered from `KEY_BINDINGS`. While assets load it shows progress; on failure it offers **Retry**, which remounts the canvas via a `key` bump. `TouchControls` shows the sample's on-screen buttons (round button sprites, 64 px): movement at the bottom left (forward on top, turn left and right below) and weapons at the bottom right (front on top, left and right broadsides below). For now they are **static** (no action); they will map to the input actions in §6. Each button shows its keyboard keys below it, read from `KEY_BINDINGS` (`game/input/bindings.ts`, the same source the `InputManager` uses) and exposed through `aria-keyshortcuts`. Buttons whose action has no key binding yet (the weapons) show no caption. In the match the Jungle Gaming logo moves up so it doesn't cover the weapon buttons, and in dev the TanStack Query Devtools button sits at the top right. HUD, combat and result are not implemented yet.
 - UI chrome uses the provided sprites: `panel_menu.png` as a 9-slice `border-image` (atlas borders 32/40 px), menu and round buttons with their normal/hover/pressed/disabled sprites (1x/2x via `image-set`/`srcSet`). Global styles live in `public/style.css`. Buttons scale up on hover and focus, and the scaling is disabled under `prefers-reduced-motion`.
 - Menu buttons play `ui_hover.wav` on mouse hover and `ui_click.wav` on click (`shared/audio/uiSounds.ts`, one cached `HTMLAudioElement` per sound). Audio blocked by the browser's autoplay policy is ignored silently.
 
@@ -56,10 +56,16 @@ config ◄── used by game and features
 
 ## 3. Simulation loop
 
-- **Fixed timestep:** the step size is **TBD**, e.g. 1/60 s.
+- **Fixed timestep** (`core/GameLoop.ts`, driven by the Pixi ticker through `PixiRenderer.onFrame`): step of 1/60 s (`gameConfig.loop.stepSec`).
   - An accumulator consumes real frame time.
-  - The frame delta is clamped so a long stall cannot trigger an avalanche of steps.
-  - Rendering runs once per frame and may interpolate. **TBD**
+  - The frame delta is clamped to 0.25 s (`loop.maxFrameDeltaSec`) so a long stall cannot trigger an avalanche of steps.
+  - Rendering runs once per frame, after the steps. There is no interpolation yet.
+- Implemented so far: `movementSystem` (player only) → `collisionSystem` (ship↔island, arena bounds).
+- Ship movement has inertia, like a boat. The ship keeps `speed` and `angularVelocity`.
+  - Holding forward accelerates it up to `maxSpeed`. Releasing it lets the ship coast and slow down through `drag`.
+  - The rudder changes the turn rate gradually (`turnAcceleration`).
+  - Turning is stronger at speed. At a standstill the ship keeps only `minRudder` of its turn rate.
+  - Hitting an obstacle removes the part of the speed that pointed into it. A head-on hit stops the ship; a glancing one keeps most of the speed while it slides.
 - `GameClock` is the only time source. It can be paused, and test hooks can step it by hand.
 - `core/random.ts` provides a seeded PRNG (algorithm **TBD**, e.g. mulberry32). It drives spawns and AI variation.
 - System order per tick:
@@ -87,20 +93,45 @@ config ◄── used by game and features
 - Tests used:
   - circle vs circle for ship↔ship and projectile↔ship;
   - circle vs polygon for ship↔island and projectile↔island.
-- Resolution: ships are pushed out along the minimum translation vector and slide along the obstacle. Projectiles are removed on contact.
+- Resolution: ships are pushed out along the minimum translation vector and slide along the obstacle (implemented for the player: `physics/collision.ts` `circleVsPolygon`, SAT over edge normals plus the closest-vertex axis). The ship's circle covers its width, not its length, so the bow can overlap the coast art a little when hitting it head-on. Projectiles are removed on contact.
 - Arena bounds clamp ship positions. Projectiles that leave the arena are removed.
 - Each projectile applies damage once. After the first hit it is flagged and removed in the same step.
 - Broad phase: **TBD** (a brute-force pass may be enough for the expected entity count, pending profiling).
+
+### Arena map
+
+- The arena is a **fixed, hand-authored map**: `game/arena/maps/mediterranean.ts` ("Mediterranean", by Estevan), inspired by the western Mediterranean (Iberia, France, Italy, Corsica/Sardinia, the Balearics, North Africa, Sicily).
+- Format: two ASCII layers of the same size, 26×16 cells of 64 px (arena 1664×1024). The full legend is in the map file header.
+  - `grid` (terrain): `.` water, `s` sand, `g` grassy land, `P` player spawn, `E` enemy spawn (both on water). Regions of different styles must not touch, because each one draws its own coastline.
+  - `features` (on land only, `.` = nothing):
+    - **Forts** (`game/arena/features.ts`), connected automatically from their neighbours: `O` tower, picking the piece for 0 connections, 1 connection, straight or corner (tiles 13/29/30/45/46/61/62/77/78/93/94); `Q` hatch tower (14); `#` wall, with rounded caps at open ends (15/16/63/64/79/80); `=` gate (60/76); `%` ruined wall (89–92); `+` widened wall (95/96); `^ v > <` cannon on the wall, facing that way (47/48/31/32). Wall junctions and corners require a tower, and a tower takes at most 2 walls, because the tileset has no pieces for anything else.
+    - **Beach props** `b`/`k`/`R` (boat, cannon, rock): coast tiles 81/83/85 on sand and 82/84/86 on grass. They are rotated so the water side faces the real coast, and must sit on a straight stretch of coast.
+    - **Decorations** (overlay, variant chosen by position): `r` rocks (49–51), `m` mossy rocks (65–67), `l` foliage (70–72), `f` sprouts (87/88).
+- `game/arena/tileMap.ts` (`buildTileMap`, pure) validates both layers: sizes, known characters, exactly one `P`, at least one `E`, features on land, the fort connection rules, and beach props on straight coast. It throws a descriptive error.
+- **Autotiling** (`game/arena/autotile.ts`): the piece for each land cell (corner, edge or centre) comes from the 4-neighbour mask of same-style land.
+  - Middle pieces are pairs that are continuous in the source art (grass: top 7/8, bottom 55/56, left 22/38, right 25/41, centre block 23 24/39 40), laid out as `a, b, b mirrored, a mirrored` (period 4). Every interior tile therefore touches its original neighbour or its own mirror image, so there are no seams. Repeating a single tile showed every square, and a single mirrored tile formed diamond or band patterns.
+  - On an edge or corner, the original piece is used when the neighbouring interior tile is unmirrored (phase 0–1). Otherwise the opposite side's piece is used, mirrored, which is what continues the art.
+  - The sand island uses tiles 1–35; the grass island uses 6–57.
+- Unused tiles:
+  - The 2×2 dune (4/5/20/21) and the sand clearing in grass (36/37/52/53) were tried and removed, because their tone doesn't match the surrounding tiles and they showed as squares.
+  - 68/69 (sand with pebbles) have no seamless pairing with the sand interior. Tiles 10–12, 26–28, 42–44, 58/59 and 74/75 are empty in the sheet.
+- Cells outside the grid repeat the nearest edge (`groundAt` accepts any coordinate). Coastlines touching the arena border continue off-screen, and the renderer draws a 12-cell margin so the scenery fills the letterbox. The tileset has no concave-corner pieces, so inner corners are square notches.
+- Island collision: land is decomposed greedily into maximal rectangles (convex polygons, ready for circle-vs-polygon). Sides facing water are inset by `COAST_INSET_PX` (2 px, the transparent bevel of the coast art). `ARENA_MAP` (`game/arena/index.ts`) is the resolved map consumed by rendering and, later, by collision and spawn systems.
+- Dev aid: `?debugIslands` in the URL (dev only) outlines the collision polygons.
 
 ## 5. Rendering and resource management
 
 - `game/assets/manifest.ts` defines the `PIXI.Assets` bundles (ships, effects, tiles, UI).
   - `loadGameAssets` reports progress, surfaces errors and supports retry before combat starts.
-  - Retina variants are picked based on DPR.
+  - Retina variants are picked based on DPR (`png/retina`, loaded with `resolution: 2` so logical size is unchanged).
+  - Tiles are loaded as the individual `tile_N.png` files, not sliced from `tiles_sheet.png`. With the sheet, linear filtering at the fractional letterbox scale pulled pixels from neighbouring tiles and showed thin lines.
+- Bundles: `tiles` (tile_1–96) and `ships` (`SHIP_SPRITES`; the player uses `ship_2`). Ship PNGs have the bow pointing down (+y); `ShipView` adds a −π/2 offset to the entity rotation (0 = +x).
+- Sea sway: `ShipView` animates the hull sprite on the Pixi ticker (`PixiRenderer.onFrame`), independently of the simulation. The animation combines roll, pitch (length scale) and heave, using sine waves with different periods, plus a lean out of the turn that follows `angularVelocity`. It is visual only: collision uses the entity, not the sprite.
 - Textures are loaded once and reused. Projectile and effect views are pooled.
 - Views (`ShipView`, `ProjectileView`, `HealthBarView`, `IslandView`) read from `World` every frame and own no gameplay state.
 - The ship sprite degrades visually as HP drops.
-- Viewport: sets `resolution` and `autoDensity` from the DPR and letterboxes the arena to keep its aspect ratio. Pointer coordinates are converted to arena coordinates.
+- Viewport (`render/PixiRenderer.ts`): sets `resolution` and `autoDensity` from the DPR and fits the whole arena in the host (contain scale, centred), recomputed by a `ResizeObserver`. The letterbox area is filled by the map's off-arena margin (scenery only, not playable). `screenToArena` converts pointer coordinates to arena coordinates.
+- `TileMapView` builds the static map once (water, then ground sprites with anchor 0.5, ±1 scale for mirroring and quarter-turn rotation, then the fort/decoration overlays).
 - `destroy()` releases, in order: ticker, listeners, timers, stage children, the application, and the audio loops.
 - Memory is checked across 5 play cycles (see §10).
 
@@ -113,7 +144,8 @@ config ◄── used by game and features
   - `pause`
 - Moving and firing can happen at the same time.
 - Keys are captured only while gameplay is active.
-- Key bindings: **TBD**, documented in the README and shown in the UI from the same definitions.
+- Key bindings (`input/bindings.ts`, `KEY_BINDINGS`, by `KeyboardEvent.code`): `W`/`↑` forward, `A`/`←` rotate left, `D`/`→` rotate right. Firing and pause keys are **TBD**. `ACTION_BY_CODE` feeds `InputManager`, and the match screen renders the hint from the same list.
+- `InputManager` listens on `window`, calls `preventDefault` only for bound keys, ignores keys typed in form fields, and clears all state on `blur` and when the tab is hidden.
 
 ## 7. Local persistence
 
@@ -198,7 +230,16 @@ A match that is abandoned, whether by refreshing or by leaving the match screen,
 
 ## 11. Balancing decisions
 
-Values will live in `src/config/gameConfig.ts`; this section will explain the reasoning behind them.
+Values live in `src/config/gameConfig.ts` (`GAME_CONFIG`, frozen).
+
+| Value | Setting | Why |
+| --- | --- | --- |
+| Player max speed | 75 px/s | Crosses the 1664 px arena in about 22 s. Slow and deliberate, so positioning matters. |
+| Acceleration / drag | 40 / 25 px/s² | About 1.9 s to reach full speed and about 3 s to coast to a stop. |
+| Max turn speed | 1.1 rad/s (at full speed) | Turn circle radius of about 68 px, roughly one tile, so channels are still navigable. |
+| Turn acceleration | 2.2 rad/s² | About 0.5 s for the rudder to reach full effect, and it keeps turning a little after release. |
+| Min rudder | 0.3 | The ship can still turn slowly when stopped, so it never gets stuck facing a coast. |
+| Player collision radius | 26 px | About half the hull width of `ship_2`. It fits through one-tile (64 px) channels. |
 
 Option limits (`src/config/options.ts`):
 
