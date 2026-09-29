@@ -1,0 +1,47 @@
+/*
+ * Cursor customizado. Só vale depois que o main marca o <html> com
+ * data-cursor="custom", o que acontece após o worker do MSW iniciar.
+ * O PNG de 32px é o fallback; image-set usa o de 128px em telas HiDPI.
+ * O hotspot (x y) aponta para a ponta da seta/gancho.
+ */
+html[data-cursor="custom"],
+html[data-cursor="custom"] * {
+  cursor:
+    url("/assets/cursor/cursor-32.png") 2 2,
+    auto;
+  cursor:
+    image-set(
+        url("/assets/cursor/cursor-32.png") 1x,
+        url("/assets/cursor/cursor.png") 4x
+      )
+      2 2,
+    auto;
+}
+
+html[data-cursor="custom"]
+  :is(a[href], button, [role="button"], label[for], select, summary):not(
+    :disabled,
+    [aria-disabled="true"]
+  ),
+html[data-cursor="custom"]
+  :is(a[href], button, [role="button"], label[for], select, summary):not(
+    :disabled,
+    [aria-disabled="true"]
+  )
+  * {
+  cursor:
+    url("/assets/cursor/cursor-pointer-32.png") 5 2,
+    pointer;
+  cursor:
+    image-set(
+        url("/assets/cursor/cursor-pointer-32.png") 1x,
+        url("/assets/cursor/cursor-pointer.png") 4x
+      )
+      5 2,
+    pointer;
+}
+
+html[data-cursor="custom"] :is(button, select):disabled,
+html[data-cursor="custom"] [aria-disabled="true"] {
+  cursor: not-allowed;
+}

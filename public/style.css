@@ -1,15 +1,702 @@
-body {
-    margin: 0;
-    padding: 0;
-    color: rgba(255, 255, 255, 0.87);
-    background-color: #000000;
+/* ---------- Tokens ---------- */
+:root {
+  --color-cream: #fbe6b4;
+  --color-gold: #f5c04a;
+  --color-gold-dark: #8a5a14;
+  --color-wood-dark: #3b2208;
+  --color-navy: #1c2a3d;
+  --color-row: rgba(12, 22, 36, 0.72);
+  --color-row-you: rgba(122, 104, 58, 0.72);
+  --color-text: #f2f5fa;
+  --color-muted: #b9c4d3;
+  --color-time-up: #d9f0a3;
+  --color-defeat: #ffb39c;
+  --color-focus: #ffe38a;
+  --font-ui: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Arial Black", "Trebuchet MS", system-ui, sans-serif;
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  background: #0b5f7a url("/assets/ui_scene_background.png") center / cover
+    no-repeat;
+}
+
+/* A aplicação ocupa exatamente a viewport, sem rolagem de página. */
 #app {
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Scene ---------- */
+.scene {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding: clamp(8px, 2vh, 24px) 16px;
+  align-items: center;
+  justify-content: center;
+}
+
+.scene__logo {
+  position: absolute;
+  right: 24px;
+  bottom: 16px;
+  width: 124px;
+  pointer-events: none;
+}
+
+/* ---------- Panel (9-slice do panel_menu.png) ---------- */
+.panel {
+  display: flex;
+  width: min(100%, 480px);
+  max-height: 100%;
+  border-style: solid;
+  border-width: 40px 32px;
+  border-image-source: url("/assets/png/retina/ui/menu/panel_menu.png");
+  border-image-slice: 80 64 fill;
+  border-image-repeat: stretch;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.45));
+}
+
+.panel--wide {
+  width: min(100%, 960px);
+}
+
+.panel__content {
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  padding: clamp(4px, 1.5vh, 16px) 12px;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(6px, 1.6vh, 16px);
+  text-align: center;
+  /* Só em telas muito baixas: rola dentro do painel, nunca a página. */
+  overflow-y: auto;
+}
+
+.panel__title {
+  margin: 0;
+  color: var(--color-cream);
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 4.5vh, 2.5rem);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-shadow:
+    0 3px 0 var(--color-wood-dark),
+    0 0 12px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- Menu buttons ---------- */
+.menu-button {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: min(256px, 28vh);
+  max-width: 100%;
+  aspect-ratio: 256 / 88;
+  padding: 0 32px 4px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent center / 100% 100% no-repeat;
+  color: var(--color-wood-dark);
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 2.6vh, 1.5rem);
+  font-weight: 900;
+  white-space: nowrap;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 180ms var(--ease-pop),
+    filter 150ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.menu-button--sm {
+  width: min(216px, 24vh);
+  font-size: clamp(0.75rem, 1.7vh, 1rem);
+}
+
+.menu-button--primary {
+  background-image: image-set(
+    url("/assets/png/default/ui/menu/button_primary_normal.png") 1x,
+    url("/assets/png/retina/ui/menu/button_primary_normal.png") 2x
+  );
+}
+
+.menu-button--primary:hover:not(:disabled) {
+  background-image: image-set(
+    url("/assets/png/default/ui/menu/button_primary_hover.png") 1x,
+    url("/assets/png/retina/ui/menu/button_primary_hover.png") 2x
+  );
+}
+
+.menu-button--primary:active:not(:disabled) {
+  background-image: image-set(
+    url("/assets/png/default/ui/menu/button_primary_pressed.png") 1x,
+    url("/assets/png/retina/ui/menu/button_primary_pressed.png") 2x
+  );
+}
+
+.menu-button--primary:disabled {
+  background-image: image-set(
+    url("/assets/png/default/ui/menu/button_primary_disabled.png") 1x,
+    url("/assets/png/retina/ui/menu/button_primary_disabled.png") 2x
+  );
+  cursor: not-allowed;
+}
+
+.menu-button--secondary {
+  color: var(--color-text);
+  background-image: image-set(
+    url("/assets/png/default/ui/menu/button_secondary_normal.png") 1x,
+    url("/assets/png/retina/ui/menu/button_secondary_normal.png") 2x
+  );
+}
+
+.menu-button--secondary:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+
+.menu-button--secondary:active:not(:disabled) {
+  background-image: image-set(
+    url("/assets/png/default/ui/menu/button_secondary_pressed.png") 1x,
+    url("/assets/png/retina/ui/menu/button_secondary_pressed.png") 2x
+  );
+}
+
+/* Animação de hover: o botão expande com um leve "pop". */
+.menu-button:hover:not(:disabled),
+.menu-button:focus-visible {
+  transform: scale(1.08);
+}
+
+.menu-button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* ---------- Round buttons ---------- */
+.round-button {
+  display: inline-flex;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent center / 100% 100% no-repeat;
+  background-image: image-set(
+    url("/assets/png/default/ui/controls/button_round_normal.png") 1x,
+    url("/assets/png/retina/ui/controls/button_round_normal.png") 2x
+  );
+  cursor: pointer;
+  transition:
+    transform 180ms var(--ease-pop),
+    opacity 150ms ease;
+}
+
+.round-button:hover:not(:disabled) {
+  background-image: image-set(
+    url("/assets/png/default/ui/controls/button_round_hover.png") 1x,
+    url("/assets/png/retina/ui/controls/button_round_hover.png") 2x
+  );
+  transform: scale(1.12);
+}
+
+.round-button:focus-visible {
+  transform: scale(1.12);
+}
+
+.round-button:active:not(:disabled) {
+  background-image: image-set(
+    url("/assets/png/default/ui/controls/button_round_pressed.png") 1x,
+    url("/assets/png/retina/ui/controls/button_round_pressed.png") 2x
+  );
+  transform: scale(0.95);
+}
+
+.round-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.round-button__icon {
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+}
+
+/* Foco visível para teclado em todos os controles. */
+.menu-button:focus-visible,
+.round-button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-button,
+  .round-button {
+    transition: none;
+  }
+
+  .menu-button:hover:not(:disabled),
+  .menu-button:focus-visible,
+  .menu-button:active:not(:disabled),
+  .round-button:hover:not(:disabled),
+  .round-button:focus-visible,
+  .round-button:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* ---------- Main menu ---------- */
+.menu__title {
+  margin: 0;
+  line-height: 0;
+}
+
+.menu__title img {
+  width: auto;
+  max-width: 100%;
+  max-height: clamp(64px, 14vh, 128px);
+}
+
+.menu__tagline {
+  margin: 0;
+  color: var(--color-cream);
+  font-size: 0.85rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.menu__actions,
+.menu__log-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu__actions {
+  flex-direction: column;
+}
+
+.menu__log-actions {
+  flex-wrap: wrap;
+}
+
+.menu__log-actions .menu-button {
+  width: min(190px, 22vh);
+}
+
+.menu__ship {
+  width: auto;
+  height: clamp(36px, 8vh, 75px);
+}
+
+.menu__hint {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+
+/* ---------- Options ---------- */
+.option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.option__label {
+  color: var(--color-cream);
+  font-weight: 700;
+}
+
+.option__stepper {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.option__value {
+  min-width: 96px;
+  color: var(--color-text);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.option__hint {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+/* ---------- Captain's Log ---------- */
+.log__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.log__panel {
+  display: flex;
+  width: 100%;
+  min-height: clamp(180px, 38vh, 360px);
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.log__subtitle {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.log-state {
+  display: flex;
+  margin: auto 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-muted);
+}
+
+.log-state p {
+  margin: 0;
+}
+
+.log-state--error {
+  color: var(--color-defeat);
+}
+
+.log-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+  text-align: left;
+}
+
+.log-table th {
+  padding: 0 14px;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.log-table td {
+  padding: clamp(6px, 1.3vh, 12px) 14px;
+  background: var(--color-row);
+  font-weight: 700;
+}
+
+.log-table td:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.log-table td:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+.log-table__row--you td {
+  background: var(--color-row-you);
+}
+
+.log-table__accent {
+  color: var(--color-gold);
+}
+
+.log-table__muted {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.log-table__name {
+  white-space: nowrap;
+}
+
+.log-table__result--time,
+.log-table__result--defeat {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.log-table__result--time {
+  color: var(--color-time-up);
+}
+
+.log-table__result--defeat {
+  color: var(--color-defeat);
+}
+
+.badge {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border: 1px solid var(--color-gold);
+  border-radius: 4px;
+  color: var(--color-gold);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.pagination {
+  display: flex;
+  margin-top: auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.pagination__label {
+  color: var(--color-cream);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.pagination__updating {
+  color: var(--color-muted);
+  text-transform: none;
+}
+
+/* ---------- Match placeholder ---------- */
+.match__status {
+  margin: 0;
+  color: var(--color-gold);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  text-transform: uppercase;
+}
+
+.match__config {
+  display: grid;
+  margin: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.match__config div {
+  padding: 12px 20px;
+  border-radius: 6px;
+  background: var(--color-row);
+}
+
+.match__config dt {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.match__config dd {
+  margin: 4px 0 0;
+  color: var(--color-text);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.match__note {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 600px) {
+  .scene__logo {
+    right: 16px;
+    width: 96px;
+  }
+
+  .panel {
+    border-width: 30px 24px;
+  }
+
+  .panel__content {
+    padding: 8px 4px;
+  }
+
+  .menu-button {
+    font-size: 1.25rem;
+  }
+
+  .menu-button--sm,
+  .menu__log-actions .menu-button {
+    width: 140px;
+    font-size: 0.7rem;
+  }
+
+  .log-table th,
+  .log-table td {
+    padding-inline: 8px;
+  }
+
+  .log-table td {
+    font-size: 0.85rem;
+  }
+
+  .log-table__muted {
+    font-size: 0.7rem;
+  }
+
+  .log-table__name {
+    white-space: normal;
+  }
+}
+
+/* Em telas baixas o logo sobreporia o painel. */
+@media (max-height: 640px) {
+  .scene__logo {
+    display: none;
+  }
+}
+
+/* ---------- Modal ---------- */
+.modal {
+  width: min(100% - 32px, 480px);
+  max-width: none;
+  max-height: 100dvh;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  overflow: visible;
+}
+
+.modal::backdrop {
+  background: rgba(6, 14, 24, 0.65);
+  backdrop-filter: blur(2px);
+}
+
+.modal .panel {
+  width: 100%;
+}
+
+.modal__text {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+/* ---------- Player name form ---------- */
+.player-form {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(6px, 1.4vh, 12px);
+}
+
+/* Campo de texto com o sprite do botão secundário como moldura. */
+.text-field {
+  width: min(100%, 300px);
+  aspect-ratio: 256 / 88;
+  padding: 0 40px 4px;
+  border: 0;
+  background: transparent center / 100% 100% no-repeat;
+  background-image: image-set(
+    url("/assets/png/default/ui/menu/button_secondary_normal.png") 1x,
+    url("/assets/png/retina/ui/menu/button_secondary_normal.png") 2x
+  );
+  color: var(--color-cream);
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 2.4vh, 1.25rem);
+  font-weight: 900;
+  text-align: center;
+  caret-color: var(--color-gold);
+  transition:
+    transform 180ms var(--ease-pop),
+    filter 150ms ease;
+}
+
+.text-field::placeholder {
+  color: var(--color-muted);
+  opacity: 0.6;
+}
+
+.text-field:hover,
+.text-field:focus-visible {
+  filter: brightness(1.15);
+  transform: scale(1.04);
+}
+
+/* Sem contorno retangular: o foco aparece como brilho seguindo a moldura do sprite. */
+.text-field:focus,
+.text-field:focus-visible {
+  outline: none;
+}
+
+.text-field:focus-visible {
+  filter: brightness(1.15) drop-shadow(0 0 6px var(--color-focus));
+}
+
+.text-field[aria-invalid="true"] {
+  filter: drop-shadow(0 0 6px var(--color-defeat));
+}
+
+.player-form__error {
+  margin: 0;
+  color: var(--color-defeat);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.player-form__actions {
+  display: flex;
+  margin-top: 4px;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-field {
+    transition: none;
+  }
+
+  .text-field:hover,
+  .text-field:focus-visible {
+    transform: none;
+  }
 }

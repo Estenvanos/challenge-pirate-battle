@@ -1,4 +1,6 @@
-export const LOCAL_PLAYER_ID = "local-player";
+import { LOCAL_PLAYER_ID } from "../../config/player";
+
+export { LOCAL_PLAYER_ID };
 
 export interface FixturePlayer {
   playerId: string;
