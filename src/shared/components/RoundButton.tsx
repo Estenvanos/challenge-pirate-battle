@@ -2,7 +2,15 @@ import type { ButtonHTMLAttributes } from "react";
 import { withUiSounds } from "../audio/uiSounds";
 import { pngAsset } from "../utils/assets";
 
-export type RoundIcon = "minus" | "plus" | "turn_left" | "turn_right";
+export type RoundIcon =
+  | "minus"
+  | "plus"
+  | "turn_left"
+  | "turn_right"
+  | "forward"
+  | "fire_front"
+  | "fire_left"
+  | "fire_right";
 
 interface RoundButtonProps extends Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
@@ -16,13 +24,14 @@ export function RoundButton({
   icon,
   label,
   type = "button",
+  className,
   ...rest
 }: RoundButtonProps) {
   const image = pngAsset(`ui/controls/icon_${icon}.png`);
   return (
     <button
       type={type}
-      className="round-button"
+      className={className ? `round-button ${className}` : "round-button"}
       aria-label={label}
       {...withUiSounds(rest)}
     >

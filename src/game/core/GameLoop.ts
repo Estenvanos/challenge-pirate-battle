@@ -1,0 +1,34 @@
+export interface GameLoopConfig {
+  readonly stepSec: number;
+  readonly maxFrameDeltaSec: number;
+}
+
+export interface GameLoopCallbacks {
+  /** Um passo fixo da simulação. */
+  readonly update: (dt: number) => void;
+  /** Desenho, uma vez por quadro, depois dos passos. */
+  readonly render: () => void;
+}
+
+/**
+ * Timestep fixo com acumulador: o tempo real do quadro vira N passos de
+ * `stepSec`. O delta é limitado para uma travada não gerar uma avalanche.
+ */
+export class GameLoop {
+  private accumulator = 0;
+
+  constructor(
+    private readonly config: GameLoopConfig,
+    private readonly callbacks: GameLoopCallbacks,
+  ) {}
+
+  frame(deltaMs: number): void {
+    const { stepSec, maxFrameDeltaSec } = this.config;
+    this.accumulator += Math.min(deltaMs / 1000, maxFrameDeltaSec);
+    while (this.accumulator >= stepSec) {
+      this.callbacks.update(stepSec);
+      this.accumulator -= stepSec;
+    }
+    this.callbacks.render();
+  }
+}

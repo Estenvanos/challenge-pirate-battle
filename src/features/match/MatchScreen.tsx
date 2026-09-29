@@ -1,6 +1,7 @@
 import type { GameOptions } from "../../config/options";
 import { MenuButton } from "../../shared/components/MenuButton";
-import { Panel } from "../../shared/components/Panel";
+import { GameCanvas } from "./GameCanvas";
+import { TouchControls } from "./TouchControls";
 
 interface MatchScreenProps {
   config: Readonly<GameOptions>;
@@ -8,29 +9,21 @@ interface MatchScreenProps {
   onExit: () => void;
 }
 
-// Placeholder da partida: o GameCanvas (PixiJS) será montado aqui.
+// Tela da partida: arena com o navio do jogador; HUD e combate virão depois.
 export function MatchScreen({ config, playerName, onExit }: MatchScreenProps) {
   return (
-    <Panel labelledBy="match-title">
-      <h1 id="match-title" className="panel__title">
-        Battle
+    <section className="match" aria-labelledby="match-title">
+      <h1 id="match-title" className="visually-hidden">
+        Battle — {playerName}, {config.sessionTimeSec} s session,{" "}
+        {config.spawnIntervalSec} s enemy spawn
       </h1>
-      <p className="match__status" role="status">
-        Match started
-      </p>
-      <p className="match__note">Good luck, {playerName}!</p>
-      <dl className="match__config">
-        <div>
-          <dt>Session time</dt>
-          <dd>{config.sessionTimeSec} s</dd>
-        </div>
-        <div>
-          <dt>Enemy spawn time</dt>
-          <dd>{config.spawnIntervalSec} s</dd>
-        </div>
-      </dl>
-      <p className="match__note">The combat arena is coming soon.</p>
-      <MenuButton onClick={onExit}>Main Menu</MenuButton>
-    </Panel>
+      <GameCanvas />
+      <TouchControls />
+      <div className="match__bar">
+        <MenuButton size="sm" variant="secondary" onClick={onExit}>
+          Main Menu
+        </MenuButton>
+      </div>
+    </section>
   );
 }

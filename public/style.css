@@ -503,44 +503,123 @@ img {
   text-transform: none;
 }
 
-/* ---------- Match placeholder ---------- */
-.match__status {
-  margin: 0;
-  color: var(--color-gold);
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  text-transform: uppercase;
+/* ---------- Match ---------- */
+/* A partida ocupa a viewport inteira, ignorando o padding da .scene. */
+.match {
+  position: absolute;
+  inset: 0;
 }
 
-.match__config {
-  display: grid;
-  margin: 0;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.match__bar {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
   gap: 16px;
 }
 
-.match__config div {
-  padding: 12px 20px;
+/* O canvas preenche a área; o Pixi faz o letterbox da arena dentro dele. */
+.game-canvas,
+.game-canvas__host {
+  position: absolute;
+  inset: 0;
+}
+
+.game-canvas__host canvas {
+  display: block;
+}
+
+.game-canvas__message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  margin: 0;
+  padding: 16px 24px;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
   border-radius: 6px;
+  color: var(--color-cream);
+  font-weight: 700;
+  background: var(--color-row);
+  transform: translate(-50%, -50%);
+}
+
+.game-canvas__message p {
+  margin: 0;
+}
+
+/* ---------- Controles na tela (movimento à esquerda, tiros à direita) ---------- */
+.touch-controls {
+  position: absolute;
+  bottom: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 64px);
+  grid-template-rows: auto auto;
+  gap: 0 12px;
+  align-items: start;
+  grid-template-areas:
+    ". main ."
+    "side-a . side-b";
+}
+
+.touch-controls--left {
+  left: 16px;
+}
+
+.touch-controls--right {
+  right: 16px;
+}
+
+.touch-controls__forward,
+.touch-controls__fire_front {
+  grid-area: main;
+}
+
+.touch-controls__turn_left,
+.touch-controls__fire_left {
+  grid-area: side-a;
+}
+
+.touch-controls__turn_right,
+.touch-controls__fire_right {
+  grid-area: side-b;
+}
+
+.touch-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Tecla do controle, logo abaixo do botão. */
+.touch-control__keys {
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--color-gold);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
   background: var(--color-row);
 }
 
-.match__config dt {
-  color: var(--color-muted);
-  font-size: 0.8rem;
-  text-transform: uppercase;
+.round-button--control {
+  width: 64px;
+  height: 64px;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
 }
 
-.match__config dd {
-  margin: 4px 0 0;
-  color: var(--color-text);
-  font-size: 1.25rem;
-  font-weight: 700;
+.round-button--control .round-button__icon {
+  width: 32px;
+  height: 32px;
 }
 
-.match__note {
-  margin: 0;
-  color: var(--color-muted);
+/* Na partida, o logo sobe para não cobrir os controles de tiro. */
+.scene:has(.match) .scene__logo {
+  bottom: 168px;
 }
 
 /* ---------- Mobile ---------- */
