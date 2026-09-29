@@ -1,6 +1,10 @@
 import { Application, Assets, Sprite } from "pixi.js";
+import { startMocks } from "./mocks/browser";
 
 (async () => {
+  // Start MSW before anything talks to the network
+  await startMocks();
+
   // Create a new application
   const app = new Application();
 
