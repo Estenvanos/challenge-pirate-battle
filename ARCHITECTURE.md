@@ -34,6 +34,17 @@ config ◄── used by game and features
 
 ## 2. React ↔ PixiJS integration
 
+### Screens
+
+- `app/App.tsx` holds a typed screen state (`menu` | `options` | `log` | `match`). There is no router: a refresh always lands on the menu, which abandons any running match.
+- **Menu:** Play, Options, and shortcuts to the Captain's Log tabs.
+- **Options:** steppers for session time and spawn interval, saved on every change (`storage/optionsStorage.ts`).
+- **Captain's Log:** `Ranking` and `Match History` tabs (WAI-ARIA tabs, arrow-key switching). The ranking is filtered by the current options; history shows the local player (`config/player.ts`). Both use 5 rows per page.
+- **Player name:** Play opens the `PlayerNameDialog` modal when no name is saved yet. It uses a native `<dialog>` (`showModal()` traps focus, makes the page inert and restores focus on close) inside the same `Panel`. The input is framed with the secondary button sprite. The name is validated (2–16 chars; letters, numbers, spaces, `'`, `-`, `_`), saved, and the match starts. `playerId` stays fixed as `local-player`.
+- **Match:** Play freezes a snapshot of the options and opens the match screen. For now it is a placeholder that reports the started state; `GameCanvas` will mount here.
+- UI chrome uses the provided sprites: `panel_menu.png` as a 9-slice `border-image` (atlas borders 32/40 px), menu and round buttons with their normal/hover/pressed/disabled sprites (1x/2x via `image-set`/`srcSet`). Global styles live in `public/style.css`. Buttons scale up on hover and focus, and the scaling is disabled under `prefers-reduced-motion`.
+- Menu buttons play `ui_hover.wav` on mouse hover and `ui_click.wav` on click (`shared/audio/uiSounds.ts`, one cached `HTMLAudioElement` per sound). Audio blocked by the browser's autoplay policy is ignored silently.
+
 - `features/match/GameCanvas.tsx` creates one `Game` on mount and calls `game.destroy()` on unmount.
   - Init is async, so a `cancelled` guard destroys the instance if the component unmounted during init. This keeps it correct under React Strict Mode's double mount.
   - `destroy()` is idempotent.
@@ -108,7 +119,8 @@ config ◄── used by game and features
 
 | Key | Content | Module |
 | --- | --- | --- |
-| options | session time, spawn interval | `storage/optionsStorage.ts` |
+| options | session time, spawn interval (validated against `config/options.ts` limits) | `storage/optionsStorage.ts` |
+| player name | captain name chosen by the player (`null` until set) | `storage/playerStorage.ts` |
 | last result | last completed match result | `storage/lastResultStorage.ts` |
 | pending submissions | queue of unconfirmed match records | `api/pendingSubmissions.ts` |
 | mock DB | confirmed records (MSW) | `mocks/mockDb.ts` |
@@ -186,7 +198,16 @@ A match that is abandoned, whether by refreshing or by leaving the match screen,
 
 ## 11. Balancing decisions
 
-**TBD**. Values will live in `src/config/gameConfig.ts`; this section will explain the reasoning behind them.
+Values will live in `src/config/gameConfig.ts`; this section will explain the reasoning behind them.
+
+Option limits (`src/config/options.ts`):
+
+| Option | Min | Max | Step | Default |
+| --- | --- | --- | --- | --- |
+| Game session time | 60 s | 180 s | 10 s | 120 s |
+| Enemy spawn time | 1 s | 10 s | 1 s | 3 s |
+
+Whole-second steps keep the number of distinct configurations small, so ranking groups stay populated.
 
 ## 12. Known limitations
 
