@@ -13,7 +13,8 @@ Pirate Battle is a single-player 2D top-down naval shooter that runs entirely in
 | Bridge | `src/game/bridge` | Throttled snapshot of game state for the UI | `useSyncExternalStore` |
 | Game core | `src/game` | Simulation, physics, arena, input, rendering, assets, audio | TypeScript + PixiJS |
 | Config | `src/config` | Typed balancing config and options limits | TypeScript |
-| Remote data | `src/api` | Contracts, HTTP client, queries and mutations, pending submissions | Axios + TanStack Query |
+| Server-state hooks | `src/hooks` | `useRanking`, `useMatchHistory`, `useSubmitMatch` (only place calling `useQuery`/`useMutation`) | TanStack Query |
+| Remote data | `src/api` | Contracts, HTTP client, QueryClient, per-service calls and query options, pending submissions | Axios + TanStack Query |
 | Mocks | `src/mocks` | REST mocks for ranking and history | MSW |
 | Persistence | `src/storage` | Typed, safe `localStorage` access | — |
 
@@ -23,7 +24,7 @@ Pirate Battle is a single-player 2D top-down naval shooter that runs entirely in
 features ──► game/bridge ──► game/core ──► game/simulation ──► game/physics, game/arena
    │                              │
    │                              └──► game/render, game/input, game/assets, game/audio
-   ├──► api ──► (HTTP) ──► mocks (MSW, network layer)
+   ├──► hooks ──► api/services ──► (HTTP) ──► mocks (MSW, network layer)
    └──► storage
 config ◄── used by game and features
 ```
@@ -134,15 +135,24 @@ A match that is abandoned, whether by refreshing or by leaving the match screen,
   - Only matches played with the same configuration are compared.
   - One entry per match.
   - Tie-break: score desc → durationSec asc → date asc → matchId asc.
+- **Layout:**
+  - `api/httpClient.ts`: the single Axios instance (`baseURL: /api`, timeout).
+  - `api/queryClient.ts`: `createQueryClient()` with the defaults below.
+  - `api/services/<service>/service.ts`: plain Axios calls typed with the contracts; no TanStack imports.
+  - `api/services/<service>/queries.ts`: query key factories (`rankingKeys`, `matchesKeys`) and `queryOptions`/`mutationOptions` factories; no React hooks.
+  - Services: `ranking` (GET ranking) and `matches` (GET history, PUT submit).
+  - `src/hooks/`: React hooks built on those options; components use these, never `api/services` directly.
+  - `app/providers/AppProviders.tsx` owns the `QueryClient` and mounts TanStack Query Devtools in dev only (excluded from the production bundle).
 - **Caching:**
-  - Query keys come from `queryKeys.ts`.
+  - Query keys come from each service's `queries.ts`.
+  - `staleTime` 30 s; retries up to 3 times with exponential backoff (500 ms → 8 s cap), never on 4xx.
   - Pagination keeps the previous page on screen while the next one loads.
   - Data refetches when a tab becomes visible again.
   - Retries use backoff.
   - Abort signals ensure a late response never overwrites newer data.
 - **Submission:**
   - `matchId` is generated on the client when the match ends, and the record is saved to the pending queue.
-  - `useSubmitMatch` sends it. On success it removes the record from the queue and invalidates the ranking and history queries.
+  - `useSubmitMatch` (`src/hooks`) sends it. On success it removes the record from the queue and invalidates the ranking and history queries.
   - Resends and repeated clicks return the existing record, so no duplicates are created.
   - Pending records survive a refresh and can be retried.
   - A pending submission never blocks starting a new match.

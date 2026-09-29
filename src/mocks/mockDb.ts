@@ -66,7 +66,6 @@ export function queryMatches(playerId: string): MatchRecord[] {
     .sort(compareHistory);
 }
 
-
 export function upsertMatch(record: MatchRecord): {
   record: MatchRecord;
   created: boolean;

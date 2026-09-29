@@ -7,16 +7,26 @@
     "start": "npm run dev",
     "build": "npm run lint && tsc && vite build",
     "lint": "eslint .",
-    "dev": "vite"
+    "dev": "vite",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "pixi.js": "^8.8.1"
+    "@tanstack/react-query": "^5.104.0",
+    "axios": "^1.20.0",
+    "pixi.js": "^8.8.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@tanstack/react-query-devtools": "^5.104.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^4.7.0",
     "eslint": "^9.21.0",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-prettier": "^5.2.6",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "msw": "^3.0.0",
     "prettier": "^3.5.3",
     "typescript": "~5.9.3",

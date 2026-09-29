@@ -21,7 +21,6 @@ function buildMatch(index: number): MatchRecord {
     ? Math.round(config.sessionTimeSec * 0.6) - (index % 7)
     : config.sessionTimeSec;
 
-    
   const score = (index * 7) % 13;
 
   return {
