@@ -1,17 +1,14 @@
-import {
-  DEFAULT_OPTIONS,
-  isGameOptions,
-  type GameOptions,
-} from "../config/options";
+import { DEFAULT_OPTIONS, type GameOptions } from "../config/options";
+import { STORAGE_KEYS } from "../constants/storage";
+import { gameOptionsSchema } from "../schemas/options";
 import { readStore, writeStore } from "./localStore";
 
-const KEY = "options";
-const VERSION = 1;
-
 export function readOptions(): GameOptions {
-  return readStore(KEY, VERSION, isGameOptions, { ...DEFAULT_OPTIONS });
+  return readStore(STORAGE_KEYS.options, gameOptionsSchema, {
+    ...DEFAULT_OPTIONS,
+  });
 }
 
 export function writeOptions(options: GameOptions): boolean {
-  return writeStore(KEY, VERSION, options);
+  return writeStore(STORAGE_KEYS.options, options);
 }

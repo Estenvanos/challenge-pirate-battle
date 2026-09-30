@@ -4,7 +4,7 @@ import { MenuButton } from "../../shared/components/MenuButton";
 import { Panel } from "../../shared/components/Panel";
 import { HistoryTable } from "../history/HistoryTable";
 import { RankingTable } from "../ranking/RankingTable";
-import type { LogTab } from "./constants";
+import { LOG_TABS, type LogTab } from "../../constants/ui";
 
 interface CaptainsLogProps {
   tab: LogTab;
@@ -13,11 +13,6 @@ interface CaptainsLogProps {
   onTabChange: (tab: LogTab) => void;
   onBack: () => void;
 }
-
-const TABS: readonly { id: LogTab; label: string }[] = [
-  { id: "ranking", label: "Ranking" },
-  { id: "history", label: "Match History" },
-];
 
 export function CaptainsLog({
   tab,
@@ -32,9 +27,10 @@ export function CaptainsLog({
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
     event.preventDefault();
-    const index = TABS.findIndex((t) => t.id === tab);
+    const index = LOG_TABS.findIndex((t) => t.id === tab);
     const offset = event.key === "ArrowRight" ? 1 : -1;
-    const next = TABS[(index + offset + TABS.length) % TABS.length].id;
+    const next =
+      LOG_TABS[(index + offset + LOG_TABS.length) % LOG_TABS.length].id;
     onTabChange(next);
     tabRefs.current[next]?.focus();
   }
@@ -50,7 +46,7 @@ export function CaptainsLog({
         aria-label="Captain's Log sections"
         onKeyDown={handleKeyDown}
       >
-        {TABS.map(({ id, label }) => {
+        {LOG_TABS.map(({ id, label }) => {
           const selected = id === tab;
           return (
             <MenuButton

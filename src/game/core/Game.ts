@@ -21,6 +21,7 @@ import { stepWorld } from "../simulation/stepWorld";
 import {
   createWorld,
   type EndReason,
+  type World,
   type WorldEvent,
 } from "../simulation/World";
 import { GameClock } from "./GameClock";
@@ -42,6 +43,8 @@ const SMOKE = { intervalSec: 0.16, light: 2 / 3, heavy: 1 / 3 } as const;
 // Espuma que a popa de cada navio em movimento deixa na água.
 const FOAM = { intervalSec: 0.07, minSpeed: 25, behindRadii: 1.8 } as const;
 
+/** Quadros por segundo com o relógio manual dos testes. */
+const MANUAL_CLOCK_FPS = 1;
 /** Tempo entre o fim da partida e o aviso à UI (s): deixa a explosão aparecer. */
 const RESULT_DELAY_SEC = 1;
 
@@ -77,6 +80,11 @@ export interface GameInitOptions {
   readonly onCooldowns?: (ratios: Readonly<CooldownRatios>) => void;
   /** Mostra os polígonos de colisão das ilhas. */
   readonly debugIslands?: boolean;
+  /**
+   * Testes: o tempo real não move a simulação; só `advance()` a faz andar.
+   * O desenho continua a cada quadro.
+   */
+  readonly manualClock?: boolean;
 }
 
 /**
@@ -95,6 +103,8 @@ export class Game {
   private input: InputManager | null = null;
   private sounds: SoundManager | null = null;
   private stopLoop: (() => void) | null = null;
+  private loop: GameLoop | null = null;
+  private world: World | null = null;
   private destroyed = false;
   private paused = false;
 
@@ -108,6 +118,17 @@ export class Game {
     // Limpa na pausa e na retomada: nada acumula do período pausado.
     this.input.clear();
     this.input.enabled = !paused;
+  }
+
+  /** Testes (relógio manual): avança `sec` de jogo ativo. Pausado, não anda. */
+  advance(sec: number): void {
+    if (this.paused || this.destroyed) return;
+    this.loop?.advance(sec);
+  }
+
+  /** Testes: estado da partida, só para leitura. */
+  get state(): Readonly<World> | null {
+    return this.world;
   }
 
   /** Controles de toque: pressiona ou solta uma ação, como o teclado faria. */
@@ -327,9 +348,15 @@ export class Game {
       },
     });
     shipView.sync(world.player, 1, 0, config.player.maxSpeed);
+    this.loop = loop;
+    this.world = world;
+    // Relógio manual (testes): a cena só muda no advance(); um quadro por
+    // segundo basta e deixa a página livre para o Playwright.
+    if (options.manualClock) renderer.setMaxFps(MANUAL_CLOCK_FPS);
     this.stopLoop = onFrame((deltaMs) => {
-      frameDt = deltaMs / 1000;
-      loop.frame(deltaMs);
+      // Relógio manual: nem a simulação nem as animações andam sozinhas.
+      frameDt = options.manualClock ? 0 : deltaMs / 1000;
+      loop.frame(options.manualClock ? 0 : deltaMs);
     });
   }
 
@@ -338,6 +365,8 @@ export class Game {
     this.destroyed = true;
     this.stopLoop?.();
     this.stopLoop = null;
+    this.loop = null;
+    this.world = null;
     this.input?.destroy();
     this.input = null;
     this.sounds?.destroy();

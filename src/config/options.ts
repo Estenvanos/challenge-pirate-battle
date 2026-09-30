@@ -29,22 +29,3 @@ export function clampOption(key: keyof GameOptions, value: number): number {
   const { min, max } = OPTIONS_LIMITS[key];
   return Math.min(max, Math.max(min, value));
 }
-
-function isValidOption(key: keyof GameOptions, value: unknown): boolean {
-  const { min, max } = OPTIONS_LIMITS[key];
-  return (
-    typeof value === "number" &&
-    Number.isInteger(value) &&
-    value >= min &&
-    value <= max
-  );
-}
-
-export function isGameOptions(value: unknown): value is GameOptions {
-  if (typeof value !== "object" || value === null) return false;
-  const record = value as Record<string, unknown>;
-  return (
-    isValidOption("sessionTimeSec", record.sessionTimeSec) &&
-    isValidOption("spawnIntervalSec", record.spawnIntervalSec)
-  );
-}

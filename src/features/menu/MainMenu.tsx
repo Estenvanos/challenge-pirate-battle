@@ -5,7 +5,7 @@ import { Panel } from "../../shared/components/Panel";
 import { pngAsset } from "../../shared/utils/assets";
 import { formatDuration, formatEndReason } from "../../shared/utils/format";
 import { readLastResult } from "../../storage/lastResultStorage";
-import type { LogTab } from "../log/constants";
+import type { LogTab } from "../../constants/ui";
 
 interface MainMenuProps {
   onPlay: () => void;
@@ -34,8 +34,13 @@ export function MainMenu({ onPlay, onOptions, onOpenLog }: MainMenuProps) {
       <p className="menu__tagline">Set sail. Take command.</p>
       <div className="menu__actions">
         <MenuButton onClick={onPlay}>Play</MenuButton>
-        <MenuButton onClick={onOptions}>Options</MenuButton>
+        <MenuButton onClick={onOptions} aria-describedby="menu-controls-hint">
+          Options
+        </MenuButton>
       </div>
+      <p id="menu-controls-hint" className="menu__hint">
+        Controls are in Options → Controls.
+      </p>
       <img
         className="menu__ship"
         src={ship.src}

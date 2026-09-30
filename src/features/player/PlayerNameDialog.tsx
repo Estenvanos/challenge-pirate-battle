@@ -1,9 +1,6 @@
 import { useState, type FormEvent } from "react";
-import {
-  PLAYER_NAME_LIMITS,
-  normalizePlayerName,
-  validatePlayerName,
-} from "../../config/player";
+import { PLAYER_NAME_LIMITS, normalizePlayerName } from "../../config/player";
+import { validatePlayerName } from "../../schemas/player";
 import { MenuButton } from "../../shared/components/MenuButton";
 import { Modal } from "../../shared/components/Modal";
 
@@ -54,6 +51,7 @@ export function PlayerNameDialog({
           type="text"
           value={value}
           autoFocus
+          data-autofocus
           autoComplete="nickname"
           spellCheck={false}
           maxLength={PLAYER_NAME_LIMITS.max + 8}

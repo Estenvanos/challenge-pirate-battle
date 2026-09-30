@@ -1,13 +1,9 @@
+import { z } from "zod";
+import { STORAGE_KEYS } from "../../constants/storage";
 import { readStore, writeStore } from "../../storage/localStore";
 
 // Mudo global de todos os sons (ambiente, interface e partida), salvo no localStorage.
-const KEY = "muted";
-const VERSION = 1;
-
-const isBoolean = (value: unknown): value is boolean =>
-  typeof value === "boolean";
-
-let muted = readStore(KEY, VERSION, isBoolean, false);
+let muted = readStore(STORAGE_KEYS.muted, z.boolean(), false);
 const listeners = new Set<() => void>();
 
 export function isMuted(): boolean {
@@ -16,7 +12,7 @@ export function isMuted(): boolean {
 
 export function setMuted(next: boolean): void {
   muted = next;
-  writeStore(KEY, VERSION, next);
+  writeStore(STORAGE_KEYS.muted, next);
   for (const listener of listeners) listener();
 }
 

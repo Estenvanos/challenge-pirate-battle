@@ -1,5 +1,5 @@
 import { HttpResponse } from "msw";
-import type { ApiError } from "../../api/contracts";
+import type { ApiError } from "../../schemas/match";
 
 export function badRequest(message: string) {
   return HttpResponse.json<ApiError>(

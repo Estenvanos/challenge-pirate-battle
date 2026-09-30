@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import type { GameOptions } from "../../config/options";
 import { gameStore } from "../../game/bridge/gameStore";
 import { Game, type MatchResult } from "../../game/core/Game";
+import {
+  exposeGameForTests,
+  TEST_MODE,
+  testSeed,
+} from "../../testing/testHooks";
 import { ArenaLoading } from "./ArenaLoading";
 import { usePause } from "./PauseProvider";
 import { TouchControls } from "./TouchControls";
@@ -67,6 +72,8 @@ function GameCanvasHost({
       .init(host, {
         options,
         debugIslands: DEBUG_ISLANDS,
+        seed: testSeed(),
+        manualClock: TEST_MODE,
         onPlayerHealth: gameStore.setPlayerHealth,
         onScore: gameStore.setScore,
         onTimeLeft: gameStore.setTimeLeft,
@@ -80,14 +87,24 @@ function GameCanvasHost({
           }
         },
         onLoadProgress: (progress) => {
-          if (!cancelled) setLoad({ status: "loading", progress });
+          // Depois de uma falha, os outros assets ainda avisam progresso: o erro fica.
+          if (!cancelled) {
+            setLoad((current) =>
+              current.status === "error"
+                ? current
+                : { status: "loading", progress },
+            );
+          }
         },
       })
       .then(
         () => {
           if (cancelled)
             game.destroy(); // desmontou durante o init
-          else setLoad({ status: "ready" });
+          else {
+            exposeGameForTests(game);
+            setLoad({ status: "ready" });
+          }
         },
         (error: unknown) => {
           game.destroy();
@@ -99,6 +116,7 @@ function GameCanvasHost({
     return () => {
       cancelled = true;
       gameRef.current = null;
+      exposeGameForTests(null);
       game.destroy(); // seguro antes do fim do init e se chamado duas vezes
       gameStore.reset(); // a próxima partida começa com o HUD cheio
     };

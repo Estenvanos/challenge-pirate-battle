@@ -1,4 +1,11 @@
-import type { MatchConfig, Page, RankingEntry } from "../../contracts";
+import { API_ROUTES } from "../../../constants/api";
+import {
+  pageSchema,
+  rankingEntrySchema,
+  type MatchConfig,
+  type Page,
+  type RankingEntry,
+} from "../../../schemas/match";
 import { httpClient } from "../../httpClient";
 
 export interface RankingParams {
@@ -7,11 +14,13 @@ export interface RankingParams {
   pageSize: number;
 }
 
+const rankingPageSchema = pageSchema(rankingEntrySchema);
+
 export async function getRanking(
   { config, page, pageSize }: RankingParams,
   signal?: AbortSignal,
 ): Promise<Page<RankingEntry>> {
-  const { data } = await httpClient.get<Page<RankingEntry>>("/ranking", {
+  const { data } = await httpClient.get<unknown>(API_ROUTES.ranking, {
     params: {
       sessionTime: config.sessionTimeSec,
       spawnInterval: config.spawnIntervalSec,
@@ -20,5 +29,5 @@ export async function getRanking(
     },
     signal,
   });
-  return data;
+  return rankingPageSchema.parse(data);
 }

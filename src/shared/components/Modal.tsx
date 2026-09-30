@@ -22,6 +22,9 @@ export function Modal({
     const dialog = dialogRef.current;
     if (!dialog) return;
     if (!dialog.open) dialog.showModal();
+    // O showModal() foca o primeiro focável, que pode ser o painel rolável
+    // (mobile); o foco inicial vai para o elemento marcado com autoFocus.
+    dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus();
     return () => dialog.close();
   }, []);
 

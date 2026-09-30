@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { MatchRecord } from "../../api/contracts";
+import type { MatchRecord } from "../../schemas/match";
 import type { GameOptions } from "../../config/options";
 import { LOCAL_PLAYER_ID } from "../../config/player";
 import type { MatchResult } from "../../game/core/Game";
@@ -11,6 +11,7 @@ import { RoundButton } from "../../shared/components/RoundButton";
 import { ResultDialog } from "../result/ResultDialog";
 import { GameCanvas } from "./GameCanvas";
 import { Hud } from "./Hud";
+import { MatchAnnouncer } from "./MatchAnnouncer";
 import { PauseMenu } from "./PauseMenu";
 import { usePause } from "./PauseProvider";
 
@@ -102,6 +103,7 @@ export function MatchScreen({
         {config.spawnIntervalSec} s enemy spawn
       </h1>
       <GameCanvas options={config} onMatchEnd={handleMatchEnd} />
+      <MatchAnnouncer />
       <div className="match__bar">
         <Hud sessionTimeSec={config.sessionTimeSec} />
         <RoundButton

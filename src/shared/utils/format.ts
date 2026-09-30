@@ -1,4 +1,5 @@
-import type { EndReason } from "../../api/contracts";
+import { END_REASON_LABELS } from "../../constants/ui";
+import type { EndReason } from "../../schemas/match";
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "2-digit",
@@ -26,11 +27,6 @@ export function formatDuration(totalSec: number): string {
   const seconds = String(sec % 60).padStart(2, "0");
   return `${minutes}:${seconds}`;
 }
-
-const END_REASON_LABELS: Record<EndReason, string> = {
-  timeUp: "Time up",
-  playerDestroyed: "Defeated",
-};
 
 export function formatEndReason(reason: EndReason): string {
   return END_REASON_LABELS[reason];

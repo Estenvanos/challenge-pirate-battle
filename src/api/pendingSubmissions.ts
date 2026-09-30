@@ -1,21 +1,23 @@
+import { z } from "zod";
+import { STORAGE_KEYS } from "../constants/storage";
+import { matchRecordSchema, type MatchRecord } from "../schemas/match";
 import { readStore, removeStore, writeStore } from "../storage/localStore";
-import { isMatchRecord, type MatchRecord } from "./contracts";
 
 // Fila de registros ainda não confirmados pela API: sobrevive a falhas e ao refresh.
-const KEY = "pendingSubmissions";
-const VERSION = 1;
-
-function isList(value: unknown): value is unknown[] {
-  return Array.isArray(value);
-}
+const STORE = STORAGE_KEYS.pendingSubmissions;
 
 // Um item corrompido é descartado sozinho; os válidos continuam na fila.
-let pending = readStore(KEY, VERSION, isList, []).filter(isMatchRecord);
+let pending: MatchRecord[] = readStore(STORE, z.array(z.unknown()), []).flatMap(
+  (item) => {
+    const result = matchRecordSchema.safeParse(item);
+    return result.success ? [result.data] : [];
+  },
+);
 const listeners = new Set<() => void>();
 
 function save(next: MatchRecord[]): void {
   pending = next;
-  writeStore(KEY, VERSION, next);
+  writeStore(STORE, next);
   for (const listener of listeners) listener();
 }
 
@@ -42,7 +44,7 @@ export function subscribePendingSubmissions(listener: () => void): () => void {
 
 /** Esvazia a fila (reset dos mocks). */
 export function clearPendingSubmissions(): void {
-  removeStore(KEY);
+  removeStore(STORE);
   pending = [];
   for (const listener of listeners) listener();
 }

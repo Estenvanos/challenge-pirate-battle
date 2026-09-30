@@ -1,9 +1,8 @@
 import axios from "axios";
-
-const REQUEST_TIMEOUT_MS = 8000;
+import { API_BASE_URL, REQUEST_TIMEOUT_MS } from "../constants/api";
 
 export const httpClient = axios.create({
-  baseURL: "/api",
+  baseURL: API_BASE_URL,
   timeout: REQUEST_TIMEOUT_MS,
 });
 

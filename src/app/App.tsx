@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { GameOptions } from "../config/options";
 import { CaptainsLog } from "../features/log/CaptainsLog";
-import type { LogTab } from "../features/log/constants";
+import type { LogTab } from "../constants/ui";
 import { MatchScreen } from "../features/match/MatchScreen";
 import { MainMenu } from "../features/menu/MainMenu";
 import { OptionsScreen } from "../features/options/OptionsScreen";

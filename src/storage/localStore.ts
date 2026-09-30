@@ -1,49 +1,43 @@
-const NAMESPACE = "pirate-battle:";
+import { z } from "zod";
+import { STORAGE_NAMESPACE, type StorageEntry } from "../constants/storage";
 
-interface Envelope {
-  v: number;
-  data: unknown;
-}
-
-function isEnvelope(value: unknown): value is Envelope {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    typeof (value as Envelope).v === "number" &&
-    "data" in value
-  );
-}
+const envelopeSchema = z.object({ v: z.number(), data: z.unknown() });
 
 export function readStore<T>(
-  key: string,
-  version: number,
-  validate: (data: unknown) => data is T,
+  { key, version }: StorageEntry,
+  schema: z.ZodType<T>,
   fallback: T,
 ): T {
   try {
-    const raw = localStorage.getItem(NAMESPACE + key);
+    const raw = localStorage.getItem(STORAGE_NAMESPACE + key);
     if (raw === null) return fallback;
-    const parsed: unknown = JSON.parse(raw);
-    if (!isEnvelope(parsed) || parsed.v !== version) return fallback;
-    return validate(parsed.data) ? parsed.data : fallback;
+    const envelope = envelopeSchema.safeParse(JSON.parse(raw));
+    if (!envelope.success || envelope.data.v !== version) return fallback;
+    const result = schema.safeParse(envelope.data.data);
+    return result.success ? result.data : fallback;
   } catch {
     return fallback;
   }
 }
 
-export function writeStore<T>(key: string, version: number, data: T): boolean {
+export function writeStore<T>(
+  { key, version }: StorageEntry,
+  data: T,
+): boolean {
   try {
-    const envelope: Envelope = { v: version, data };
-    localStorage.setItem(NAMESPACE + key, JSON.stringify(envelope));
+    localStorage.setItem(
+      STORAGE_NAMESPACE + key,
+      JSON.stringify({ v: version, data }),
+    );
     return true;
   } catch {
     return false;
   }
 }
 
-export function removeStore(key: string): void {
+export function removeStore({ key }: StorageEntry): void {
   try {
-    localStorage.removeItem(NAMESPACE + key);
+    localStorage.removeItem(STORAGE_NAMESPACE + key);
   } catch {
     // Storage unavailable: nothing to remove.
   }
