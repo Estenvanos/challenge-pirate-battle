@@ -21,24 +21,55 @@ export const tileAlias = (tile: number) => `tile_${tile}`;
 export const SHIPS_BUNDLE = "ships";
 
 // Navios usados no jogo (png/default/ships/<nome>.png); a proa aponta para baixo (+y).
-// ship_2 (pirata preto) é o jogador; os dos inimigos, com seus estágios de
-// dano, vêm de `config/enemies.ts`.
+// Os do jogador (pirata preto) e os dos inimigos, com seus estágios de dano,
+// vêm da config.
 export const SHIP_SPRITES: readonly ShipSprite[] = [
-  ...new Set<ShipSprite>([
-    "ship_2",
-    ...Object.values(GAME_CONFIG.enemies.kinds).flatMap(({ sprites }) => [
-      ...sprites.stages,
-      sprites.destroyed,
-    ]),
-  ]),
+  ...new Set<ShipSprite>(
+    [GAME_CONFIG.player, ...Object.values(GAME_CONFIG.enemies.kinds)].flatMap(
+      ({ sprites }) => [...sprites.stages, sprites.destroyed],
+    ),
+  ),
 ];
 
 export const CANNON_BALL = "cannon_ball";
+
+// Tripulantes que caem na água quando um navio afunda (png/default/ship_parts).
+export const CREW_SPRITES = [
+  "crew_1",
+  "crew_2",
+  "crew_3",
+  "crew_4",
+  "crew_5",
+  "crew_6",
+] as const;
 
 export const EFFECTS_BUNDLE = "effects";
 
 // Clarão na boca do canhão: png/default/effects/explosion_3.png.
 export const MUZZLE_FLASH = "explosion_3";
+
+// Explosões de destruição, chamas de casco danificado e o reparo do jogador
+// (png/default/effects). `heal_plus` e `heal_aura` foram criados para o jogo.
+export const EFFECT_SPRITES = [
+  MUZZLE_FLASH,
+  "explosion_1",
+  "explosion_2",
+  "fire_1",
+  "fire_2",
+  "heal_plus",
+  "heal_aura",
+] as const;
+
+export type EffectSprite = (typeof EFFECT_SPRITES)[number];
+
+export const HUD_BUNDLE = "hud";
+
+// Barra de vida sobre os navios (png/default/ui/hud): moldura e preenchimentos.
+export const HEALTH_BAR = {
+  frame: "enemy_health_frame",
+  green: "enemy_health_fill_green",
+  red: "enemy_health_fill_red",
+} as const;
 
 export function buildManifestBundles() {
   return [
@@ -60,16 +91,25 @@ export function buildManifestBundles() {
           alias: CANNON_BALL,
           src: `/assets/png/default/ship_parts/${CANNON_BALL}.png`,
         },
+        ...CREW_SPRITES.map((crew) => ({
+          alias: crew,
+          src: `/assets/png/default/ship_parts/${crew}.png`,
+        })),
       ],
     },
     {
       name: EFFECTS_BUNDLE,
-      assets: [
-        {
-          alias: MUZZLE_FLASH,
-          src: `/assets/png/default/effects/${MUZZLE_FLASH}.png`,
-        },
-      ],
+      assets: EFFECT_SPRITES.map((effect) => ({
+        alias: effect,
+        src: `/assets/png/default/effects/${effect}.png`,
+      })),
+    },
+    {
+      name: HUD_BUNDLE,
+      assets: Object.values(HEALTH_BAR).map((alias) => ({
+        alias,
+        src: `/assets/png/default/ui/hud/${alias}.png`,
+      })),
     },
   ];
 }

@@ -3,6 +3,7 @@ import type { MatchConfig } from "../../../config/gameConfig";
 import { circleVsPolygon } from "../../physics/collision";
 import type { Projectile, Ship } from "../entities";
 import type { World, WorldEvent } from "../World";
+import { applyDamage } from "./damageSystem";
 
 type EndCause = Extract<WorldEvent, { type: "projectileEnded" }>["cause"];
 
@@ -27,6 +28,7 @@ export function spawnProjectile(
     vy: Math.sin(angle) * spec.speed,
     travelled: 0,
     range: spec.range,
+    damage: spec.damage,
     radius: config.projectile.radius,
   });
 }
@@ -35,8 +37,12 @@ export function spawnProjectile(
  * O casco é uma cápsula: o segmento entre popa e proa, engrossado pelo raio
  * (a mesma forma dos três círculos da colisão com ilhas).
  */
-function hitsShip(
-  projectile: Projectile,
+export function hitsShip(
+  projectile: {
+    readonly x: number;
+    readonly y: number;
+    readonly radius: number;
+  },
   ship: Ship,
   hullHalfLength: number,
 ): boolean {
@@ -53,7 +59,11 @@ function hitsShip(
   );
 }
 
-/** Por que o projétil some neste passo, ou `null` se ele segue voando. */
+/**
+ * Por que o projétil some neste passo, ou `null` se ele segue voando. Ao
+ * acertar um navio já aplica o dano: como o projétil some no mesmo passo, ele
+ * fere uma única vez.
+ */
 function endCause(
   world: World,
   projectile: Projectile,
@@ -63,18 +73,26 @@ function endCause(
   const { width, height } = world.arena;
   if (x < -radius || y < -radius || x > width + radius || y > height + radius)
     return "bounds";
-  // Tiro do jogador só acerta inimigos. Por enquanto só some: o dano vem depois.
-  if (
-    projectile.owner === "player" &&
-    world.enemies.some((enemy) =>
-      hitsShip(
-        projectile,
-        enemy,
-        config.enemies.kinds[enemy.kind].hullHalfLength,
-      ),
-    )
-  )
+  // Tiro do jogador só acerta inimigos; tiro inimigo, só o jogador.
+  const target =
+    projectile.owner === "player"
+      ? world.enemies.find(
+          (enemy) =>
+            // Quem já foi a 0 neste passo não absorve mais tiros.
+            enemy.hp > 0 &&
+            hitsShip(
+              projectile,
+              enemy,
+              config.enemies.kinds[enemy.kind].hullHalfLength,
+            ),
+        )
+      : hitsShip(projectile, world.player, config.player.hullHalfLength)
+        ? world.player
+        : undefined;
+  if (target) {
+    applyDamage(world, target, projectile.damage, x, y);
     return "ship";
+  }
   if (
     world.islands.some((island) => circleVsPolygon(projectile, radius, island))
   )
@@ -83,7 +101,7 @@ function endCause(
   return null;
 }
 
-/** Move os projéteis e remove os que passaram do alcance, saíram da arena ou bateram numa ilha ou num inimigo. */
+/** Move os projéteis e remove os que passaram do alcance, saíram da arena ou bateram numa ilha ou num navio. */
 export function projectileSystem(
   world: World,
   dt: number,

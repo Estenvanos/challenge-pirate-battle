@@ -1,18 +1,27 @@
+import type { CSSProperties } from "react";
+import { useGameSnapshot } from "../../game/bridge/useGameSnapshot";
 import { pngAsset } from "../../shared/utils/assets";
 import { formatDuration } from "../../shared/utils/format";
 
-// HUD do topo: por enquanto só visual, com valores fixos (pontuação zerada, o tempo
-// cheio da sessão e a vida cheia). Virão do useGameSnapshot quando a simulação tiver
-// pontuação, timer e dano.
+// Cor do preenchimento da vida conforme a fração restante.
+function healthLevel(ratio: number): "full" | "mid" | "low" {
+  if (ratio <= 1 / 3) return "low";
+  return ratio <= 2 / 3 ? "mid" : "full";
+}
+
+// HUD do topo: vida, pontuação e tempo restante vêm do jogo (useGameSnapshot).
+// Enquanto a arena carrega, o tempo mostra a sessão cheia.
 export function Hud({ sessionTimeSec }: { sessionTimeSec: number }) {
+  const { hp, maxHp, score, timeLeftSec } = useGameSnapshot();
+  const ratio = hp / maxHp;
   const heart = pngAsset("ui/hud/icon_heart.png");
   return (
     <dl className="hud">
-      <Counter icon="score" label="Score" value="0" />
+      <Counter icon="score" label="Score" value={String(score)} />
       <Counter
         icon="time"
         label="Time left"
-        value={formatDuration(sessionTimeSec)}
+        value={formatDuration(timeLeftSec ?? sessionTimeSec)}
       />
       <div className="hud__health">
         <img
@@ -24,8 +33,13 @@ export function Hud({ sessionTimeSec }: { sessionTimeSec: number }) {
         />
         <dt className="visually-hidden">Health</dt>
         <dd className="hud__bar">
-          <span className="hud__fill" />
-          <span className="hud__bar-value">100 / 100</span>
+          <span
+            className={`hud__fill hud__fill--${healthLevel(ratio)}`}
+            style={{ "--hp": ratio } as CSSProperties}
+          />
+          <span className="hud__bar-value">
+            {hp} / {maxHp}
+          </span>
         </dd>
       </div>
     </dl>

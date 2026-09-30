@@ -18,7 +18,7 @@ function absorbImpact(ship: Ship, normalX: number, normalY: number): void {
  * deslizam ao longo da costa) e os mantém dentro dos limites da arena.
  */
 export function collisionSystem(world: World, config: MatchConfig): void {
-  separateEnemies(world.enemies);
+  separateShips(world, config);
   collideWithArena(world, world.player, config.player.hullHalfLength);
   for (const enemy of world.enemies) {
     const { hullHalfLength } = config.enemies.kinds[enemy.kind];
@@ -27,15 +27,24 @@ export function collisionSystem(world: World, config: MatchConfig): void {
 }
 
 /**
- * Inimigos não se sobrepõem: cada par em contato é afastado metade da
- * sobreposição para cada lado. O contato com o jogador fica para o dano.
+ * Navios não se sobrepõem: cada par em contato é afastado metade da
+ * sobreposição para cada lado. Quem abalroa (Chaser) não é afastado do
+ * jogador: precisa encostar nele para explodir (damageSystem).
  */
-function separateEnemies(enemies: readonly Ship[]): void {
+function separateShips(world: World, config: MatchConfig): void {
+  const { player } = world;
+  const ships: readonly Ship[] = [player, ...world.enemies];
   // ponytail: O(n²) por passo; trocar por grade espacial se o perfil pedir.
-  for (let i = 0; i < enemies.length; i++) {
-    for (let j = i + 1; j < enemies.length; j++) {
-      const a = enemies[i];
-      const b = enemies[j];
+  for (let i = 0; i < ships.length; i++) {
+    for (let j = i + 1; j < ships.length; j++) {
+      const a = ships[i];
+      const b = ships[j];
+      // O jogador é o índice 0, então `b` é o inimigo `j - 1`.
+      if (
+        a === player &&
+        config.enemies.kinds[world.enemies[j - 1].kind].ramDamage
+      )
+        continue;
       const dx = b.x - a.x;
       const dy = b.y - a.y;
       const dist = Math.hypot(dx, dy);

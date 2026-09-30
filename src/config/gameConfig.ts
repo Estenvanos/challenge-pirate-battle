@@ -1,5 +1,5 @@
 // Valores de balanceamento do jogo. Sistemas leem daqui; nada de números mágicos.
-import { createEnemyConfig } from "./enemies";
+import { createEnemyConfig, type DamageSprites } from "./enemies";
 import type { GameOptions } from "./options";
 
 export type { ShipMotion } from "./enemies";
@@ -21,6 +21,14 @@ const PLAYER = Object.freeze({
   hullHalfLength: 67,
   /** Rotação inicial (rad); -π/2 aponta para cima. */
   initialRotation: -Math.PI / 2,
+  maxHp: 100,
+  /** Reparo: a cada `everyKills` inimigos destruídos por tiro, recupera `amount` de vida (até `maxHp`). */
+  repair: Object.freeze({ everyKills: 3, amount: 10 }),
+  /** Pirata preto: do intacto ao mais danificado, e o casco cinza ao afundar. */
+  sprites: Object.freeze({
+    stages: Object.freeze(["ship_2", "ship_8", "ship_14"] as const),
+    destroyed: "ship_20",
+  }) satisfies DamageSprites,
   weapons: Object.freeze({
     /** Canhão de proa: um projétil por disparo. */
     front: Object.freeze({
@@ -28,9 +36,16 @@ const PLAYER = Object.freeze({
       shots: 1,
       speed: 720,
       range: 720,
+      damage: 5.75,
     }),
     /** Bordada (bombordo ou boreste): projéteis paralelos; cada lado tem seu cooldown. */
-    side: Object.freeze({ cooldownSec: 1.2, shots: 3, speed: 620, range: 460 }),
+    side: Object.freeze({
+      cooldownSec: 1.2,
+      shots: 3,
+      speed: 620,
+      range: 460,
+      damage: 5.75,
+    }),
     /** Distância entre os canhões de uma bordada, ao longo do casco (px). */
     shotSpacing: 32,
   }),

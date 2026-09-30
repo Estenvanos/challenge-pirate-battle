@@ -1,19 +1,7 @@
 import type { Texture } from "pixi.js";
-import type { DamageSprites, ShipSprite } from "../../../config/enemies";
 import { GAME_CONFIG } from "../../../config/gameConfig";
 import type { Enemy } from "../../simulation/entities";
 import { ShipView, type ShipLayers } from "./ShipView";
-
-/** Casco cada vez mais danificado conforme a vida cai; cinza ao ser destruído. */
-function damageSprite(
-  { stages, destroyed }: DamageSprites,
-  hp: number,
-  maxHp: number,
-): ShipSprite {
-  if (hp <= 0) return destroyed;
-  const stage = Math.floor(((maxHp - hp) * stages.length) / maxHp);
-  return stages[Math.min(stage, stages.length - 1)];
-}
 
 /** Defasagem do balanço entre navios (rad), para não balançarem em uníssono. */
 const SWAY_PHASE_STEP = 2.4;
@@ -21,9 +9,12 @@ const SWAY_PHASE_STEP = 2.4;
 /** Tempo para o inimigo recém-nascido surgir por completo (s). */
 const FADE_IN_SEC = 0.4;
 
-/** Um ShipView por inimigo, criado e removido conforme o World. */
+/**
+ * Um ShipView por inimigo, criado conforme o World. O inimigo destruído sai do
+ * World na hora, mas a view fica até o casco terminar de afundar.
+ */
 export class EnemiesView {
-  private readonly views = new Map<string, ShipView>();
+  private readonly views = new Map<string, { enemy: Enemy; view: ShipView }>();
   private created = 0;
 
   constructor(
@@ -33,41 +24,42 @@ export class EnemiesView {
   ) {}
 
   sync(enemies: readonly Enemy[], alpha: number, dt: number): void {
-    const alive = new Set<string>();
+    const alive = new Set(enemies);
     for (const enemy of enemies) {
-      alive.add(enemy.id);
       const { sprites, spriteScale, maxSpeed } =
         GAME_CONFIG.enemies.kinds[enemy.kind];
-      const sprite = damageSprite(sprites, enemy.hp, enemy.maxHp);
-      let view = this.views.get(enemy.id);
+      let view = this.views.get(enemy.id)?.view;
       if (!view) {
         view = new ShipView(this.layers, {
-          sprite,
+          sprites,
           scale: spriteScale,
           wakeTexture: this.wakeTexture,
           reducedMotion: this.reducedMotion,
           phase: this.created++ * SWAY_PHASE_STEP,
           fadeInSec: FADE_IN_SEC,
         });
-        this.views.set(enemy.id, view);
+        this.views.set(enemy.id, { enemy, view });
       }
-      view.setSprite(sprite);
       view.sync(enemy, alpha, dt, maxSpeed);
     }
-    for (const [id, view] of this.views) {
-      if (alive.has(id)) continue;
+    for (const [id, { enemy, view }] of this.views) {
+      if (alive.has(enemy)) continue;
+      // Destruído (vida 0, parado na última posição): segue afundando.
+      const { maxSpeed } = GAME_CONFIG.enemies.kinds[enemy.kind];
+      view.sync(enemy, 1, dt, maxSpeed);
+      if (!view.sunk) continue;
       view.destroy();
       this.views.delete(id);
     }
   }
 
-  /** View do inimigo `id`, se ele ainda existe. */
+  /** View do inimigo `id`, se ela ainda existe. */
   get(id: string): ShipView | undefined {
-    return this.views.get(id);
+    return this.views.get(id)?.view;
   }
 
   destroy(): void {
-    for (const view of this.views.values()) view.destroy();
+    for (const { view } of this.views.values()) view.destroy();
     this.views.clear();
   }
 }

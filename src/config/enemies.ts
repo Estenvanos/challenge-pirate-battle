@@ -23,6 +23,8 @@ export interface ProjectileSpec {
   readonly speed: number;
   /** Distância máxima percorrida antes de cair na água (px). */
   readonly range: number;
+  /** Vida que tira do navio atingido. */
+  readonly damage: number;
 }
 
 /** Navio em png/<pasta>/ships/<nome>.png. */
@@ -55,6 +57,8 @@ export interface EnemySpec extends ShipMotion {
   /** Escala do sprite; o `radius` deve acompanhar. */
   readonly spriteScale: number;
   readonly sprites: DamageSprites;
+  /** Dano no jogador ao abalroá-lo; quem abalroa explode no impacto. */
+  readonly ramDamage?: number;
   /** Quem tem arma mantém distância e atira; quem não tem persegue o jogador. */
   readonly weapon?: EnemyWeapon;
 }
@@ -84,7 +88,13 @@ const WEAPON: EnemyWeapon = Object.freeze({
   attackRange: 560,
   aimTolerance: 0.14,
   fireCooldownSec: 2.2,
-  projectile: Object.freeze({ speed: 520, range: 620 }),
+  projectile: Object.freeze({ speed: 520, range: 620, damage: 5 }),
+});
+
+/** O navio grande atira mais fraco: compensa a vida maior. */
+const BIG_WEAPON: EnemyWeapon = Object.freeze({
+  ...WEAPON,
+  projectile: Object.freeze({ ...WEAPON.projectile, damage: 4 }),
 });
 
 /** Recebe o navio do jogador porque os inimigos usam o mesmo casco. */
@@ -95,7 +105,6 @@ export function createEnemyConfig(
   const medium = {
     radius: player.radius,
     hullHalfLength: player.hullHalfLength,
-    maxHp: 3,
     spriteScale: player.spriteScale,
   };
   // Mais lento que o jogador (210 px/s), mas rápido o bastante para alcançá-lo nas curvas.
@@ -113,33 +122,43 @@ export function createEnemyConfig(
     turnSpeed: 1.7,
   };
 
+  const biggerShooterMotion = {
+    maxSpeed: 115,
+    acceleration: 177.5,
+    drag: 177.5,
+    turnSpeed: 1.5,
+  };
+
   const kinds: Readonly<Record<EnemyKind, EnemySpec>> = Object.freeze({
     /** Vermelho: persegue o jogador. */
     chaser: Object.freeze({
       ...medium,
       ...chaserMotion,
       spawnWeight: 0.2,
+      maxHp: 15,
       sprites: RED,
+      ramDamage: 10,
     }),
     /** Amarelo: mantém distância e atira. */
     shooter: Object.freeze({
       ...medium,
       ...shooterMotion,
       spawnWeight: 0.56,
+      maxHp: 20,
       sprites: YELLOW,
       weapon: WEAPON,
     }),
     /** Azul grande: um Shooter com mais vida. */
     bigShooter: Object.freeze({
       ...medium,
-      ...shooterMotion,
+      ...biggerShooterMotion,
       radius: player.radius * BIG_SCALE,
       hullHalfLength: player.hullHalfLength * BIG_SCALE,
-      maxHp: 6,
+      maxHp: 30,
       spriteScale: player.spriteScale * BIG_SCALE,
       spawnWeight: 0.24,
       sprites: BLUE,
-      weapon: WEAPON,
+      weapon: BIG_WEAPON,
     }),
   });
 

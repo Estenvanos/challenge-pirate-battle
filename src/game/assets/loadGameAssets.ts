@@ -2,11 +2,15 @@ import { Assets, type Texture } from "pixi.js";
 import {
   buildManifestBundles,
   CANNON_BALL,
+  CREW_SPRITES,
   EFFECTS_BUNDLE,
+  HEALTH_BAR,
+  HUD_BUNDLE,
   MUZZLE_FLASH,
   SHIPS_BUNDLE,
   tileAlias,
   TILES_BUNDLE,
+  type EffectSprite,
   type ShipSprite,
 } from "./manifest";
 
@@ -27,7 +31,7 @@ function registerBundles() {
 export async function loadGameAssets(onProgress?: (progress: number) => void) {
   registerBundles();
   await Assets.loadBundle(
-    [TILES_BUNDLE, SHIPS_BUNDLE, EFFECTS_BUNDLE],
+    [TILES_BUNDLE, SHIPS_BUNDLE, EFFECTS_BUNDLE, HUD_BUNDLE],
     onProgress,
   );
 }
@@ -50,8 +54,33 @@ export function getCannonBallTexture(): Texture {
   return texture;
 }
 
-export function getMuzzleFlashTexture(): Texture {
-  const texture = Assets.get<Texture>(MUZZLE_FLASH);
-  if (!texture) throw new Error("Muzzle flash texture is not loaded");
+export function getEffectTexture(effect: EffectSprite): Texture {
+  const texture = Assets.get<Texture>(effect);
+  if (!texture) throw new Error(`Effect texture ${effect} is not loaded`);
   return texture;
+}
+
+export const getMuzzleFlashTexture = () => getEffectTexture(MUZZLE_FLASH);
+
+/** Moldura e preenchimentos (verde, vermelho) da barra de vida dos navios. */
+export function getHealthBarTextures() {
+  const [frame, green, red] = [
+    HEALTH_BAR.frame,
+    HEALTH_BAR.green,
+    HEALTH_BAR.red,
+  ].map((alias) => {
+    const texture = Assets.get<Texture>(alias);
+    if (!texture) throw new Error(`Health bar texture ${alias} is not loaded`);
+    return texture;
+  });
+  return { frame, green, red };
+}
+
+/** Texturas dos tripulantes (todas as variações). */
+export function getCrewTextures(): Texture[] {
+  return CREW_SPRITES.map((crew) => {
+    const texture = Assets.get<Texture>(crew);
+    if (!texture) throw new Error(`Crew texture ${crew} is not loaded`);
+    return texture;
+  });
 }

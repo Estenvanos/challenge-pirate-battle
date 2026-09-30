@@ -42,7 +42,32 @@ export type WorldEvent =
       readonly x: number;
       readonly y: number;
     }
-  | { readonly type: "enemySpawned"; readonly x: number; readonly y: number };
+  | { readonly type: "enemySpawned"; readonly x: number; readonly y: number }
+  | {
+      readonly type: "shipDamaged";
+      readonly shipId: string;
+      /** Ponto do impacto. */
+      readonly x: number;
+      readonly y: number;
+    }
+  | {
+      readonly type: "enemyDestroyed";
+      readonly id: string;
+      readonly x: number;
+      readonly y: number;
+      /** Tiro do jogador ou a própria abalroada (que não vale ponto). */
+      readonly cause: "shot" | "ram";
+    }
+  /** O jogador recuperou vida (reparo por inimigos destruídos). */
+  | { readonly type: "playerRepaired" }
+  | {
+      readonly type: "playerDestroyed";
+      readonly x: number;
+      readonly y: number;
+    };
+
+/** Por que a partida terminou: o tempo acabou ou o jogador foi destruído. */
+export type EndReason = "timeUp" | "playerDestroyed";
 
 /** Estado contínuo da partida. Uma partida nova cria um World novo. */
 export interface World {
@@ -64,6 +89,12 @@ export interface World {
   spawnTimer: number;
   /** Contador para ids únicos de inimigos e projéteis. */
   nextId: number;
+  /** Pontos: um por inimigo destruído por tiro do jogador. */
+  score: number;
+  /** Tempo de jogo ativo já decorrido (s); pausas não contam. */
+  elapsedSec: number;
+  /** Motivo do fim; `null` enquanto a partida corre. Encerrada, a simulação não avança mais. */
+  endReason: EndReason | null;
 }
 
 export function createWorld(
@@ -89,6 +120,8 @@ export function createWorld(
       prevY: map.playerSpawn.y,
       prevRotation: config.player.initialRotation,
       radius: config.player.radius,
+      hp: config.player.maxHp,
+      maxHp: config.player.maxHp,
     },
     playerCooldowns: { front: 0, left: 0, right: 0 },
     enemies: [],
@@ -96,5 +129,8 @@ export function createWorld(
     events: [],
     spawnTimer: 0,
     nextId: 1,
+    score: 0,
+    elapsedSec: 0,
+    endReason: null,
   };
 }
