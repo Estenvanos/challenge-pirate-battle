@@ -6,21 +6,34 @@ export type { ShipMotion } from "./enemies";
 
 const PLAYER = Object.freeze({
   /** Velocidade máxima para a frente (px/s). */
-  maxSpeed: 75,
-  /** Aceleração com a vela aberta (px/s²); ~1,9 s até a velocidade máxima. */
-  acceleration: 40,
-  /** Desaceleração sem vela, à deriva (px/s²); ~3 s até parar. */
-  drag: 25,
-  /** Velocidade de giro máxima, em velocidade máxima (rad/s). */
-  maxTurnSpeed: 1.1,
-  /** Quão rápido o leme muda a velocidade de giro (rad/s²). */
-  turnAcceleration: 2.2,
-  /** Fração do giro disponível com o navio parado (o leme precisa de água passando). */
-  minRudder: 0.3,
-  /** Raio do círculo de colisão (px), ~meia largura do casco. */
-  radius: 26,
+  maxSpeed: 210,
+  /** Aceleração com a vela aberta (px/s²); ~0,66 s até a velocidade máxima. */
+  acceleration: 320,
+  /** Desaceleração sem vela (px/s²); ~0,9 s até parar. */
+  drag: 240,
+  /** Velocidade de giro (rad/s); igual parado ou em movimento. */
+  turnSpeed: 2.5,
+  /** Escala do sprite do navio; `radius` e `hullHalfLength` acompanham. */
+  spriteScale: 1.35,
+  /** Raio de colisão (px), ~meia largura do casco. */
+  radius: 34,
+  /** Meio comprimento do casco (px). */
+  hullHalfLength: 67,
   /** Rotação inicial (rad); -π/2 aponta para cima. */
   initialRotation: -Math.PI / 2,
+  weapons: Object.freeze({
+    /** Canhão de proa: um projétil por disparo. */
+    front: Object.freeze({
+      cooldownSec: 0.45,
+      shots: 1,
+      speed: 720,
+      range: 720,
+    }),
+    /** Bordada (bombordo ou boreste): projéteis paralelos; cada lado tem seu cooldown. */
+    side: Object.freeze({ cooldownSec: 1.2, shots: 3, speed: 620, range: 460 }),
+    /** Distância entre os canhões de uma bordada, ao longo do casco (px). */
+    shotSpacing: 32,
+  }),
 });
 
 export const GAME_CONFIG = Object.freeze({
@@ -33,17 +46,12 @@ export const GAME_CONFIG = Object.freeze({
   player: PLAYER,
   spawn: Object.freeze({
     /** Distância mínima (px) do ponto de spawn até o jogador. */
-    minPlayerDistance: 360,
+    minPlayerDistance: 700,
   }),
   /** Tipos de inimigo e a taxa de spawn de cada um: veja `enemies.ts`. */
   enemies: createEnemyConfig(PLAYER),
-  projectile: Object.freeze({
-    /** Velocidade (px/s). */
-    speed: 220,
-    /** Distância máxima percorrida antes de sumir (px). */
-    range: 400,
-    radius: 5,
-  }),
+  /** Velocidade e alcance ficam em cada arma. */
+  projectile: Object.freeze({ radius: 5 }),
 });
 
 export type GameConfig = typeof GAME_CONFIG;

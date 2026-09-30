@@ -49,20 +49,24 @@ function spawnEnemy(world: World, config: MatchConfig): void {
   // Sem ponto livre, este spawn é pulado; o próximo intervalo tenta de novo.
   if (candidates.length === 0) return;
   const point = world.rng.pick(candidates);
+  const rotation = angleTo(point, world.player);
   world.enemies.push({
     id: `enemy-${world.nextId++}`,
     kind,
     x: point.x,
     y: point.y,
-    rotation: angleTo(point, world.player),
+    rotation,
     speed: 0,
-    angularVelocity: 0,
+    prevX: point.x,
+    prevY: point.y,
+    prevRotation: rotation,
     radius: spec.radius,
     hp: spec.maxHp,
     maxHp: spec.maxHp,
-    control: { forward: false, turn: 0 },
+    control: { throttle: 0, turn: 0 },
     fireCooldown: spec.weapon?.fireCooldownSec ?? 0,
   });
+  world.events.push({ type: "enemySpawned", x: point.x, y: point.y });
 }
 
 /** Um inimigo a cada `spawn.intervalSec` de jogo ativo. */
