@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { GameOptions } from "../../config/options";
+import { gameStore } from "../../game/bridge/gameStore";
 import { Game } from "../../game/core/Game";
-import { MenuButton } from "../../shared/components/MenuButton";
+import { ArenaLoading } from "./ArenaLoading";
 import { usePause } from "./PauseProvider";
+import { TouchControls } from "./TouchControls";
 
 // Em dev, `?debugIslands` desenha os polígonos de colisão das ilhas.
 const DEBUG_ISLANDS =
@@ -36,6 +38,7 @@ function GameCanvasHost({
   onRetry,
 }: GameCanvasProps & { onRetry: () => void }) {
   const { paused } = usePause();
+  const rootRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Game | null>(null);
   const [load, setLoad] = useState<LoadState>({
@@ -54,6 +57,17 @@ function GameCanvasHost({
       .init(host, {
         options,
         debugIslands: DEBUG_ISLANDS,
+        onPlayerHealth: gameStore.setPlayerHealth,
+        onScore: gameStore.setScore,
+        onTimeLeft: gameStore.setTimeLeft,
+        // Direto no DOM (variáveis CSS lidas pelos botões de tiro): sem render por quadro.
+        onCooldowns: (ratios) => {
+          const root = rootRef.current;
+          if (!root) return;
+          for (const [slot, ratio] of Object.entries(ratios)) {
+            root.style.setProperty(`--cooldown-${slot}`, ratio.toFixed(3));
+          }
+        },
         onLoadProgress: (progress) => {
           if (!cancelled) setLoad({ status: "loading", progress });
         },
@@ -75,6 +89,7 @@ function GameCanvasHost({
       cancelled = true;
       gameRef.current = null;
       game.destroy(); // seguro antes do fim do init e se chamado duas vezes
+      gameStore.reset(); // a próxima partida começa com o HUD cheio
     };
   }, [options]);
 
@@ -84,20 +99,18 @@ function GameCanvasHost({
   }, [paused, options]);
 
   return (
-    <div className="game-canvas">
+    <div ref={rootRef} className="game-canvas">
       <div ref={hostRef} className="game-canvas__host" />
-      {load.status === "loading" && (
-        <p className="game-canvas__message" role="status">
-          Loading arena… {Math.round(load.progress * 100)}%
-        </p>
-      )}
-      {load.status === "error" && (
-        <div className="game-canvas__message" role="alert">
-          <p>The arena could not be loaded.</p>
-          <MenuButton size="sm" onClick={onRetry}>
-            Retry
-          </MenuButton>
-        </div>
+      <TouchControls
+        onAction={(action, pressed) =>
+          gameRef.current?.setAction(action, pressed)
+        }
+      />
+      {load.status !== "ready" && (
+        <ArenaLoading
+          progress={load.status === "loading" ? load.progress : null}
+          onRetry={onRetry}
+        />
       )}
     </div>
   );
