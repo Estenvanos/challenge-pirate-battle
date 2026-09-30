@@ -13,7 +13,8 @@ A 2D top-down naval shooter that runs entirely in the browser. Sail between isla
 
 [![Gameplay demo — click to watch the video](public/assets/demo/gameplay.png)](public/assets/demo/demo.mp4)
 
-▶️ [Watch the gameplay video](public/assets/demo/demo.mp4)
+▶️ [Watch the gameplay video](https://github.com/user-attachments/assets/723cad0c-c828-4875-9c52-938144300c1e)
+
 
 ## Table of contents
 
