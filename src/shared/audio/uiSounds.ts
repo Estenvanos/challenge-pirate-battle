@@ -1,9 +1,12 @@
 import type { MouseEvent, PointerEvent } from "react";
+import { isMuted } from "./mute";
 
 // Sons de interface dos menus (fora da partida; os sons do jogo ficam no SoundManager).
 const UI_SOUNDS = {
   hover: "/assets/sounds/ui_hover.wav",
   click: "/assets/sounds/ui_click.wav",
+  open: "/assets/sounds/ui_open.wav",
+  close: "/assets/sounds/ui_close.wav",
 } as const;
 
 export type UiSound = keyof typeof UI_SOUNDS;
@@ -24,6 +27,7 @@ function getAudio(sound: UiSound): HTMLAudioElement {
 }
 
 export function playUiSound(sound: UiSound): void {
+  if (isMuted()) return;
   const audio = getAudio(sound);
   audio.currentTime = 0;
   // O navegador bloqueia áudio antes da primeira interação: ignora a rejeição.
