@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { GameOptions } from "../../config/options";
 import { gameStore } from "../../game/bridge/gameStore";
-import { Game } from "../../game/core/Game";
+import { Game, type MatchResult } from "../../game/core/Game";
 import { ArenaLoading } from "./ArenaLoading";
 import { usePause } from "./PauseProvider";
 import { TouchControls } from "./TouchControls";
@@ -20,14 +20,17 @@ type LoadState =
 interface GameCanvasProps {
   /** Snapshot congelado das opções; fixo durante a partida. */
   options: Readonly<GameOptions>;
+  /** Fim da partida (tempo esgotado ou jogador destruído). */
+  onMatchEnd: (result: MatchResult) => void;
 }
 
-export function GameCanvas({ options }: GameCanvasProps) {
+export function GameCanvas({ options, onMatchEnd }: GameCanvasProps) {
   const [attempt, setAttempt] = useState(0);
   return (
     <GameCanvasHost
       key={attempt}
       options={options}
+      onMatchEnd={onMatchEnd}
       onRetry={() => setAttempt((n) => n + 1)}
     />
   );
@@ -35,12 +38,19 @@ export function GameCanvas({ options }: GameCanvasProps) {
 
 function GameCanvasHost({
   options,
+  onMatchEnd,
   onRetry,
 }: GameCanvasProps & { onRetry: () => void }) {
   const { paused } = usePause();
   const rootRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Game | null>(null);
+  // Sempre o callback do render atual, sem recriar o Game quando ele muda.
+  const onMatchEndRef = useRef(onMatchEnd);
+  useEffect(() => {
+    // Sincroniza o ref lido pelo Game (fora do React) com o callback atual; nada a desfazer.
+    onMatchEndRef.current = onMatchEnd;
+  });
   const [load, setLoad] = useState<LoadState>({
     status: "loading",
     progress: 0,
@@ -60,6 +70,7 @@ function GameCanvasHost({
         onPlayerHealth: gameStore.setPlayerHealth,
         onScore: gameStore.setScore,
         onTimeLeft: gameStore.setTimeLeft,
+        onMatchEnd: (result) => onMatchEndRef.current(result),
         // Direto no DOM (variáveis CSS lidas pelos botões de tiro): sem render por quadro.
         onCooldowns: (ratios) => {
           const root = rootRef.current;
