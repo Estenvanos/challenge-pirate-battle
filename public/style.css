@@ -1,3 +1,10 @@
+/* Rye (Google Fonts, OFL), servida localmente para não depender da rede. */
+@font-face {
+  font-family: "Rye";
+  font-display: swap;
+  src: url("/assets/fonts/rye-latin.woff2") format("woff2");
+}
+
 /* ---------- Tokens ---------- */
 :root {
   --color-cream: #fbe6b4;
@@ -14,6 +21,7 @@
   --color-focus: #ffe38a;
   --font-ui: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
   --font-display: "Arial Black", "Trebuchet MS", system-ui, sans-serif;
+  --font-carved: "Rye", Georgia, serif;
   --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -234,12 +242,15 @@ img {
     opacity 150ms ease;
 }
 
-.round-button:hover:not(:disabled) {
-  background-image: image-set(
-    url("/assets/png/default/ui/controls/button_round_hover.png") 1x,
-    url("/assets/png/retina/ui/controls/button_round_hover.png") 2x
-  );
-  transform: scale(1.12);
+/* Só com hover de verdade: no toque o :hover ficaria preso depois do toque. */
+@media (hover: hover) {
+  .round-button:hover:not(:disabled) {
+    background-image: image-set(
+      url("/assets/png/default/ui/controls/button_round_hover.png") 1x,
+      url("/assets/png/retina/ui/controls/button_round_hover.png") 2x
+    );
+    transform: scale(1.12);
+  }
 }
 
 .round-button:focus-visible {
@@ -594,6 +605,8 @@ img {
   );
 }
 
+/* --hp (0–1) recorta o preenchimento: na arte de 256 px ele vai de x = 30
+   (vazio) a x = 229 (cheio). */
 .hud__fill {
   position: absolute;
   inset: 0;
@@ -601,6 +614,21 @@ img {
   background-image: image-set(
     url("/assets/png/default/ui/hud/health_fill_green.png") 1x,
     url("/assets/png/retina/ui/hud/health_fill_green.png") 2x
+  );
+  clip-path: inset(0 calc((226 - 199 * var(--hp, 1)) / 256 * 100%) 0 0);
+}
+
+.hud__fill--mid {
+  background-image: image-set(
+    url("/assets/png/default/ui/hud/health_fill_amber.png") 1x,
+    url("/assets/png/retina/ui/hud/health_fill_amber.png") 2x
+  );
+}
+
+.hud__fill--low {
+  background-image: image-set(
+    url("/assets/png/default/ui/hud/health_fill_red.png") 1x,
+    url("/assets/png/retina/ui/hud/health_fill_red.png") 2x
   );
 }
 
@@ -620,43 +648,111 @@ img {
   inset: 0;
 }
 
+/* Sem gestos do navegador (zoom, rolagem) sobre a arena e os controles. */
+.game-canvas {
+  touch-action: none;
+}
+
 .game-canvas__host canvas {
   display: block;
 }
 
-.game-canvas__message {
+/* ---------- Carregamento da arena ---------- */
+/* Cobre a partida inteira (HUD e controles incluídos) com o fundo do menu. */
+.arena-loading {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  inset: 0;
+  z-index: 1;
   display: flex;
-  margin: 0;
-  padding: 16px 24px;
+  padding: clamp(8px, 2vh, 24px) 16px;
+  align-items: center;
+  justify-content: center;
+  background: #0b5f7a url("/assets/ui_scene_background.png") center / cover
+    no-repeat;
+}
+
+.arena-loading__error {
+  display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  border-radius: 6px;
-  color: var(--color-cream);
-  font-weight: 700;
-  background: var(--color-row);
-  transform: translate(-50%, -50%);
 }
 
-.game-canvas__message p {
-  margin: 0;
+/* Navio + barra: --hp (0–1) é o progresso, o mesmo recorte da barra de vida. */
+.arena-loading__voyage {
+  --ship-length: 96px;
+  display: flex;
+  flex-direction: column;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+}
+
+.arena-loading__sea {
+  position: relative;
+  height: 56px;
+}
+
+.arena-loading__ship {
+  position: absolute;
+  left: calc(var(--hp, 0) * (100% - var(--ship-length)));
+  display: grid;
+  width: var(--ship-length);
+  height: 100%;
+  place-items: center;
+  transition: left 200ms ease-out;
+  animation: arena-loading-bob 1.8s ease-in-out infinite;
+}
+
+/* A arte tem a proa para baixo; −90° aponta para a direita. */
+.arena-loading__ship img {
+  width: auto;
+  max-width: none;
+  height: var(--ship-length);
+  rotate: -90deg;
+}
+
+.arena-loading .hud__fill {
+  transition: clip-path 200ms ease-out;
+}
+
+@keyframes arena-loading-bob {
+  0%,
+  100% {
+    transform: translateY(2px) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateY(-3px) rotate(2deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arena-loading__ship {
+    animation: none;
+  }
+
+  .arena-loading__ship,
+  .arena-loading .hud__fill {
+    transition: none;
+  }
 }
 
 /* ---------- Controles na tela (movimento à esquerda, tiros à direita) ---------- */
+/* Triângulo compacto: ação principal em cima, centralizada sobre as duas laterais. */
 .touch-controls {
+  --control-size: 64px;
   position: absolute;
   bottom: 16px;
   display: grid;
-  grid-template-columns: repeat(3, 64px);
+  grid-template-columns: repeat(2, var(--control-size));
   grid-template-rows: auto auto;
-  gap: 0 12px;
+  gap: 4px 8px;
   align-items: start;
   grid-template-areas:
-    ". main ."
-    "side-a . side-b";
+    "main main"
+    "side-a side-b";
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .touch-controls--left {
@@ -701,9 +797,42 @@ img {
 }
 
 .round-button--control {
-  width: 64px;
-  height: 64px;
+  position: relative;
+  width: var(--control-size, 64px);
+  height: var(--control-size, 64px);
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Cooldown da arma: véu branco que some conforme ela recarrega. As variáveis
+   --cooldown-* (1 → 0) são escritas pelo GameCanvas a cada quadro. */
+.touch-controls__fire_front {
+  --cooldown: var(--cooldown-front, 0);
+}
+
+.touch-controls__fire_left {
+  --cooldown: var(--cooldown-left, 0);
+}
+
+.touch-controls__fire_right {
+  --cooldown: var(--cooldown-right, 0);
+}
+
+.touch-controls .round-button--control::after {
+  position: absolute;
+  inset: 5%; /* a borda do sprite é transparente */
+  border-radius: 50%;
+  background: #fff;
+  opacity: calc(var(--cooldown, 0) * 0.6);
+  pointer-events: none;
+  content: "";
+}
+
+/* No toque a legenda de tecla não serve. */
+@media (pointer: coarse) {
+  .touch-control__keys {
+    display: none;
+  }
 }
 
 .round-button--control .round-button__icon {
@@ -724,7 +853,7 @@ img {
 
 /* Na partida, o logo sobe para não cobrir os controles de tiro. */
 .scene:has(.match) .scene__logo {
-  bottom: 168px;
+  bottom: 204px;
 }
 
 /* ---------- Mobile ---------- */
@@ -734,6 +863,45 @@ img {
     width: 96px;
   }
 
+  .panel {
+    border-width: 30px 24px;
+  }
+
+  .panel__content {
+    padding: 8px 4px;
+  }
+
+  .menu-button {
+    width: min(200px, 28vh);
+    font-size: 1.05rem;
+  }
+
+  .menu-button--sm,
+  .menu__log-actions .menu-button {
+    width: 140px;
+    font-size: 0.7rem;
+  }
+
+  .log-table th,
+  .log-table td {
+    padding-inline: 8px;
+  }
+
+  .log-table td {
+    font-size: 0.85rem;
+  }
+
+  .log-table__muted {
+    font-size: 0.7rem;
+  }
+
+  .log-table__name {
+    white-space: normal;
+  }
+}
+
+/* ---------- Partida no mobile (retrato estreito ou paisagem baixa) ---------- */
+@media (max-width: 600px), (max-height: 480px) {
   /* Contadores menores para caber ao lado da pausa. */
   .match__bar,
   .hud {
@@ -780,39 +948,26 @@ img {
     height: 22px;
   }
 
-  .panel {
-    border-width: 30px 24px;
+  .touch-controls {
+    --control-size: 56px;
+    bottom: 8px;
   }
 
-  .panel__content {
-    padding: 8px 4px;
+  .touch-controls--left {
+    left: 8px;
   }
 
-  .menu-button {
-    font-size: 1.25rem;
+  .touch-controls--right {
+    right: 8px;
   }
 
-  .menu-button--sm,
-  .menu__log-actions .menu-button {
-    width: 140px;
-    font-size: 0.7rem;
+  .round-button--control .round-button__icon {
+    width: 28px;
+    height: 28px;
   }
 
-  .log-table th,
-  .log-table td {
-    padding-inline: 8px;
-  }
-
-  .log-table td {
-    font-size: 0.85rem;
-  }
-
-  .log-table__muted {
-    font-size: 0.7rem;
-  }
-
-  .log-table__name {
-    white-space: normal;
+  .scene:has(.match) .scene__logo {
+    bottom: 136px;
   }
 }
 
@@ -840,13 +995,81 @@ img {
   backdrop-filter: blur(2px);
 }
 
+/* Altura explícita: o max-height em % do painel não resolve dentro do <dialog>,
+   e sem ela o conteúdo cortaria em vez de rolar. */
 .modal .panel {
   width: 100%;
+  max-height: calc(100dvh - 16px);
 }
 
 .modal__text {
   margin: 0;
   color: var(--color-muted);
+}
+
+/* ---------- Match result ---------- */
+.result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(6px, 1.4vh, 12px);
+}
+
+/* Placa de madeira com o número entalhado: veios em gradiente, e o texto escuro
+   com sombra clara embaixo e escura em cima, como uma ranhura na tábua. */
+.result__score {
+  min-width: 3.2em;
+  margin: 16px 0 0;
+  padding: 0.3em 0.9em 0.2em;
+  border: 3px solid var(--color-wood-dark);
+  border-radius: 10px;
+  background:
+    repeating-linear-gradient(
+      178deg,
+      rgba(59, 34, 8, 0) 0 7px,
+      rgba(59, 34, 8, 0.18) 7px 9px,
+      rgba(59, 34, 8, 0) 9px 16px
+    ),
+    linear-gradient(180deg, #c98a45, #a86a2c 55%, #8a5520);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 220, 160, 0.45),
+    inset 0 -3px 0 rgba(59, 34, 8, 0.45),
+    0 4px 10px rgba(0, 0, 0, 0.45);
+  color: #4a2a0c;
+  font-family: var(--font-carved);
+  font-size: clamp(2.5rem, 9vh, 4.25rem);
+  line-height: 1;
+  text-shadow:
+    0 -2px 1px rgba(30, 15, 2, 0.7),
+    0 2px 0 rgba(255, 214, 150, 0.55);
+}
+
+/* Moldura de madeira (o mesmo 9-slice do painel, menor) em volta do título. */
+.result__title {
+  padding: 2px 12px;
+  border-style: solid;
+  border-width: 20px 16px;
+  border-image-source: url("/assets/png/retina/ui/menu/panel_menu.png");
+  border-image-slice: 80 64 fill;
+  border-image-repeat: stretch;
+}
+
+.result__details {
+  margin: 0;
+  color: var(--color-cream);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.result__retry {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-cream);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 /* ---------- Player name form ---------- */
@@ -928,5 +1151,68 @@ img {
   .text-field:hover,
   .text-field:focus-visible {
     transform: none;
+  }
+}
+
+/* ---------- Paisagem baixa (celular deitado): painéis, botões e controles menores ---------- */
+/* No fim do arquivo para valer sobre as regras base de modal e painel. */
+@media (max-height: 480px) {
+  .panel {
+    border-width: 26px 22px;
+  }
+
+  .panel__content {
+    padding: 4px 8px;
+    gap: 6px;
+  }
+
+  .panel__title {
+    font-size: 1.25rem;
+  }
+
+  .modal {
+    width: min(100% - 32px, 380px);
+  }
+
+  /* Largura fixa: a regra base usa vh e, deitado, o texto não caberia. */
+  .menu-button {
+    width: 140px;
+    padding: 0 20px 3px;
+    font-size: 0.85rem;
+  }
+
+  .menu-button--sm,
+  .menu__log-actions .menu-button {
+    width: 124px;
+    padding-inline: 14px;
+    font-size: 0.65rem;
+  }
+
+  /* Play e Options lado a lado: o menu cabe sem rolar. */
+  .menu__actions {
+    flex-direction: row;
+  }
+
+  .option {
+    gap: 2px;
+  }
+
+  .option__value {
+    min-width: 72px;
+    font-size: 1.15rem;
+  }
+
+  .option__stepper .round-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .touch-controls {
+    --control-size: 48px;
+  }
+
+  .touch-controls .round-button__icon {
+    width: 24px;
+    height: 24px;
   }
 }

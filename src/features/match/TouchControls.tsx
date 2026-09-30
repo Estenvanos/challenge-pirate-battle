@@ -29,12 +29,24 @@ function keysFor(action: Action) {
   return KEY_BINDINGS.find((binding) => binding.action === action)?.keys ?? [];
 }
 
-// Controles na tela: por enquanto só visuais, sem ação ligada ao jogo.
-export function TouchControls() {
+type OnAction = (action: Action, pressed: boolean) => void;
+
+// Controles na tela: disparam as mesmas ações do teclado enquanto pressionados.
+export function TouchControls({ onAction }: { onAction: OnAction }) {
   return (
     <>
-      <ControlGroup label="Movement" side="left" controls={MOVEMENT} />
-      <ControlGroup label="Weapons" side="right" controls={WEAPONS} />
+      <ControlGroup
+        label="Movement"
+        side="left"
+        controls={MOVEMENT}
+        onAction={onAction}
+      />
+      <ControlGroup
+        label="Weapons"
+        side="right"
+        controls={WEAPONS}
+        onAction={onAction}
+      />
     </>
   );
 }
@@ -43,10 +55,12 @@ function ControlGroup({
   label,
   side,
   controls,
+  onAction,
 }: {
   label: string;
   side: "left" | "right";
   controls: readonly ControlDefinition[];
+  onAction: OnAction;
 }) {
   return (
     <div
@@ -56,12 +70,24 @@ function ControlGroup({
     >
       {controls.map(({ action, icon, label: controlLabel }) => {
         const keys = keysFor(action);
+        const release = () => onAction(action, false);
         return (
           <div key={icon} className={`touch-control touch-controls__${icon}`}>
             <RoundButton
               icon={icon}
               label={controlLabel}
               className="round-button--control"
+              silent
+              // Captura o ponteiro: cada dedo segura o seu botão (multi-touch) e
+              // soltar fora dele ainda encerra a ação.
+              onPointerDown={(event) => {
+                event.currentTarget.setPointerCapture(event.pointerId);
+                onAction(action, true);
+              }}
+              onPointerUp={release}
+              onPointerCancel={release}
+              onLostPointerCapture={release}
+              onContextMenu={(event) => event.preventDefault()}
               aria-keyshortcuts={
                 keys.map(({ code }) => code).join(" ") || undefined
               }

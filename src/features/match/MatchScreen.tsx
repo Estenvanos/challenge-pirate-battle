@@ -6,7 +6,6 @@ import { GameCanvas } from "./GameCanvas";
 import { Hud } from "./Hud";
 import { PauseMenu } from "./PauseMenu";
 import { usePause } from "./PauseProvider";
-import { TouchControls } from "./TouchControls";
 
 interface MatchScreenProps {
   config: Readonly<GameOptions>;
@@ -62,7 +61,6 @@ export function MatchScreen({
         {config.spawnIntervalSec} s enemy spawn
       </h1>
       <GameCanvas options={config} />
-      <TouchControls />
       <div className="match__bar">
         <Hud sessionTimeSec={config.sessionTimeSec} />
         <RoundButton

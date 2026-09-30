@@ -19,6 +19,8 @@ interface RoundButtonProps extends Omit<
 > {
   icon: RoundIcon;
   label: string;
+  /** Sem sons de interface (controles da partida). */
+  silent?: boolean;
 }
 
 export function RoundButton({
@@ -26,6 +28,7 @@ export function RoundButton({
   label,
   type = "button",
   className,
+  silent = false,
   ...rest
 }: RoundButtonProps) {
   const image = pngAsset(`ui/controls/icon_${icon}.png`);
@@ -34,7 +37,7 @@ export function RoundButton({
       type={type}
       className={className ? `round-button ${className}` : "round-button"}
       aria-label={label}
-      {...withUiSounds(rest)}
+      {...(silent ? rest : withUiSounds(rest))}
     >
       <img
         className="round-button__icon"
