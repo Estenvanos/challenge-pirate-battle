@@ -48,7 +48,23 @@ export const GRASS_PIECES: LandPieces = {
   ],
 };
 
+// Água rasa 3×3 (tiles 10–44): branco translúcido desenhado em volta da terra.
+export const SHALLOW_PIECES: LandPieces = {
+  corners: { topLeft: 10, topRight: 12, bottomLeft: 42, bottomRight: 44 },
+  top: [11, 11],
+  bottom: [43, 43],
+  left: [26, 26],
+  right: [28, 28],
+  center: [
+    [27, 27],
+    [27, 27],
+  ],
+};
+
 type Outline = readonly (readonly [number, number])[];
+
+/** Lado do tile (px) em que os contornos abaixo foram medidos. */
+export const OUTLINE_TILE_SIZE = 64;
 
 // Contorno convexo da terra em cada peça de canto (px do tile, sentido
 // horário), medido no alfa da arte. Os cantos são arredondados e cada um tem
@@ -153,6 +169,29 @@ function resolveAxis(
     return { band: original ? "end" : "start", flip: !original, index: 0 };
   }
   return { band: "middle", flip: along.flip, index: along.index };
+}
+
+/**
+ * Peça pela posição na região, sem espelhar nem alternar: serve a desenhos
+ * uniformes, como a água rasa.
+ */
+export function resolvePlainTile(
+  pieces: LandPieces,
+  { top, bottom, left, right }: CellSides,
+): GroundTile {
+  const { corners } = pieces;
+  let tile = pieces.center[0][0];
+  if (top)
+    tile = left ? corners.topLeft : right ? corners.topRight : pieces.top[0];
+  else if (bottom)
+    tile = left
+      ? corners.bottomLeft
+      : right
+        ? corners.bottomRight
+        : pieces.bottom[0];
+  else if (left) tile = pieces.left[0];
+  else if (right) tile = pieces.right[0];
+  return { tile, flipX: false, flipY: false, rotation: 0 };
 }
 
 export function resolveLandTile(
