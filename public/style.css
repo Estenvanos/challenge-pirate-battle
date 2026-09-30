@@ -513,10 +513,45 @@ img {
 .match__bar {
   position: absolute;
   top: 8px;
-  left: 8px;
+  right: 8px;
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+/* ---------- HUD (pontuação e tempo, à esquerda da pausa como no sample) ---------- */
+.hud {
+  display: flex;
+  margin: 0;
+  gap: 16px;
+}
+
+.hud__counter {
+  display: flex;
+  width: 160px;
+  height: 56px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-variant-numeric: tabular-nums;
+  background: center / 100% 100% no-repeat;
+  background-image: image-set(
+    url("/assets/png/default/ui/hud/counter_panel.png") 1x,
+    url("/assets/png/retina/ui/hud/counter_panel.png") 2x
+  );
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+}
+
+.hud__icon {
+  width: 28px;
+  height: 28px;
+}
+
+.hud__value {
+  margin: 0;
 }
 
 /* O canvas preenche a área; o Pixi faz o letterbox da arena dentro dele. */
@@ -617,6 +652,17 @@ img {
   height: 32px;
 }
 
+/* A pausa acompanha a altura dos contadores do HUD. */
+.match__bar .round-button--control {
+  width: 56px;
+  height: 56px;
+}
+
+.match__bar .round-button--control .round-button__icon {
+  width: 28px;
+  height: 28px;
+}
+
 /* Na partida, o logo sobe para não cobrir os controles de tiro. */
 .scene:has(.match) .scene__logo {
   bottom: 168px;
@@ -627,6 +673,35 @@ img {
   .scene__logo {
     right: 16px;
     width: 96px;
+  }
+
+  /* Contadores menores para caber ao lado da pausa. */
+  .match__bar,
+  .hud {
+    gap: 8px;
+  }
+
+  .hud__counter {
+    width: 112px;
+    height: 40px;
+    gap: 4px;
+    font-size: 1rem;
+  }
+
+  .hud__icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* 44 px: mínimo confortável para toque, mesmo com o contador em 40 px. */
+  .match__bar .round-button--control {
+    width: 44px;
+    height: 44px;
+  }
+
+  .match__bar .round-button--control .round-button__icon {
+    width: 22px;
+    height: 22px;
   }
 
   .panel {
