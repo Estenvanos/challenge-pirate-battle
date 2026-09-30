@@ -5,14 +5,18 @@ import type { Enemy } from "../entities";
 import { nextWaypoint, updateFlowField } from "../navigation";
 import type { World } from "../World";
 
-/** Leme proporcional ao erro de rumo, saturando em `fullRudderAngle`. */
+/**
+ * Leme proporcional ao erro de rumo, saturando em `fullRudderAngle`. Retorna
+ * o erro (rad).
+ */
 function steerToward(
   enemy: Enemy,
   target: Point,
   fullRudderAngle: number,
-): void {
+): number {
   const error = angleDelta(enemy.rotation, angleTo(enemy, target));
   enemy.control.turn = Math.max(-1, Math.min(1, error / fullRudderAngle));
+  return error;
 }
 
 /**
@@ -20,14 +24,15 @@ function steerToward(
  * movementSystem, com a mesma física do jogador.
  * O rumo segue o campo de fluxo até o jogador (contorna ilhas); perto dele,
  * mira direto.
- * - Sem arma (Chaser): vela sempre aberta, rumo ao jogador.
+ * A vela abre conforme o alinhamento com o rumo: o navio freia nas curvas.
+ * - Sem arma (Chaser): sempre rumo ao jogador.
  * - Com arma (Shooters): aproxima-se e recolhe a vela dentro de
- *   `keepDistance`; à deriva ele para aos poucos e segue virando a proa para
- *   o jogador.
+ *   `keepDistance`; ele para e segue virando a proa para o jogador.
  */
 export function enemyAiSystem(world: World, config: MatchConfig): void {
   const { player } = world;
-  const { fullRudderAngle, pathLookahead, kinds } = config.enemies;
+  const { fullRudderAngle, minTurnThrottle, pathLookahead, kinds } =
+    config.enemies;
   updateFlowField(world.flowField, world.navGrid, player);
   for (const enemy of world.enemies) {
     const waypoint = nextWaypoint(
@@ -36,9 +41,11 @@ export function enemyAiSystem(world: World, config: MatchConfig): void {
       enemy,
       pathLookahead,
     );
-    steerToward(enemy, waypoint ?? player, fullRudderAngle);
+    const error = steerToward(enemy, waypoint ?? player, fullRudderAngle);
     const { weapon } = kinds[enemy.kind];
-    enemy.control.forward =
-      !weapon || distance(enemy, player) > weapon.keepDistance;
+    const holding = weapon && distance(enemy, player) <= weapon.keepDistance;
+    enemy.control.throttle = holding
+      ? 0
+      : Math.max(minTurnThrottle, Math.cos(error));
   }
 }

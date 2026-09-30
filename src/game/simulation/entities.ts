@@ -11,14 +11,16 @@ export interface Ship {
   rotation: number;
   /** Velocidade atual ao longo da proa (px/s). */
   speed: number;
-  /** Velocidade de giro atual (rad/s); positivo = sentido horário. */
-  angularVelocity: number;
+  /** Posição e rumo no início do passo: o desenho interpola entre eles e os atuais. */
+  prevX: number;
+  prevY: number;
+  prevRotation: number;
   readonly radius: number;
 }
 
-/** Comando de um navio em um passo: vela aberta e leme (-1 bombordo … 1 boreste). */
+/** Comando de um navio em um passo: vela (0 recolhida … 1 toda aberta) e leme (-1 bombordo … 1 boreste). */
 export interface ShipControl {
-  forward: boolean;
+  throttle: number;
   turn: number;
 }
 
@@ -35,11 +37,17 @@ export interface Enemy extends Ship {
 
 export interface Projectile {
   readonly id: string;
+  readonly owner: "player" | "enemy";
   x: number;
   y: number;
+  /** Posição no início do passo, para o desenho interpolar. */
+  prevX: number;
+  prevY: number;
   readonly vx: number;
   readonly vy: number;
   /** Distância já percorrida (px); some ao passar do alcance. */
   travelled: number;
+  /** Alcance da arma que o disparou (px). */
+  readonly range: number;
   readonly radius: number;
 }

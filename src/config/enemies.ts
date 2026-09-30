@@ -1,22 +1,28 @@
 // Tipos de inimigo: movimento, taxa de spawn, vida, arma e aparência.
 // Para criar ou rebalancear um inimigo, basta mexer aqui.
 
-/** Modelo de barco (vela, deriva e leme), comum ao jogador e aos inimigos. */
+/** Modelo de barco (vela e leme), comum ao jogador e aos inimigos. */
 export interface ShipMotion {
   /** Velocidade máxima para a frente (px/s). */
   readonly maxSpeed: number;
-  /** Aceleração com a vela aberta (px/s²). */
+  /** Aceleração até a velocidade pedida (px/s²). */
   readonly acceleration: number;
-  /** Desaceleração sem vela, à deriva (px/s²). */
+  /** Desaceleração quando a velocidade pedida é menor que a atual (px/s²). */
   readonly drag: number;
-  /** Velocidade de giro máxima, em velocidade máxima (rad/s). */
-  readonly maxTurnSpeed: number;
-  /** Quão rápido o leme muda a velocidade de giro (rad/s²). */
-  readonly turnAcceleration: number;
-  /** Fração do giro disponível com o navio parado. */
-  readonly minRudder: number;
-  /** Raio do círculo de colisão (px). */
+  /** Velocidade de giro com o leme todo (rad/s); igual parado ou em movimento. */
+  readonly turnSpeed: number;
+  /** Raio de colisão (px), ~meia largura do casco. */
   readonly radius: number;
+  /** Meio comprimento do casco (px): a colisão com ilhas cobre proa e popa. */
+  readonly hullHalfLength: number;
+}
+
+/** Projétil de uma arma. */
+export interface ProjectileSpec {
+  /** Velocidade (px/s). */
+  readonly speed: number;
+  /** Distância máxima percorrida antes de cair na água (px). */
+  readonly range: number;
 }
 
 /** Navio em png/<pasta>/ships/<nome>.png. */
@@ -39,6 +45,7 @@ export interface EnemyWeapon {
   readonly aimTolerance: number;
   /** Intervalo entre disparos (s). */
   readonly fireCooldownSec: number;
+  readonly projectile: ProjectileSpec;
 }
 
 export interface EnemySpec extends ShipMotion {
@@ -54,10 +61,7 @@ export interface EnemySpec extends ShipMotion {
 
 export type EnemyKind = "chaser" | "shooter" | "bigShooter";
 
-/** Inimigos ~20% mais lentos que o jogador, com a mesma sensação de inércia. */
-const SPEED_FACTOR = 0.8;
-
-/** Escala do navio grande; com raio ~31 ele ainda passa em canais de um tile (64 px). */
+/** Navio grande, em relação ao médio; com raio ~41 ele ainda passa em canais de um tile (128 px). */
 const BIG_SCALE = 1.2;
 
 const RED: DamageSprites = Object.freeze({
@@ -70,46 +74,71 @@ const YELLOW: DamageSprites = Object.freeze({
   destroyed: "ship_24",
 });
 
-const WEAPON: EnemyWeapon = Object.freeze({
-  keepDistance: 240,
-  attackRange: 340,
-  aimTolerance: 0.25,
-  fireCooldownSec: 1.8,
+const BLUE: DamageSprites = Object.freeze({
+  stages: Object.freeze(["ship_5", "ship_11", "ship_17"] as const),
+  destroyed: "ship_23",
 });
 
-/** Recebe o navio do jogador porque os inimigos usam o mesmo modelo, em escala. */
-export function createEnemyConfig(player: ShipMotion) {
+const WEAPON: EnemyWeapon = Object.freeze({
+  keepDistance: 380,
+  attackRange: 560,
+  aimTolerance: 0.14,
+  fireCooldownSec: 2.2,
+  projectile: Object.freeze({ speed: 520, range: 620 }),
+});
+
+/** Recebe o navio do jogador porque os inimigos usam o mesmo casco. */
+export function createEnemyConfig(
+  player: ShipMotion & { readonly spriteScale: number },
+) {
   // Navio médio: mesmo casco do jogador.
   const medium = {
-    maxSpeed: player.maxSpeed * SPEED_FACTOR,
-    acceleration: player.acceleration * SPEED_FACTOR,
-    drag: player.drag * SPEED_FACTOR,
-    maxTurnSpeed: player.maxTurnSpeed,
-    turnAcceleration: player.turnAcceleration,
-    minRudder: player.minRudder,
     radius: player.radius,
+    hullHalfLength: player.hullHalfLength,
     maxHp: 3,
-    spriteScale: 1,
+    spriteScale: player.spriteScale,
+  };
+  // Mais lento que o jogador (210 px/s), mas rápido o bastante para alcançá-lo nas curvas.
+  const chaserMotion = {
+    maxSpeed: 150,
+    acceleration: 225,
+    drag: 225,
+    turnSpeed: 2,
+  };
+  // O mais lento e o que gira menos: dá para fugir da mira dele.
+  const shooterMotion = {
+    maxSpeed: 125,
+    acceleration: 187.5,
+    drag: 187.5,
+    turnSpeed: 1.7,
   };
 
   const kinds: Readonly<Record<EnemyKind, EnemySpec>> = Object.freeze({
     /** Vermelho: persegue o jogador. */
-    chaser: Object.freeze({ ...medium, spawnWeight: 0.5, sprites: RED }),
+    chaser: Object.freeze({
+      ...medium,
+      ...chaserMotion,
+      spawnWeight: 0.2,
+      sprites: RED,
+    }),
     /** Amarelo: mantém distância e atira. */
     shooter: Object.freeze({
       ...medium,
-      spawnWeight: 0.35,
+      ...shooterMotion,
+      spawnWeight: 0.56,
       sprites: YELLOW,
       weapon: WEAPON,
     }),
-    /** Amarelo grande: um Shooter com mais vida. */
+    /** Azul grande: um Shooter com mais vida. */
     bigShooter: Object.freeze({
       ...medium,
+      ...shooterMotion,
       radius: player.radius * BIG_SCALE,
+      hullHalfLength: player.hullHalfLength * BIG_SCALE,
       maxHp: 6,
-      spriteScale: BIG_SCALE,
-      spawnWeight: 0.15,
-      sprites: YELLOW,
+      spriteScale: player.spriteScale * BIG_SCALE,
+      spawnWeight: 0.24,
+      sprites: BLUE,
       weapon: WEAPON,
     }),
   });
@@ -120,6 +149,8 @@ export function createEnemyConfig(player: ShipMotion) {
      * proporcional, para o navio não ficar ziguezagueando sobre o alvo.
      */
     fullRudderAngle: 0.6,
+    /** Fração mínima da velocidade em curva: o inimigo freia quanto mais desalinhado está do rumo. */
+    minTurnThrottle: 0.3,
     /** Quantas células à frente no caminho a IA mira (contorno de ilhas). */
     pathLookahead: 2,
     kinds,

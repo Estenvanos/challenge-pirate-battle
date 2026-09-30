@@ -1,3 +1,4 @@
+import type { MatchConfig } from "../../../config/gameConfig";
 import { circleVsPolygon } from "../../physics/collision";
 import type { Ship } from "../entities";
 import type { World } from "../World";
@@ -16,10 +17,13 @@ function absorbImpact(ship: Ship, normalX: number, normalY: number): void {
  * Empurra os navios para fora das ilhas pelo vetor de translação mínima (eles
  * deslizam ao longo da costa) e os mantém dentro dos limites da arena.
  */
-export function collisionSystem(world: World): void {
+export function collisionSystem(world: World, config: MatchConfig): void {
   separateEnemies(world.enemies);
-  collideWithArena(world, world.player);
-  for (const enemy of world.enemies) collideWithArena(world, enemy);
+  collideWithArena(world, world.player, config.player.hullHalfLength);
+  for (const enemy of world.enemies) {
+    const { hullHalfLength } = config.enemies.kinds[enemy.kind];
+    collideWithArena(world, enemy, hullHalfLength);
+  }
 }
 
 /**
@@ -48,13 +52,25 @@ function separateEnemies(enemies: readonly Ship[]): void {
   }
 }
 
-function collideWithArena(world: World, ship: Ship): void {
+function collideWithArena(
+  world: World,
+  ship: Ship,
+  hullHalfLength: number,
+): void {
+  // O casco é comprido: três círculos (popa, centro, proa) cobrem o
+  // comprimento, para a proa não entrar na ilha numa batida de frente.
+  const reach = Math.max(0, hullHalfLength - ship.radius);
+  const dirX = Math.cos(ship.rotation);
+  const dirY = Math.sin(ship.rotation);
   for (const island of world.islands) {
-    const hit = circleVsPolygon(ship, ship.radius, island);
-    if (!hit) continue;
-    ship.x += hit.normal.x * hit.depth;
-    ship.y += hit.normal.y * hit.depth;
-    absorbImpact(ship, hit.normal.x, hit.normal.y);
+    for (const along of [-reach, 0, reach]) {
+      const probe = { x: ship.x + dirX * along, y: ship.y + dirY * along };
+      const hit = circleVsPolygon(probe, ship.radius, island);
+      if (!hit) continue;
+      ship.x += hit.normal.x * hit.depth;
+      ship.y += hit.normal.y * hit.depth;
+      absorbImpact(ship, hit.normal.x, hit.normal.y);
+    }
   }
 
   const { width, height } = world.arena;

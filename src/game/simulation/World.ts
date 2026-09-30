@@ -22,6 +22,28 @@ export interface WorldMap {
   groundAt(col: number, row: number): unknown;
 }
 
+/** Acontecimento pontual de um passo, para quem reage fora da simulação (áudio, efeitos). */
+export type WorldEvent =
+  | {
+      readonly type: "shotFired";
+      /** Proa (um projétil) ou bordada (vários). */
+      readonly weapon: "front" | "side";
+      readonly shipId: string;
+      /** Boca do canhão (centro da bordada) e direção do disparo (rad). */
+      readonly x: number;
+      readonly y: number;
+      readonly angle: number;
+      readonly shots: number;
+    }
+  | {
+      readonly type: "projectileEnded";
+      /** Fim do alcance (cai na água), ilha, borda da arena ou casco de um navio. */
+      readonly cause: "range" | "island" | "bounds" | "ship";
+      readonly x: number;
+      readonly y: number;
+    }
+  | { readonly type: "enemySpawned"; readonly x: number; readonly y: number };
+
 /** Estado contínuo da partida. Uma partida nova cria um World novo. */
 export interface World {
   readonly arena: { readonly width: number; readonly height: number };
@@ -32,8 +54,12 @@ export interface World {
   readonly flowField: FlowField;
   readonly rng: Rng;
   readonly player: Ship;
+  /** Segundos até cada arma do jogador poder disparar de novo. */
+  readonly playerCooldowns: { front: number; left: number; right: number };
   enemies: Enemy[];
   projectiles: Projectile[];
+  /** Eventos dos últimos passos; quem consome (o `Game`) esvazia a lista. */
+  readonly events: WorldEvent[];
   /** Tempo acumulado desde o último spawn (s). */
   spawnTimer: number;
   /** Contador para ids únicos de inimigos e projéteis. */
@@ -59,11 +85,15 @@ export function createWorld(
       y: map.playerSpawn.y,
       rotation: config.player.initialRotation,
       speed: 0,
-      angularVelocity: 0,
+      prevX: map.playerSpawn.x,
+      prevY: map.playerSpawn.y,
+      prevRotation: config.player.initialRotation,
       radius: config.player.radius,
     },
+    playerCooldowns: { front: 0, left: 0, right: 0 },
     enemies: [],
     projectiles: [],
+    events: [],
     spawnTimer: 0,
     nextId: 1,
   };

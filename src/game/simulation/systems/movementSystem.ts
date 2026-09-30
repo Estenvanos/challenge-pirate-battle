@@ -9,9 +9,9 @@ function approach(current: number, target: number, maxDelta: number): number {
 }
 
 /**
- * Movimento com inércia, como um barco: a vela acelera aos poucos, sem ela o
- * navio segue à deriva até parar, e o leme muda o giro gradualmente. O giro
- * rende mais com velocidade (água passando pelo leme).
+ * O leme gira o navio direto, sem inércia, igual parado ou em movimento. A
+ * velocidade vai aos poucos até a pedida pela vela: `acceleration` subindo,
+ * `drag` descendo.
  */
 function sail(
   ship: Ship,
@@ -19,27 +19,15 @@ function sail(
   motion: ShipMotion,
   dt: number,
 ): void {
-  const {
-    maxSpeed,
-    acceleration,
-    drag,
-    maxTurnSpeed,
-    turnAcceleration,
-    minRudder,
-  } = motion;
+  const { maxSpeed, acceleration, drag, turnSpeed } = motion;
 
-  ship.speed = control.forward
-    ? approach(ship.speed, maxSpeed, acceleration * dt)
-    : approach(ship.speed, 0, drag * dt);
-
-  const rudder = minRudder + (1 - minRudder) * (ship.speed / maxSpeed);
-  ship.angularVelocity = approach(
-    ship.angularVelocity,
-    control.turn * maxTurnSpeed * rudder,
-    turnAcceleration * dt,
+  ship.rotation += control.turn * turnSpeed * dt;
+  const target = maxSpeed * control.throttle;
+  ship.speed = approach(
+    ship.speed,
+    target,
+    (ship.speed < target ? acceleration : drag) * dt,
   );
-
-  ship.rotation += ship.angularVelocity * dt;
   ship.x += Math.cos(ship.rotation) * ship.speed * dt;
   ship.y += Math.sin(ship.rotation) * ship.speed * dt;
 }
@@ -54,7 +42,7 @@ export function movementSystem(
   sail(
     world.player,
     {
-      forward: actions.forward,
+      throttle: Number(actions.forward),
       turn: Number(actions.rotateRight) - Number(actions.rotateLeft),
     },
     config.player,

@@ -5,6 +5,9 @@ export interface ArenaSize {
   readonly height: number;
 }
 
+/** Decaimento do tranco da tela (1/s). */
+const KICK_DECAY = 16;
+
 /**
  * Dono da Application do Pixi. Ajusta a arena à área do host mantendo a
  * proporção (letterbox); redimensionar muda só a apresentação.
@@ -16,6 +19,12 @@ export class PixiRenderer {
   private app: Application | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private destroyed = false;
+  /** Posição do mundo no letterbox, sem o tranco. */
+  private baseX = 0;
+  private baseY = 0;
+  /** Tranco da tela (px da arena), que decai sozinho. */
+  private kickX = 0;
+  private kickY = 0;
 
   constructor(private readonly arena: ArenaSize) {}
 
@@ -44,6 +53,24 @@ export class PixiRenderer {
     });
     this.resizeObserver.observe(host);
     this.fitArena();
+
+    app.ticker.add((ticker) => {
+      if (this.kickX === 0 && this.kickY === 0) return;
+      const decay = Math.exp((-KICK_DECAY * ticker.deltaMS) / 1000);
+      this.kickX = Math.abs(this.kickX) < 0.01 ? 0 : this.kickX * decay;
+      this.kickY = Math.abs(this.kickY) < 0.01 ? 0 : this.kickY * decay;
+      this.applyPosition();
+    });
+  }
+
+  /**
+   * Tranco da tela no sentido oposto a `angle` (rad), de `amount` px da arena.
+   * Só visual; ignorado com `prefers-reduced-motion`.
+   */
+  kick(angle: number, amount: number): void {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    this.kickX -= Math.cos(angle) * amount;
+    this.kickY -= Math.sin(angle) * amount;
   }
 
   /** Registra uma chamada por quadro (delta em ms); retorna a função que a remove. */
@@ -89,9 +116,16 @@ export class PixiRenderer {
       height / this.arena.height,
     );
     this.world.scale.set(scale);
+    this.baseX = (width - this.arena.width * scale) / 2;
+    this.baseY = (height - this.arena.height * scale) / 2;
+    this.applyPosition();
+  }
+
+  private applyPosition(): void {
+    const scale = this.world.scale.x;
     this.world.position.set(
-      (width - this.arena.width * scale) / 2,
-      (height - this.arena.height * scale) / 2,
+      this.baseX + this.kickX * scale,
+      this.baseY + this.kickY * scale,
     );
   }
 }

@@ -6,8 +6,11 @@ export interface GameLoopConfig {
 export interface GameLoopCallbacks {
   /** Um passo fixo da simulação. */
   readonly update: (dt: number) => void;
-  /** Desenho, uma vez por quadro, depois dos passos. */
-  readonly render: () => void;
+  /**
+   * Desenho, uma vez por quadro, depois dos passos. `alpha` (0–1) é a fração
+   * do próximo passo já decorrida, para interpolar do estado anterior ao atual.
+   */
+  readonly render: (alpha: number) => void;
 }
 
 /**
@@ -29,6 +32,6 @@ export class GameLoop {
       this.callbacks.update(stepSec);
       this.accumulator -= stepSec;
     }
-    this.callbacks.render();
+    this.callbacks.render(this.accumulator / stepSec);
   }
 }
