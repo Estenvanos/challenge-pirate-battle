@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { GameOptions } from "../config/options";
 import { CaptainsLog } from "../features/log/CaptainsLog";
 import type { LogTab } from "../features/log/constants";
@@ -6,6 +6,7 @@ import { MatchScreen } from "../features/match/MatchScreen";
 import { MainMenu } from "../features/menu/MainMenu";
 import { OptionsScreen } from "../features/options/OptionsScreen";
 import { PlayerNameDialog } from "../features/player/PlayerNameDialog";
+import { startAmbience } from "../shared/audio/ambience";
 import { readOptions, writeOptions } from "../storage/optionsStorage";
 import { readPlayerName, writePlayerName } from "../storage/playerStorage";
 
@@ -14,13 +15,22 @@ type Screen =
   | { name: "menu" }
   | { name: "options" }
   | { name: "log"; tab: LogTab }
-  | { name: "match"; config: Readonly<GameOptions>; playerName: string };
+  | {
+      name: "match";
+      /** Id da partida: identifica o registro e remonta a tela a cada partida nova. */
+      matchId: string;
+      config: Readonly<GameOptions>;
+      playerName: string;
+    };
 
 export function App() {
   const [screen, setScreen] = useState<Screen>({ name: "menu" });
   const [options, setOptions] = useState(readOptions);
   const [playerName, setPlayerName] = useState(readPlayerName);
   const [askingName, setAskingName] = useState(false);
+
+  // Som ambiente em todas as telas, do menu à partida.
+  useEffect(() => startAmbience(), []);
 
   const goToMenu = () => setScreen({ name: "menu" });
 
@@ -33,6 +43,7 @@ export function App() {
   function startMatch(name: string) {
     setScreen({
       name: "match",
+      matchId: crypto.randomUUID(),
       config: Object.freeze({ ...options }),
       playerName: name,
     });
@@ -81,10 +92,13 @@ export function App() {
       case "match":
         return (
           <MatchScreen
+            key={screen.matchId}
+            matchId={screen.matchId}
             config={screen.config}
             playerName={screen.playerName}
             options={options}
             onOptionsChange={changeOptions}
+            onPlayAgain={() => startMatch(screen.playerName)}
             onExit={goToMenu}
           />
         );

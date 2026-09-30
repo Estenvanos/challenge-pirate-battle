@@ -1,18 +1,26 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { GameOptions } from "../../config/options";
+import { LOCAL_PLAYER_ID } from "../../config/player";
+import type { MatchResult } from "../../game/core/Game";
 import { ACTION_BY_CODE } from "../../game/input/bindings";
+import { useSubmitMatch } from "../../hooks/useSubmitMatch";
+import { playUiSound } from "../../shared/audio/uiSounds";
 import { RoundButton } from "../../shared/components/RoundButton";
+import { ResultDialog } from "../result/ResultDialog";
 import { GameCanvas } from "./GameCanvas";
 import { Hud } from "./Hud";
 import { PauseMenu } from "./PauseMenu";
 import { usePause } from "./PauseProvider";
 
 interface MatchScreenProps {
+  /** Id desta partida, gerado no cliente; reenviar o mesmo id não duplica o registro. */
+  matchId: string;
   config: Readonly<GameOptions>;
   playerName: string;
   /** Opções salvas (valem para a próxima partida), editáveis no menu de pausa. */
   options: GameOptions;
   onOptionsChange: (options: GameOptions) => void;
+  onPlayAgain: () => void;
   onExit: () => void;
 }
 
@@ -20,15 +28,44 @@ const PAUSE_CODES = [...ACTION_BY_CODE]
   .filter(([, action]) => action === "pause")
   .map(([code]) => code);
 
-// Tela da partida: arena, controles, pausa e HUD (ainda estático); combate virá depois.
+// Tela da partida: arena, controles, HUD, pausa e, ao final, o resultado.
 export function MatchScreen({
+  matchId,
   config,
   playerName,
   options,
   onOptionsChange,
+  onPlayAgain,
   onExit,
 }: MatchScreenProps) {
   const { paused, setPaused } = usePause();
+  const [result, setResult] = useState<MatchResult | null>(null);
+  const submission = useSubmitMatch();
+  const menuOpen = paused && !result;
+  const wasMenuOpen = useRef(menuOpen);
+
+  useEffect(() => {
+    // Som ao abrir e fechar o menu de pausa; o ref ignora a montagem (e a dupla do Strict Mode).
+    if (menuOpen === wasMenuOpen.current) return;
+    wasMenuOpen.current = menuOpen;
+    playUiSound(menuOpen ? "open" : "close");
+  }, [menuOpen]);
+
+  // Fim da partida: mostra o resultado e registra no ranking e no histórico.
+  function handleMatchEnd(ended: MatchResult) {
+    setResult(ended);
+    submission.mutate({
+      matchId,
+      playerId: LOCAL_PLAYER_ID,
+      playerName,
+      date: new Date().toISOString(),
+      score: ended.score,
+      // Décimos de segundo bastam para o desempate do ranking.
+      durationSec: Math.round(ended.durationSec * 10) / 10,
+      endReason: ended.endReason,
+      config: { ...config },
+    });
+  }
 
   useEffect(() => {
     // Sincroniza com window/document: tecla de pausa e pausa automática ao perder o foco.
@@ -60,7 +97,7 @@ export function MatchScreen({
         Battle — {playerName}, {config.sessionTimeSec} s session,{" "}
         {config.spawnIntervalSec} s enemy spawn
       </h1>
-      <GameCanvas options={config} />
+      <GameCanvas options={config} onMatchEnd={handleMatchEnd} />
       <div className="match__bar">
         <Hud sessionTimeSec={config.sessionTimeSec} />
         <RoundButton
@@ -71,7 +108,24 @@ export function MatchScreen({
           onClick={() => setPaused(true)}
         />
       </div>
-      {paused && (
+      {result && (
+        <ResultDialog
+          result={result}
+          submission={
+            submission.isSuccess
+              ? "saved"
+              : submission.isError
+                ? "failed"
+                : "pending"
+          }
+          onRetrySubmit={() =>
+            submission.variables && submission.mutate(submission.variables)
+          }
+          onPlayAgain={onPlayAgain}
+          onExit={onExit}
+        />
+      )}
+      {menuOpen && (
         <PauseMenu
           options={options}
           onOptionsChange={onOptionsChange}
