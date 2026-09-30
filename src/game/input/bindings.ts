@@ -34,6 +34,11 @@ export const KEY_BINDINGS: readonly KeyBinding[] = [
       { code: "ArrowRight", display: "→" },
     ],
   },
+  {
+    action: "pause",
+    label: "Pause",
+    keys: [{ code: "Escape", display: "Esc" }],
+  },
 ];
 
 export const ACTION_BY_CODE: ReadonlyMap<string, Action> = new Map(

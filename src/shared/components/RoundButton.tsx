@@ -5,6 +5,7 @@ import { pngAsset } from "../utils/assets";
 export type RoundIcon =
   | "minus"
   | "plus"
+  | "pause"
   | "turn_left"
   | "turn_right"
   | "forward"
