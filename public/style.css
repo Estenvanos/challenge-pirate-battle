@@ -350,6 +350,17 @@ img {
   font-size: 0.95rem;
 }
 
+.menu__last,
+.menu__pending {
+  margin: 0;
+  color: var(--color-cream);
+  font-size: 0.9rem;
+}
+
+.menu__pending:empty {
+  display: none;
+}
+
 /* ---------- Options ---------- */
 .option {
   display: flex;
@@ -854,6 +865,55 @@ img {
 /* Na partida, o logo sobe para não cobrir os controles de tiro. */
 .scene:has(.match) .scene__logo {
   bottom: 204px;
+}
+
+/* ---------- Mock API scenario panel ---------- */
+.scenario-panel {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 5;
+  max-width: min(280px, calc(100vw - 32px));
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--color-row);
+  color: var(--color-text);
+  font-size: 0.85rem;
+}
+
+.scenario-panel summary {
+  cursor: pointer;
+}
+
+.scenario-panel__current {
+  color: var(--color-gold);
+}
+
+.scenario-panel[open] {
+  display: grid;
+  gap: 8px;
+}
+
+.scenario-panel__field {
+  display: grid;
+  gap: 4px;
+}
+
+.scenario-panel select,
+.scenario-panel button {
+  font: inherit;
+  padding: 4px 8px;
+}
+
+.scenario-panel__note {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.scenario-panel :focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
 /* ---------- Mobile ---------- */

@@ -2,6 +2,7 @@ import { http, HttpResponse, type PathParams } from "msw";
 import type { ApiError, Page, RankingEntry } from "../../api/contracts";
 import { queryRanking } from "../mockDb";
 import { paginate, parsePageParams } from "../pagination";
+import { simulateNetwork } from "../scenarios";
 import { badRequest } from "./errors";
 
 function parsePositiveNumber(raw: string | null): number | null {
@@ -13,7 +14,10 @@ function parsePositiveNumber(raw: string | null): number | null {
 export const rankingHandlers = [
   http.get<PathParams, never, Page<RankingEntry> | ApiError>(
     "/api/ranking",
-    ({ request }) => {
+    async ({ request }) => {
+      const simulated = await simulateNetwork("ranking");
+      if (simulated) return simulated;
+
       const params = new URL(request.url).searchParams;
 
       const pageParams = parsePageParams(params);

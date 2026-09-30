@@ -122,7 +122,7 @@ config ◄── used by game and features
 - **Score:** `World.score` gains 1 point in `damageSystem` when an enemy destroyed by the player's shots leaves the world. The enemy is removed in that same step, so a kill counts once; a Chaser that rams the player gives no point.
 - **Repair:** every `player.repair.everyKills` (3) points, the player recovers `player.repair.amount` (10) HP, capped at `maxHp`. A player already at 0 HP is not revived, and a player at full HP gets nothing (no animation either). The simulation emits `playerRepaired`; `Game` updates the HUD and calls `ShipView.heal()`, which plays a quick green aura around the hull (0.5 s, under the ship) and a green plus sign rising from it (0.9 s, above everything). Both sprites (`heal_aura.png`, `heal_plus.png` in `png/default/effects`) were made for this game, generated with a script, and are created lazily on the first repair.
 - **Match end:** `World.endReason` is `null` while the match runs. `damageSystem` sets `playerDestroyed` when HP reaches 0; `matchSystem` counts `World.elapsedSec` (active play only, so pauses do not count) and sets `timeUp` when it reaches the session time. Defeat wins if both happen in the same step. Once ended, `stepWorld` returns early: movement, attacks, damage, spawns and scoring stop.
-- **Result** (`features/result/ResultDialog.tsx`, `sample_result.png`): the shared `Modal` titled **Battle Complete** (time up) or **Game Over** (defeated), with the score (in the `Rye` font, self-hosted, carved into a CSS wooden plank), the time played, the end reason, the status of the record submission (saving, saved, or failed with **Try again**) and the **Play Again** and **Main Menu** actions. The title is framed by a smaller copy of the `panel_menu.png` 9-slice (`.result__title`). `Esc` does not close it and the pause menu cannot open over it. `App` gives each match a `matchId` (`crypto.randomUUID()`), used as the React key of `MatchScreen` (Play Again remounts it with a fresh `World`) and as the id of the record sent through `useSubmitMatch`, so a retry never duplicates it. Not implemented yet: the pending-submission queue and the persisted last result (§7, §8).
+- **Result** (`features/result/ResultDialog.tsx`, `sample_result.png`): the shared `Modal` titled **Battle Complete** (time up) or **Game Over** (defeated), with the score (in the `Rye` font, self-hosted, carved into a CSS wooden plank), the time played, the end reason, the status of the record submission (saving, saved, or failed with **Try again**) and the **Play Again** and **Main Menu** actions. The title is framed by a smaller copy of the `panel_menu.png` 9-slice (`.result__title`). `Esc` does not close it and the pause menu cannot open over it. `App` gives each match a `matchId` (`crypto.randomUUID()`), used as the React key of `MatchScreen` (Play Again remounts it with a fresh `World`) and as the id of the record sent through `useSubmitMatch`, so a retry never duplicates it. The record is also saved as the last result (`storage/lastResultStorage.ts`), which the main menu shows as "Last battle: score · time · reason", also after a refresh.
 - **Restart:** builds a new `World`. The old one is not reset in place.
 
 ## 4. Collisions
@@ -256,31 +256,42 @@ A match that is abandoned, whether by refreshing or by leaving the match screen,
   - Retries use backoff.
   - Abort signals ensure a late response never overwrites newer data.
 - **Submission:**
-  - `matchId` is generated on the client when the match ends, and the record is saved to the pending queue.
-  - `useSubmitMatch` (`src/hooks`) sends it. On success it removes the record from the queue and invalidates the ranking and history queries.
+  - `matchId` is generated on the client when the match ends.
+  - `useSubmitMatch` (`src/hooks`) sends it. Its `onMutate` adds the record to the pending queue (`api/pendingSubmissions.ts`, persisted under `pendingSubmissions`, one entry per `matchId`); on success it removes it and invalidates the ranking and history queries. A failed send leaves it in the queue.
+  - Recovery: `useResendPendingOnStart` (called once by `App`) resends the whole queue when the page loads. The main menu shows how many records are still unsaved (`usePendingSubmissions`, a `useSyncExternalStore` over the queue, plus `useIsMutating` for "Saving…") in a `role="status"` line with **Try again**, which resends them all.
   - Resends and repeated clicks return the existing record, so no duplicates are created.
-  - Pending records survive a refresh and can be retried.
+  - Pending records survive a refresh and can be retried. On load, an invalid entry is dropped on its own; the valid ones stay queued.
   - A pending submission never blocks starting a new match.
 
 ## 9. MSW mocks
 
 - The same contracts, fixtures and handlers are used in dev, tests and the published build. The worker also runs in production.
 - Layout of `src/mocks`:
-  - `browser.ts`: `setupWorker` and `startMocks()`, called in `main` before anything else touches the network.
+  - `browser.ts`: `setupWorker` and `startMocks()`. `main` renders the app at once and starts the worker in parallel; `holdRequestsUntil` (`api/httpClient.ts`) makes an Axios request interceptor wait for it. If the worker fails to start, every request fails (the tabs show their error state) and the game, the options and the menu keep working.
   - `handlers/`: `ranking.ts`, `history.ts`, shared `errors.ts`, and `index.ts`, which aggregates them.
   - `fixtures/`: other players, plus about 40 deterministic matches across 3 configs (fixed dates, no randomness).
   - `mockDb.ts`: fixtures plus confirmed records. Only confirmed records are persisted, via `storage/localStore.ts` (key `pirate-battle:mockDb`). `resetMockDb()` clears them.
   - `pagination.ts`: page parameter parsing and validation, and slicing.
 - The local player (`local-player`) has no fixture matches, so their history starts empty.
-- Scenarios (**not implemented yet**; only the success path exists today):
-  - success, empty, multiple pages;
-  - slow, variable latency, out-of-order responses;
-  - timeout, network error, 4xx/5xx;
-  - ranking or history read failure;
-  - timeout after a write;
-  - API unavailable at match end, then recovery.
-- A scenario is selected through `ScenarioPanel`, or through a URL or storage flag for tests. The panel can also reset everything to the initial state.
-- Latency and randomness are seeded so tests are reproducible.
+- **Scenarios** (`mocks/scenarios.ts`, `SCENARIOS`). `simulateNetwork(endpoint)` runs at the start of every handler and either delays the request or returns the simulated failure:
+
+  | Id | Behaviour |
+  | --- | --- |
+  | `success` | Default. No delay. |
+  | `empty` | No fixtures: only records confirmed in this browser. |
+  | `manyPages` | 200 extra rival matches and 30 local-player matches. |
+  | `slow` | Every request waits 2.5 s. |
+  | `variableLatency` | 200–2000 ms per request, from the seeded RNG (`createRng(1)`), so the sequence is the same on every load. |
+  | `outOfOrder` | Requests alternate between 2.5 s and 0.3 s, so the second of two quick requests resolves first. |
+  | `timeout` | Never answers; Axios gives up after its 8 s timeout. |
+  | `networkError` | `HttpResponse.error()` (connection failure). |
+  | `clientError` / `serverError` | 400 / 500 with an `ApiError`. 4xx is not retried, 5xx is. |
+  | `rankingDown` / `historyDown` | 503 on that read only. |
+  | `timeoutAfterWrite` | The first PUT of each match is saved but never answered; the resend returns `200 {created: false}`, so nothing is duplicated. |
+  | `downAtMatchEnd` | Every PUT returns 503. The record stays pending; switching back to `success` resends it on load (or through **Try again**). |
+
+- **Selection:** `?scenario=<id>` in the URL (saved, used by Playwright) or the `ScenarioPanel` (a `<details>` at the bottom left of every screen except the match, also in the published build). The choice is stored under the `scenario` key. Changing it reloads the page, so the query cache, the latency sequence and the in-memory state start clean.
+- **Reset:** the panel's **Reset mock data** clears the confirmed records (`resetMockDb`), the pending queue, the last result and the scenario, then reloads.
 
 ## 10. Testing and profiling
 

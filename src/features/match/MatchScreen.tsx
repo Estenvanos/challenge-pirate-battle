@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import type { MatchRecord } from "../../api/contracts";
 import type { GameOptions } from "../../config/options";
 import { LOCAL_PLAYER_ID } from "../../config/player";
 import type { MatchResult } from "../../game/core/Game";
 import { ACTION_BY_CODE } from "../../game/input/bindings";
 import { useSubmitMatch } from "../../hooks/useSubmitMatch";
+import { writeLastResult } from "../../storage/lastResultStorage";
 import { playUiSound } from "../../shared/audio/uiSounds";
 import { RoundButton } from "../../shared/components/RoundButton";
 import { ResultDialog } from "../result/ResultDialog";
@@ -54,7 +56,7 @@ export function MatchScreen({
   // Fim da partida: mostra o resultado e registra no ranking e no histórico.
   function handleMatchEnd(ended: MatchResult) {
     setResult(ended);
-    submission.mutate({
+    const record: MatchRecord = {
       matchId,
       playerId: LOCAL_PLAYER_ID,
       playerName,
@@ -64,7 +66,9 @@ export function MatchScreen({
       durationSec: Math.round(ended.durationSec * 10) / 10,
       endReason: ended.endReason,
       config: { ...config },
-    });
+    };
+    writeLastResult(record);
+    submission.mutate(record);
   }
 
   useEffect(() => {

@@ -5,7 +5,8 @@ import {
   type RankingEntry,
 } from "../api/contracts";
 import { readStore, removeStore, writeStore } from "../storage/localStore";
-import { fixtureMatches } from "./fixtures/matches";
+import { fixtureMatches, manyPagesMatches } from "./fixtures/matches";
+import { getScenario } from "./scenarios";
 
 const STORE_KEY = "mockDb";
 const STORE_VERSION = 1;
@@ -18,8 +19,20 @@ function loadConfirmed(): MatchRecord[] {
   return readStore(STORE_KEY, STORE_VERSION, isMatchRecordList, []);
 }
 
+// Fixtures de cada cenário: "empty" só tem os registros confirmados.
+function fixturesForScenario(): readonly MatchRecord[] {
+  switch (getScenario()) {
+    case "empty":
+      return [];
+    case "manyPages":
+      return [...fixtureMatches, ...manyPagesMatches];
+    default:
+      return fixtureMatches;
+  }
+}
+
 function allMatches(): MatchRecord[] {
-  return [...fixtureMatches, ...loadConfirmed()];
+  return [...fixturesForScenario(), ...loadConfirmed()];
 }
 
 function sameConfig(a: MatchConfig, b: MatchConfig): boolean {

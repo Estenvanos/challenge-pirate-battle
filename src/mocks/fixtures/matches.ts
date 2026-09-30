@@ -1,5 +1,5 @@
 import type { EndReason, MatchConfig, MatchRecord } from "../../api/contracts";
-import { fixturePlayers } from "./players";
+import { fixturePlayers, LOCAL_PLAYER_ID } from "./players";
 
 export const fixtureConfigs: readonly MatchConfig[] = [
   { sessionTimeSec: 120, spawnIntervalSec: 3 },
@@ -39,3 +39,18 @@ export const fixtureMatches: readonly MatchRecord[] = Array.from(
   { length: MATCH_COUNT },
   (_, index) => buildMatch(index),
 );
+
+// Cenário "manyPages": muitos rivais e um histórico longo do jogador local.
+const MANY_PAGES_RIVALS = 200;
+const MANY_PAGES_LOCAL = 30;
+
+export const manyPagesMatches: readonly MatchRecord[] = [
+  ...Array.from({ length: MANY_PAGES_RIVALS }, (_, index) =>
+    buildMatch(MATCH_COUNT + index),
+  ),
+  ...Array.from({ length: MANY_PAGES_LOCAL }, (_, index) => ({
+    ...buildMatch(MATCH_COUNT + MANY_PAGES_RIVALS + index),
+    playerId: LOCAL_PLAYER_ID,
+    playerName: "Local Captain",
+  })),
+];

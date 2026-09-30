@@ -6,6 +6,8 @@ import { MatchScreen } from "../features/match/MatchScreen";
 import { MainMenu } from "../features/menu/MainMenu";
 import { OptionsScreen } from "../features/options/OptionsScreen";
 import { PlayerNameDialog } from "../features/player/PlayerNameDialog";
+import { useResendPendingOnStart } from "../hooks/usePendingSubmissions";
+import { ScenarioPanel } from "../mocks/ScenarioPanel";
 import { startAmbience } from "../shared/audio/ambience";
 import { readOptions, writeOptions } from "../storage/optionsStorage";
 import { readPlayerName, writePlayerName } from "../storage/playerStorage";
@@ -31,6 +33,7 @@ export function App() {
 
   // Som ambiente em todas as telas, do menu à partida.
   useEffect(() => startAmbience(), []);
+  useResendPendingOnStart();
 
   const goToMenu = () => setScreen({ name: "menu" });
 
@@ -108,6 +111,7 @@ export function App() {
   return (
     <main className="scene">
       {renderScreen()}
+      {screen.name !== "match" && <ScenarioPanel />}
       {askingName && (
         <PlayerNameDialog
           onSubmit={handleNameSubmit}
