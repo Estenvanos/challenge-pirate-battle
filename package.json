@@ -7,13 +7,16 @@
     "start": "npm run dev",
     "build": "npm run lint && tsc && vite build",
     "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "dev": "vite",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "test:e2e": "playwright test tests/e2e",
     "test:report": "playwright show-report",
     "test:visual": "playwright test tests/visual",
-    "test:visual:update": "playwright test tests/visual --update-snapshots"
+    "test:visual:update": "playwright test tests/visual --update-snapshots",
+    "profile": "node scripts/profile.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.0",

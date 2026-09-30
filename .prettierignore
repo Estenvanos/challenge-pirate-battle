@@ -1,0 +1,11 @@
+dist
+dist-profile
+public/mockServiceWorker.js
+playwright-report
+test-results
+tests/visual/__snapshots__
+docs/profiling/*.json
+.claude
+package-lock.json
+public/assets
+proposta.md

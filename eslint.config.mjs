@@ -7,6 +7,7 @@ export default tseslint.config(
   {
     ignores: [
       "dist",
+      "dist-profile",
       ".claude",
       "public/mockServiceWorker.js",
       "playwright-report",

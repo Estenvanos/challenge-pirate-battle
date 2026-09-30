@@ -3,23 +3,31 @@ import { isMuted } from "../../shared/audio/mute";
 
 export type GameSound = keyof typeof GAME_SOUND_URLS;
 
-/**
- * Toca os efeitos sonoros do jogo. Os arquivos são pré-carregados uma vez; cada
- * execução usa um clone, para disparos seguidos se sobreporem em vez de cortar
- * o som anterior.
- */
-export class SoundManager {
-  private readonly sources = new Map<string, HTMLAudioElement>();
-  private readonly playing = new Set<HTMLAudioElement>();
-  private readonly nextVariant = new Map<GameSound, number>();
+// Originais pré-carregados uma vez por página e compartilhados entre partidas:
+// criar um Audio por partida baixava tudo de novo (pelo service worker do MSW)
+// e fazia a memória crescer a cada ciclo (docs/profiling).
+let sources: Map<string, HTMLAudioElement> | null = null;
 
-  constructor() {
+function getSources(): Map<string, HTMLAudioElement> {
+  if (!sources) {
+    sources = new Map();
     for (const url of Object.values(GAME_SOUND_URLS).flat()) {
       const audio = new Audio(url);
       audio.preload = "auto";
-      this.sources.set(url, audio);
+      sources.set(url, audio);
     }
   }
+  return sources;
+}
+
+/**
+ * Toca os efeitos sonoros do jogo. Cada execução usa um clone do original,
+ * para disparos seguidos se sobreporem em vez de cortar o som anterior.
+ */
+export class SoundManager {
+  private readonly sources = getSources();
+  private readonly playing = new Set<HTMLAudioElement>();
+  private readonly nextVariant = new Map<GameSound, number>();
 
   play(sound: GameSound): void {
     if (isMuted()) return;
@@ -42,6 +50,5 @@ export class SoundManager {
   destroy(): void {
     for (const audio of this.playing) audio.pause();
     this.playing.clear();
-    this.sources.clear();
   }
 }

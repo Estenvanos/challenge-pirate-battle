@@ -15,7 +15,6 @@ A 2D top-down naval shooter that runs entirely in the browser. Sail between isla
 
 ▶️ [Watch the gameplay video](https://github.com/user-attachments/assets/723cad0c-c828-4875-9c52-938144300c1e)
 
-
 ## Table of contents
 
 - [About](#about)
@@ -30,6 +29,7 @@ A 2D top-down naval shooter that runs entirely in the browser. Sail between isla
 - [Tests](#tests)
 - [Tech stack](#tech-stack)
 - [Architecture](#architecture)
+- [Performance](#performance)
 - [Credits](#credits)
 - [Author](#author)
 
@@ -100,15 +100,19 @@ Open http://localhost:8080.
 
 ## Commands
 
-| Command               | What it does                                  |
-| --------------------- | --------------------------------------------- |
-| `npm run dev`         | Dev server on port 8080                       |
-| `npm run build`       | Lint + typecheck + production build (`dist/`) |
-| `npm run preview`     | Serve the production build locally            |
-| `npm run lint`        | ESLint + Prettier                             |
-| `npm run typecheck`   | TypeScript check (`tsc --noEmit`)             |
-| `npm run test:e2e`    | Playwright tests (Chromium desktop + mobile)  |
-| `npm run test:report` | Open the last Playwright HTML report          |
+| Command                      | What it does                                                     |
+| ---------------------------- | ---------------------------------------------------------------- |
+| `npm run dev`                | Dev server on port 8080                                          |
+| `npm run build`              | Lint + typecheck + production build (`dist/`)                    |
+| `npm run preview`            | Serve the production build locally (port 4173)                   |
+| `npm run lint`               | ESLint + Prettier                                                |
+| `npm run format`             | Format every file with Prettier (`format:check` only checks)     |
+| `npm run typecheck`          | TypeScript check (`tsc --noEmit`)                                |
+| `npm run test:e2e`           | Playwright E2E tests (Chromium desktop + mobile)                 |
+| `npm run test:visual`        | Visual regression (menu, arena, result)                          |
+| `npm run test:visual:update` | Regenerate the visual baselines                                  |
+| `npm run test:report`        | Open the last Playwright HTML report                             |
+| `npm run profile`            | 3-minute performance profile + memory cycles (`docs/profiling/`) |
 
 First time running the tests: `npx playwright install chromium`.
 
@@ -170,7 +174,7 @@ npx playwright test tests/e2e/combat.spec.ts  # one file
 npm run test:report                       # open the report
 ```
 
-Specs live in [`tests/e2e`](tests/e2e) (one spec per required test area) and [`tests/visual`](tests/visual) (visual regression).
+Specs live in [`tests/e2e`](tests/e2e) (one spec per required test area) and [`tests/visual`](tests/visual) (visual regression, baselines in `tests/visual/__snapshots__`). Playwright starts its own dev server on port 4173 with `VITE_GAME_TEST=true`, which adds the `window.__GAME_TEST__` hooks: `?seed=N` for the match seed, a manual clock the tests advance step by step, and read-only state. The game is still played through the real keyboard and touch controls. The full suite takes about 4 minutes.
 
 ## Tech stack
 
@@ -192,7 +196,9 @@ The game core (`src/game`) has no React dependency: it runs a fixed-timestep sim
 
 Full details (React/PixiJS integration, simulation loop, collisions, resource management, persistence, ranking contracts and cache) are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
-Performance evidence: [`docs/profiling/`](docs/profiling/) <!-- TODO -->
+## Performance
+
+Measured on a production build (Intel i5-10210U with integrated UHD Graphics, Chromium 153, 1280×720): a full 3-minute match at the default spawn rate runs at **60 FPS** with a **p95 frame time of 16.7 ms**, up to 44 enemies on screen. Five play-and-exit cycles leave no extra canvases, DOM nodes or listeners behind. Method, raw data and limitations: [`docs/profiling/`](docs/profiling/README.md).
 
 ## Credits
 
