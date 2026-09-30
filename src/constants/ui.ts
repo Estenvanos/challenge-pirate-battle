@@ -1,4 +1,3 @@
-// Textos e tamanhos fixos da interface.
 import type { EndReason } from "../schemas/match";
 
 export const END_REASON_LABELS: Readonly<Record<EndReason, string>> = {
@@ -18,5 +17,4 @@ export const LOG_TABS: readonly { id: LogTab; label: string }[] = [
   { id: "history", label: "Match History" },
 ];
 
-// Cabe na moldura do painel sem rolagem, como nas telas de referência.
 export const LOG_PAGE_SIZE = 5;

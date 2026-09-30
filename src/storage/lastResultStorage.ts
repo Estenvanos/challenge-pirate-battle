@@ -2,7 +2,6 @@ import { STORAGE_KEYS } from "../constants/storage";
 import { matchRecordSchema, type MatchRecord } from "../schemas/match";
 import { readStore, removeStore, writeStore } from "./localStore";
 
-// Último resultado concluído, mostrado no menu mesmo depois de um refresh.
 export function readLastResult(): MatchRecord | null {
   return readStore(STORAGE_KEYS.lastResult, matchRecordSchema.nullable(), null);
 }

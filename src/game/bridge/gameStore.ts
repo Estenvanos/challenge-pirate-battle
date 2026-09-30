@@ -1,13 +1,10 @@
-// Snapshot do estado do jogo para a UI (React lê via useGameSnapshot).
-// Tudo aqui muda em momentos pontuais (dano, ponto, virada de segundo), então
-// o React nunca re-renderiza por quadro.
 import { GAME_CONFIG } from "../../config/gameConfig";
 
+// React subscribes to discrete HUD changes, never to the render loop.
 export interface GameSnapshot {
   readonly hp: number;
   readonly maxHp: number;
   readonly score: number;
-  /** Segundos inteiros restantes; `null` até a partida começar. */
   readonly timeLeftSec: number | null;
 }
 
@@ -38,6 +35,5 @@ export const gameStore = {
     publish({ ...snapshot, hp, maxHp }),
   setScore: (score: number) => publish({ ...snapshot, score }),
   setTimeLeft: (timeLeftSec: number) => publish({ ...snapshot, timeLeftSec }),
-  /** Volta ao estado de partida nova (ao sair da partida). */
   reset: () => publish(INITIAL),
 };

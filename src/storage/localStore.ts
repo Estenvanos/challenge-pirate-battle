@@ -39,6 +39,6 @@ export function removeStore({ key }: StorageEntry): void {
   try {
     localStorage.removeItem(STORAGE_NAMESPACE + key);
   } catch {
-    // Storage unavailable: nothing to remove.
+    // Storage may be unavailable; removal is best effort.
   }
 }

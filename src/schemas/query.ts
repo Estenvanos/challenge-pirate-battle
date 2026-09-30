@@ -1,4 +1,3 @@
-// Query strings da API mock. Parâmetro ausente ou vazio usa o padrão; inválido vira 400.
 import { z } from "zod";
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "../constants/api";
 

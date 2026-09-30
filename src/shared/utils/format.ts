@@ -11,7 +11,6 @@ const timeFormatter = new Intl.DateTimeFormat("en-US", {
   hourCycle: "h23",
 });
 
-/** "08 SEP · 21:42" no fuso local. */
 export function formatLogDate(iso: string): string {
   const date = new Date(iso);
   const parts = dateFormatter.formatToParts(date);
@@ -20,7 +19,6 @@ export function formatLogDate(iso: string): string {
   return `${day} ${month.toUpperCase()} · ${timeFormatter.format(date)}`;
 }
 
-/** Segundos para "mm:ss". */
 export function formatDuration(totalSec: number): string {
   const sec = Math.max(0, Math.round(totalSec));
   const minutes = String(Math.floor(sec / 60)).padStart(2, "0");

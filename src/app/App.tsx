@@ -12,14 +12,13 @@ import { startAmbience } from "../shared/audio/ambience";
 import { readOptions, writeOptions } from "../storage/optionsStorage";
 import { readPlayerName, writePlayerName } from "../storage/playerStorage";
 
-// Máquina de telas simples: um refresh sempre volta ao menu, abandonando a partida.
+/** Refresh returns to the menu and abandons an active match. */
 type Screen =
   | { name: "menu" }
   | { name: "options" }
   | { name: "log"; tab: LogTab }
   | {
       name: "match";
-      /** Id da partida: identifica o registro e remonta a tela a cada partida nova. */
       matchId: string;
       config: Readonly<GameOptions>;
       playerName: string;
@@ -31,7 +30,6 @@ export function App() {
   const [playerName, setPlayerName] = useState(readPlayerName);
   const [askingName, setAskingName] = useState(false);
 
-  // Som ambiente em todas as telas, do menu à partida.
   useEffect(() => startAmbience(), []);
   useResendPendingOnStart();
 
@@ -42,7 +40,7 @@ export function App() {
     setOptions(next);
   }
 
-  // Cada partida usa um snapshot congelado das opções vigentes.
+  /** Each match captures its options and gets an idempotent record ID. */
   function startMatch(name: string) {
     setScreen({
       name: "match",

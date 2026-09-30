@@ -66,7 +66,7 @@ Hard rules:
 
 - Init is async; a `cancelled` guard destroys the instance if the component unmounted mid-init. This makes React Strict Mode's double mount safe.
 - `destroy()` is idempotent.
-- `Game` (`game/core/Game.ts`) wires `GameLoop`, `World`, systems, `InputManager`, `PixiRenderer` and `SoundManager`.
+- `Game` (`game/core/Game.ts`) owns initialization, input and the simulation loop. `GamePresentation` owns the Pixi scene, visual effects and match audio; `Game` forwards simulation events to it and sends discrete updates to the UI.
 
 **Game → UI sync (no per-frame React render).**
 
@@ -85,7 +85,7 @@ There is no separate event bus: the simulation pushes `WorldEvent`s, `Game` drai
 
 - Step of 1/60 s. An accumulator consumes real frame time; the frame delta is clamped to 0.25 s so a stall cannot trigger a burst of steps.
 - Render runs once per frame and interpolates between the previous and current transform (`alpha = accumulator / stepSec`), so motion is smooth above 60 Hz.
-- `GameClock` is the only time source; the seeded PRNG (`core/random.ts`, mulberry32) the only randomness. Simulation code never calls `Math.random`, `Date.now` or `performance.now`.
+- `World.elapsedSec` is the match clock, advanced only by fixed simulation steps. The seeded PRNG (`core/random.ts`, mulberry32) is the only source of simulation randomness. Simulation code never calls `Math.random`, `Date.now` or `performance.now`.
 
 **System order per step** (`simulation/stepWorld.ts`):
 
@@ -171,7 +171,7 @@ There is no separate event bus: the simulation pushes `WorldEvent`s, `Game` drai
 
 **Audio.** `SoundManager` plays match sounds from `WorldEvent`s (cloned `HTMLAudioElement`s, so shots overlap). Menu sounds and the ambience loop live in `shared/audio`; a global mute applies everywhere.
 
-**Cleanup.** `Game.destroy()` releases, in order: ticker, listeners, timers, stage children, effect textures, the application, audio. Verified over 5 play cycles (section 10).
+**Cleanup.** `Game.destroy()` stops the loop and input, then `GamePresentation` releases match audio, views and generated textures before the renderer destroys the Pixi application. Shared asset textures remain cached. Verified over 5 play cycles (section 10).
 
 ## 6. Input
 
@@ -268,7 +268,7 @@ Invalid input returns `400` with an `ApiError`. The PUT is an idempotent upsert:
 | 12   | `retry-race.spec.ts`       | resend after write timeout, late page ignored                  |
 
 - **Bugs the suite found:** late progress callbacks hid the **Retry** button after an asset failure; `showModal()` focused the scroll panel instead of the primary button on mobile (`Modal` now focuses `data-autofocus`).
-- **Profiling** (`npm run profile`, report in [`docs/profiling/`](docs/profiling/README.md)): production build, 3-minute match at 180 s / 3 s, then 5 play-and-exit cycles with forced GC. On an i5-10210U (UHD Graphics), Chromium 153, 1280×720: **60 FPS, p95 16.7 ms, up to 44 enemies**; DOM nodes, listeners and canvases stay flat across cycles.
+- **Profiling** (`npm run profile`, report in [`docs/profiling/`](docs/profiling/README.md)): production build, 3-minute match at 180 s / 3 s, then 5 play-and-exit cycles with forced GC. On an i5-10210U (UHD Graphics), Chromium 153, 1280×720: **60 FPS, p95 16.8 ms, up to 44 enemies**; DOM nodes, listeners and canvases stay flat across cycles.
 
 ## 11. Balancing decisions
 

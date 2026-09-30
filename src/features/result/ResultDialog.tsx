@@ -7,14 +7,12 @@ import { formatDuration, formatEndReason } from "../../shared/utils/format";
 
 interface ResultDialogProps {
   result: MatchResult;
-  /** Situação do registro da partida no ranking/histórico. */
   submission: "pending" | "saved" | "failed";
   onRetrySubmit: () => void;
   onPlayAgain: () => void;
   onExit: () => void;
 }
 
-// Resultado da partida (sample_result.png): vitória por tempo ou derrota.
 export function ResultDialog({
   result,
   submission,
@@ -36,7 +34,6 @@ export function ResultDialog({
   };
 
   return (
-    // Esc não fecha: o resultado só sai por uma das duas ações.
     <Modal labelledBy="result-title" describedBy="result-desc" onClose={noop}>
       <h2 id="result-title" className="panel__title result__title">
         {RESULT_TITLES[result.endReason]}

@@ -16,11 +16,9 @@ import { PauseMenu } from "./PauseMenu";
 import { usePause } from "./PauseProvider";
 
 interface MatchScreenProps {
-  /** Id desta partida, gerado no cliente; reenviar o mesmo id não duplica o registro. */
   matchId: string;
   config: Readonly<GameOptions>;
   playerName: string;
-  /** Opções salvas (valem para a próxima partida), editáveis no menu de pausa. */
   options: GameOptions;
   onOptionsChange: (options: GameOptions) => void;
   onPlayAgain: () => void;
@@ -31,7 +29,6 @@ const PAUSE_CODES = [...ACTION_BY_CODE]
   .filter(([, action]) => action === "pause")
   .map(([code]) => code);
 
-// Tela da partida: arena, controles, HUD, pausa e, ao final, o resultado.
 export function MatchScreen({
   matchId,
   config,
@@ -48,13 +45,11 @@ export function MatchScreen({
   const wasMenuOpen = useRef(menuOpen);
 
   useEffect(() => {
-    // Som ao abrir e fechar o menu de pausa; o ref ignora a montagem (e a dupla do Strict Mode).
     if (menuOpen === wasMenuOpen.current) return;
     wasMenuOpen.current = menuOpen;
     playUiSound(menuOpen ? "open" : "close");
   }, [menuOpen]);
 
-  // Fim da partida: mostra o resultado e registra no ranking e no histórico.
   function handleMatchEnd(ended: MatchResult) {
     setResult(ended);
     const record: MatchRecord = {
@@ -63,7 +58,7 @@ export function MatchScreen({
       playerName,
       date: new Date().toISOString(),
       score: ended.score,
-      // Décimos de segundo bastam para o desempate do ranking.
+      // Tenths of a second provide a stable ranking tie-break.
       durationSec: Math.round(ended.durationSec * 10) / 10,
       endReason: ended.endReason,
       config: { ...config },
@@ -73,12 +68,10 @@ export function MatchScreen({
   }
 
   useEffect(() => {
-    // Sincroniza com window/document: tecla de pausa e pausa automática ao perder o foco.
     const pause = () => setPaused(true);
     const onKeyDown = (event: KeyboardEvent) => {
       if (!PAUSE_CODES.includes(event.code)) return;
-      // A tecla alterna a pausa só aqui: sem o preventDefault, o <dialog> recém-aberto
-      // trataria o mesmo Esc como "fechar" e a partida retomaria na hora.
+      // Prevent the same Escape press from closing the newly opened dialog.
       event.preventDefault();
       if (!event.repeat) setPaused((current) => !current);
     };
@@ -92,7 +85,7 @@ export function MatchScreen({
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("blur", pause);
       document.removeEventListener("visibilitychange", onVisibilityChange);
-      setPaused(false); // sair da partida nunca deixa a pausa ligada
+      setPaused(false); // Leaving a match always clears the pause state.
     };
   }, [setPaused]);
 

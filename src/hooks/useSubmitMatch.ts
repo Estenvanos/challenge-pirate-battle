@@ -10,7 +10,7 @@ export function useSubmitMatch() {
   const queryClient = useQueryClient();
   return useMutation({
     ...matchesMutations.submit(),
-    // Na fila antes de enviar; só sai quando a API confirma.
+    // Persist before sending; remove only after server confirmation.
     onMutate: (record) => addPendingSubmission(record),
     onSuccess: (_data, record) => {
       removePendingSubmission(record.matchId);

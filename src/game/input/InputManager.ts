@@ -11,14 +11,10 @@ function isEditable(target: EventTarget | null): boolean {
   );
 }
 
-/**
- * Traduz o teclado em ações abstratas. A simulação lê `actions` uma vez por
- * passo. Tudo é limpo ao perder o foco, para nenhuma tecla ficar "presa".
- */
+/** Maps keyboard events to actions and clears held keys on lost focus. */
 export class InputManager {
   private readonly state = emptyActionState();
 
-  /** Desligado fora do gameplay (pausa): não captura nem bloqueia teclas. */
   enabled = true;
 
   get actions(): ActionState {
@@ -38,7 +34,6 @@ export class InputManager {
     }
   };
 
-  /** Entrada dos controles de toque: mesma regra do teclado (não pressiona na pausa). */
   setAction(action: Action, pressed: boolean): void {
     if (pressed && !this.enabled) return;
     this.state[action] = pressed;

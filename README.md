@@ -198,7 +198,7 @@ Full details (React/PixiJS integration, simulation loop, collisions, resource ma
 
 ## Performance
 
-Measured on a production build (Intel i5-10210U with integrated UHD Graphics, Chromium 153, 1280×720): a full 3-minute match at the default spawn rate runs at **60 FPS** with a **p95 frame time of 16.7 ms**, up to 44 enemies on screen. Five play-and-exit cycles leave no extra canvases, DOM nodes or listeners behind. Method, raw data and limitations: [`docs/profiling/`](docs/profiling/README.md).
+Measured on a production build (Intel i5-10210U with integrated UHD Graphics, Chromium 153, 1280×720): a full 3-minute match at the default spawn rate runs at **60 FPS** with a **p95 frame time of 16.8 ms**, up to 44 enemies on screen. Five play-and-exit cycles leave no extra canvases, DOM nodes or listeners behind. Method, raw data and limitations: [`docs/profiling/`](docs/profiling/README.md).
 
 ## Credits
 

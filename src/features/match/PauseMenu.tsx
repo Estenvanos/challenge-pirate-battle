@@ -11,7 +11,6 @@ interface PauseMenuProps {
   onExit: () => void;
 }
 
-// Menu de pausa (sample_pause.png). Esc fecha o diálogo, o que retoma a partida.
 export function PauseMenu({
   options,
   onOptionsChange,

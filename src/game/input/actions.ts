@@ -1,5 +1,3 @@
-// Ações abstratas: teclado e toque viram estas ações; a simulação só lê elas.
-
 export const ACTIONS = [
   "forward",
   "rotateLeft",

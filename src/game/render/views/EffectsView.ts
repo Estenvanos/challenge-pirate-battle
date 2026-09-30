@@ -7,7 +7,7 @@ import {
 import { createRng } from "../../core/random";
 import type { FxTextures } from "../effects/fxTextures";
 
-/** Teto de partículas vivas; acima dele, efeitos novos são descartados. */
+/** Caps live particles to keep visual feedback bounded under heavy combat. */
 const MAX_PARTICLES = 700;
 
 const SMOKE_TINT = 0xd8d8d8;
@@ -16,25 +16,16 @@ const WOOD_TINT = 0x8a5a2b;
 const LIGHT_SMOKE_TINT = 0x8c8c8c;
 const DARK_SMOKE_TINT = 0x2e2e2e;
 
-// Tripulantes que caem na água ao afundar um navio: saltam do casco, encolhem
-// ao cair e afundam. Cada um tem uma cópia preta mais abaixo como sombra.
 const CREW = {
   min: 2,
   max: 4,
-  /**
-   * Velocidade do salto (px/s) e seu freio (1/s): eles param a ~v/drag do
-   * centro (76–112 px), fora do casco que afunda por cima deles.
-   */
   speedMin: 190,
   speedMax: 280,
   drag: 2.5,
-  /** Escala ao saltar (ainda "no alto") e ao sumir afundando. */
   scaleFrom: 2.1,
   scaleTo: 0.9,
   life: 2.6,
-  /** Fração da vida em que ainda boiam, antes de começar a afundar. */
   hold: 0.45,
-  /** Giro ao cair (rad/s). */
   spin: 3,
   shadow: { tint: 0x000000, alpha: 0.35, offsetY: 6 },
 } as const;
@@ -43,22 +34,17 @@ interface ParticleSpec {
   readonly texture: Texture;
   readonly x: number;
   readonly y: number;
-  /** Duração (s). */
   readonly life: number;
   readonly vx?: number;
   readonly vy?: number;
-  /** Freio da velocidade (1/s). */
   readonly drag?: number;
   readonly scaleFrom: number;
   readonly scaleTo: number;
   readonly alphaFrom: number;
   readonly tint?: number;
-  /** Desenhada abaixo dos navios (na água) em vez de acima. */
   readonly under?: boolean;
   readonly rotation?: number;
-  /** Giro (rad/s), que o freio também reduz. */
   readonly spin?: number;
-  /** Fração da vida com o alfa cheio antes de começar a sumir. */
   readonly hold?: number;
 }
 
@@ -76,24 +62,17 @@ interface Particle {
   hold: number;
 }
 
-/**
- * Efeitos visuais de curta duração (fumaça, respingos, espuma) como partículas
- * com pool: os sprites são reaproveitados. Só visual: nada aqui afeta o jogo.
- */
+/** Pooled visual particles; none of their state affects the simulation. */
 export class EffectsView {
-  /** Camada abaixo dos navios: o que acontece na água. */
   readonly under = new Container();
-  /** Camada acima dos navios: fumaça e clarões. */
   readonly over = new Container();
 
   private active: Particle[] = [];
   private readonly pool: Particle[] = [];
-  // Seed fixa: os efeitos saem iguais a cada execução (screenshots estáveis).
   private readonly rng = createRng(1337);
 
   constructor(private readonly textures: FxTextures) {}
 
-  /** Clarão e fumaça na boca do canhão; `shots` aumenta o efeito na bordada. */
   muzzle(x: number, y: number, angle: number, shots: number): void {
     this.spawn({
       texture: getMuzzleFlashTexture(),
@@ -123,7 +102,6 @@ export class EffectsView {
     }
   }
 
-  /** Projétil caindo na água: anel e gotas. */
   splash(x: number, y: number): void {
     this.ripple(x, y, 0.5, 0.15, 0.75);
     for (let i = 0; i < 4; i++) {
@@ -143,7 +121,6 @@ export class EffectsView {
     }
   }
 
-  /** Projétil batendo numa ilha: poeira de areia. */
   dust(x: number, y: number): void {
     for (let i = 0; i < 6; i++) {
       const direction = this.range(0, Math.PI * 2);
@@ -164,7 +141,6 @@ export class EffectsView {
     }
   }
 
-  /** Tiro acertando um casco: clarão curto e lascas de madeira. */
   hit(x: number, y: number): void {
     this.spawn({
       texture: getMuzzleFlashTexture(),
@@ -194,7 +170,6 @@ export class EffectsView {
     }
   }
 
-  /** Navio destruído: bola de fogo, fumaça escura e anéis na água. */
   explosion(x: number, y: number): void {
     this.spawn({
       texture: getEffectTexture("explosion_1"),
@@ -235,7 +210,6 @@ export class EffectsView {
     this.ripple(x, y, 1.7, 0.3, 2.4);
   }
 
-  /** Fumaça de casco danificado; `heavy` a escurece e acrescenta chamas. */
   smoke(x: number, y: number, heavy: boolean): void {
     const at = { x: x + this.range(-10, 10), y: y + this.range(-10, 10) };
     this.spawn({
@@ -261,13 +235,11 @@ export class EffectsView {
     });
   }
 
-  /** Navio afundando: 2 a 4 tripulantes saltam na água e afundam. */
   crew(x: number, y: number): void {
     const textures = getCrewTextures();
     const count =
       CREW.min + Math.floor(this.rng.next() * (CREW.max - CREW.min + 1));
     for (let i = 0; i < count; i++) {
-      // Espalhados em volta do casco, cada um para um lado.
       const direction = ((i + this.rng.next() * 0.6) / count) * Math.PI * 2;
       const speed = this.range(CREW.speedMin, CREW.speedMax);
       const vx = Math.cos(direction) * speed;
@@ -285,7 +257,6 @@ export class EffectsView {
         hold: CREW.hold,
         under: true,
       };
-      // Sombra primeiro, para ficar por baixo; mesmo movimento, só mais abaixo.
       this.spawn({
         ...common,
         x,
@@ -294,12 +265,10 @@ export class EffectsView {
         tint: CREW.shadow.tint,
       });
       this.spawn({ ...common, x, y, alphaFrom: 1 });
-      // Respingo onde ele cai (o freio o leva a ~v/drag do casco).
       this.ripple(x + vx / CREW.drag, y + vy / CREW.drag, 0.7, 0.15, 0.9);
     }
   }
 
-  /** Espuma deixada pela popa de um navio que segue no rumo `rotation`. */
   foam(x: number, y: number, rotation: number): void {
     this.spawn({
       texture: this.textures.circle,
@@ -315,7 +284,6 @@ export class EffectsView {
     });
   }
 
-  /** Anel que se abre na água (spawn de inimigo, queda de projétil). */
   ripple(x: number, y: number, life = 0.9, scaleFrom = 0.4, scaleTo = 2.2) {
     this.spawn({
       texture: this.textures.ring,
@@ -356,7 +324,6 @@ export class EffectsView {
   }
 
   destroy(): void {
-    // Sprites no pool estão fora da cena: precisam ser destruídos à parte.
     for (const { sprite } of this.pool) sprite.destroy();
     this.pool.length = 0;
     this.active.length = 0;

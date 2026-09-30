@@ -11,14 +11,13 @@ import { projectileSystem } from "./systems/projectileSystem";
 import { spawnSystem } from "./systems/spawnSystem";
 import type { World } from "./World";
 
-/** Um passo fixo da simulação, na ordem do ARCHITECTURE.md §3. */
+/** Advances systems in gameplay order after preserving interpolation state. */
 export function stepWorld(
   world: World,
   actions: ActionState,
   dt: number,
   config: MatchConfig,
 ): void {
-  // Guarda o estado anterior: o desenho interpola entre ele e o deste passo.
   for (const ship of [world.player, ...world.enemies]) {
     ship.prevX = ship.x;
     ship.prevY = ship.y;
@@ -29,8 +28,7 @@ export function stepWorld(
     projectile.prevY = projectile.y;
   }
 
-  // Partida encerrada: movimento, ataques, dano e spawns param. Vem depois da
-  // cópia acima para o desenho não ficar interpolando o último passo.
+  // Copy transforms even after the match ends to avoid interpolating its last step.
   if (world.endReason) return;
 
   enemyAiSystem(world, config);

@@ -24,10 +24,7 @@ function registerBundles() {
   bundlesRegistered = true;
 }
 
-/**
- * Carrega os assets do jogo antes do combate. Rejeita em caso de erro para que
- * quem chamou possa oferecer "tentar de novo"; cargas repetidas usam o cache.
- */
+/** Loads cached bundles before combat and surfaces failure for UI retry. */
 export async function loadGameAssets(onProgress?: (progress: number) => void) {
   registerBundles();
   await Assets.loadBundle(
@@ -62,7 +59,6 @@ export function getEffectTexture(effect: EffectSprite): Texture {
 
 export const getMuzzleFlashTexture = () => getEffectTexture(MUZZLE_FLASH);
 
-/** Moldura e preenchimentos (verde, vermelho) da barra de vida dos navios. */
 export function getHealthBarTextures() {
   const [frame, green, red] = [
     HEALTH_BAR.frame,
@@ -76,7 +72,6 @@ export function getHealthBarTextures() {
   return { frame, green, red };
 }
 
-/** Texturas dos tripulantes (todas as variações). */
 export function getCrewTextures(): Texture[] {
   return CREW_SPRITES.map((crew) => {
     const texture = Assets.get<Texture>(crew);

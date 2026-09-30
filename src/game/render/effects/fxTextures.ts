@@ -1,13 +1,9 @@
 import { Texture } from "pixi.js";
 
 export interface FxTextures {
-  /** Disco branco de borda suave: fumaça, espuma, gotas, sombra de projétil. */
   readonly circle: Texture;
-  /** Anel fino: ondulações na água. */
   readonly ring: Texture;
-  /** Cunha que some para trás: rastro do projétil. */
   readonly trail: Texture;
-  /** Faixa que some para trás e nas bordas: esteira do navio. */
   readonly wake: Texture;
   destroy(): void;
 }
@@ -26,10 +22,7 @@ function draw(
   return Texture.from(canvas);
 }
 
-/**
- * Texturas dos efeitos, desenhadas em canvas (o pacote de assets não as tem).
- * São brancas para receber `tint`. Quem cria chama `destroy()` ao final.
- */
+/** Creates generated effect textures owned by one match. */
 export function createFxTextures(): FxTextures {
   const textures = {
     circle: draw(64, 64, (ctx) => {
@@ -67,7 +60,6 @@ export function createFxTextures(): FxTextures {
       across.addColorStop(1, "rgba(255,255,255,0)");
       ctx.fillStyle = across;
       ctx.fillRect(0, 0, 64, 10);
-      // Recorta o alfa ao longo do comprimento: some na ponta mais antiga.
       ctx.globalCompositeOperation = "destination-in";
       const along = ctx.createLinearGradient(0, 0, 64, 0);
       along.addColorStop(0, "rgba(255,255,255,0)");

@@ -5,7 +5,6 @@ import type { ApiError } from "../schemas/match";
 import { createRng } from "../game/core/random";
 import { readStore, removeStore, writeStore } from "../storage/localStore";
 
-// Cenários de rede do MSW: escolhidos no ScenarioPanel ou por ?scenario=<id> na URL.
 export const SCENARIOS = {
   success: "Success",
   empty: "Empty lists",
@@ -31,9 +30,8 @@ const URL_PARAM = "scenario";
 
 const SLOW_MS = 2500;
 const VARIABLE_MS = { min: 200, max: 2000 } as const;
-/** Pedidos alternam entre lento e rápido: o segundo chega antes do primeiro. */
 const OUT_OF_ORDER_MS = { slow: 2500, fast: 300 } as const;
-/** Seed fixa: a mesma sequência de latências a cada carregamento da página. */
+// Keep variable delays reproducible across page loads and tests.
 const LATENCY_SEED = 1;
 
 const scenarioIdSchema = z.enum(
@@ -41,7 +39,7 @@ const scenarioIdSchema = z.enum(
 );
 
 function initialScenario(): ScenarioId {
-  // A URL vence e fica salva: os testes do Playwright escolhem o cenário assim.
+  // The URL takes precedence and persists the scenario selected by tests.
   const fromUrl = scenarioIdSchema.safeParse(
     new URLSearchParams(window.location.search).get(URL_PARAM),
   );
@@ -55,20 +53,17 @@ function initialScenario(): ScenarioId {
 const scenario = initialScenario();
 const rng = createRng(LATENCY_SEED);
 let requestCount = 0;
-/** Partidas cuja escrita já travou uma vez no timeoutAfterWrite. */
 const hungWrites = new Set<string>();
 
 export function getScenario(): ScenarioId {
   return scenario;
 }
 
-/** Salva o cenário e recarrega: cache, latências e pendentes recomeçam limpos. */
 export function selectScenario(id: ScenarioId): void {
   writeStore(STORE, id);
   reloadWithoutScenarioParam();
 }
 
-/** Volta ao cenário de sucesso e recarrega. */
 export function resetScenario(): void {
   removeStore(STORE);
   reloadWithoutScenarioParam();
@@ -84,10 +79,7 @@ function apiError(status: number, code: string, message: string) {
   return HttpResponse.json<ApiError>({ code, message }, { status });
 }
 
-/**
- * Aplica o cenário a um pedido: atrasa, ou devolve a falha simulada.
- * undefined = o handler segue e responde normalmente.
- */
+/** Delays or fails one request; undefined lets the handler answer normally. */
 export async function simulateNetwork(
   endpoint: Endpoint,
 ): Promise<Response | undefined> {
@@ -106,7 +98,6 @@ export async function simulateNetwork(
       );
       return;
     case "timeout":
-      // O Axios desiste pelo próprio timeout.
       await delay("infinite");
       return;
     case "networkError":
@@ -130,7 +121,7 @@ function unavailable() {
   return apiError(503, "SIMULATED_UNAVAILABLE", "Service unavailable.");
 }
 
-/** timeoutAfterWrite: a primeira escrita de cada partida grava e nunca responde. */
+/** Simulates one lost response after a successful write for each match. */
 export function hangsAfterWrite(matchId: string): boolean {
   if (scenario !== "timeoutAfterWrite" || hungWrites.has(matchId)) return false;
   hungWrites.add(matchId);

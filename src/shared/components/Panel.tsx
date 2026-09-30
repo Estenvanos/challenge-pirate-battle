@@ -6,7 +6,6 @@ interface PanelProps {
   labelledBy?: string;
 }
 
-// Moldura de madeira do panel_menu.png, esticada em 9-slice pelo CSS.
 export function Panel({ children, wide = false, labelledBy }: PanelProps) {
   return (
     <section

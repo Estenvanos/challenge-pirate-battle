@@ -3,7 +3,7 @@ import { isAxiosError } from "axios";
 import { ZodError } from "zod";
 import { QUERY_DEFAULTS } from "../constants/api";
 
-// 4xx e resposta fora do contrato não se resolvem sozinhos: não vale repetir.
+/** 4xx and invalid schemas cannot recover through automatic retries. */
 function isPermanentError(error: unknown): boolean {
   if (error instanceof ZodError) return true;
   const status = isAxiosError(error) ? error.response?.status : undefined;

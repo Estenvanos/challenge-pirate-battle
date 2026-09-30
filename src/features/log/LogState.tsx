@@ -9,7 +9,6 @@ interface LogStateProps {
   onRetry: () => void;
 }
 
-// Estados de carregamento, erro e vazio compartilhados pelas abas do Captain's Log.
 export function LogState({
   isPending,
   isError,

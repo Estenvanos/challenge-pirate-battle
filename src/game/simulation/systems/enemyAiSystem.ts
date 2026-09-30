@@ -5,10 +5,6 @@ import type { Enemy } from "../entities";
 import { nextWaypoint, updateFlowField } from "../navigation";
 import type { World } from "../World";
 
-/**
- * Leme proporcional ao erro de rumo, saturando em `fullRudderAngle`. Retorna
- * o erro (rad).
- */
 function steerToward(
   enemy: Enemy,
   target: Point,
@@ -19,16 +15,7 @@ function steerToward(
   return error;
 }
 
-/**
- * Decide o comando de cada inimigo (vela e leme); quem move é o
- * movementSystem, com a mesma física do jogador.
- * O rumo segue o campo de fluxo até o jogador (contorna ilhas); perto dele,
- * mira direto.
- * A vela abre conforme o alinhamento com o rumo: o navio freia nas curvas.
- * - Sem arma (Chaser): sempre rumo ao jogador.
- * - Com arma (Shooters): aproxima-se e recolhe a vela dentro de
- *   `keepDistance`; ele para e segue virando a proa para o jogador.
- */
+/** Steers along the shared flow field; armed ships stop within keepDistance. */
 export function enemyAiSystem(world: World, config: MatchConfig): void {
   const { player } = world;
   const { fullRudderAngle, minTurnThrottle, pathLookahead, kinds } =

@@ -11,7 +11,6 @@ import { ArenaLoading } from "./ArenaLoading";
 import { usePause } from "./PauseProvider";
 import { TouchControls } from "./TouchControls";
 
-// Em dev, `?debugIslands` desenha os polígonos de colisão das ilhas.
 const DEBUG_ISLANDS =
   import.meta.env.DEV &&
   new URLSearchParams(window.location.search).has("debugIslands");
@@ -21,15 +20,13 @@ type LoadState =
   | { status: "ready" }
   | { status: "error" };
 
-// Cada tentativa é uma montagem nova (key), então "Retry" não precisa de efeito.
 interface GameCanvasProps {
-  /** Snapshot congelado das opções; fixo durante a partida. */
   options: Readonly<GameOptions>;
-  /** Fim da partida (tempo esgotado ou jogador destruído). */
   onMatchEnd: (result: MatchResult) => void;
 }
 
 export function GameCanvas({ options, onMatchEnd }: GameCanvasProps) {
+  // Retry remounts the host so every Pixi resource starts fresh.
   const [attempt, setAttempt] = useState(0);
   return (
     <GameCanvasHost
@@ -50,10 +47,9 @@ function GameCanvasHost({
   const rootRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Game | null>(null);
-  // Sempre o callback do render atual, sem recriar o Game quando ele muda.
+  // Read the latest callback without rebuilding the Pixi instance.
   const onMatchEndRef = useRef(onMatchEnd);
   useEffect(() => {
-    // Sincroniza o ref lido pelo Game (fora do React) com o callback atual; nada a desfazer.
     onMatchEndRef.current = onMatchEnd;
   });
   const [load, setLoad] = useState<LoadState>({
@@ -62,7 +58,6 @@ function GameCanvasHost({
   });
 
   useEffect(() => {
-    // Sincroniza a instância do Game (Pixi) com o ciclo de vida do componente.
     const host = hostRef.current;
     if (!host) return;
     let cancelled = false;
@@ -78,7 +73,7 @@ function GameCanvasHost({
         onScore: gameStore.setScore,
         onTimeLeft: gameStore.setTimeLeft,
         onMatchEnd: (result) => onMatchEndRef.current(result),
-        // Direto no DOM (variáveis CSS lidas pelos botões de tiro): sem render por quadro.
+        // CSS variables update weapon veils without a React render per frame.
         onCooldowns: (ratios) => {
           const root = rootRef.current;
           if (!root) return;
@@ -87,7 +82,7 @@ function GameCanvasHost({
           }
         },
         onLoadProgress: (progress) => {
-          // Depois de uma falha, os outros assets ainda avisam progresso: o erro fica.
+          // Other bundle progress callbacks may arrive after a failed load.
           if (!cancelled) {
             setLoad((current) =>
               current.status === "error"
@@ -100,7 +95,7 @@ function GameCanvasHost({
       .then(
         () => {
           if (cancelled)
-            game.destroy(); // desmontou durante o init
+            game.destroy(); // Unmounted during initialization.
           else {
             exposeGameForTests(game);
             setLoad({ status: "ready" });
@@ -117,13 +112,12 @@ function GameCanvasHost({
       cancelled = true;
       gameRef.current = null;
       exposeGameForTests(null);
-      game.destroy(); // seguro antes do fim do init e se chamado duas vezes
-      gameStore.reset(); // a próxima partida começa com o HUD cheio
+      game.destroy(); // Safe before initialization completes and if called twice.
+      gameStore.reset(); // The next match starts with a full HUD.
     };
   }, [options]);
 
   useEffect(() => {
-    // Sincroniza a pausa da UI com o Game (roda depois do efeito que o cria).
     gameRef.current?.setPaused(paused);
   }, [paused, options]);
 

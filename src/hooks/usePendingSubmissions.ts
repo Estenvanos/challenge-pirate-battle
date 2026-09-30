@@ -7,7 +7,6 @@ import {
 import { matchesKeys } from "../api/services/matches/queries";
 import { useSubmitMatch } from "./useSubmitMatch";
 
-/** Registros ainda não confirmados e o reenvio de todos eles (PUT idempotente). */
 export function usePendingSubmissions() {
   const pending = useSyncExternalStore(
     subscribePendingSubmissions,
@@ -23,14 +22,12 @@ export function usePendingSubmissions() {
   return { pending, saving, resend };
 }
 
-/** Reenvia a fila uma vez por carregamento da página (recuperação após refresh). */
 export function useResendPendingOnStart() {
   const { mutate } = useSubmitMatch();
   const sent = useRef(false);
 
   useEffect(() => {
-    // Sincroniza a fila salva no localStorage com a API. O ref segura a segunda
-    // execução do Strict Mode; não há o que desfazer, o PUT é idempotente.
+    // Strict Mode may run this effect twice; PUT remains idempotent on retries.
     if (sent.current) return;
     sent.current = true;
     for (const record of readPendingSubmissions()) mutate(record);

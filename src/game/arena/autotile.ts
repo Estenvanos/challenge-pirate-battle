@@ -1,13 +1,6 @@
-// Escolha do tile de chão de cada célula de terra a partir dos vizinhos.
-// Módulo puro (sem Pixi/DOM).
-
 type Pair = readonly [number, number];
 
-/**
- * Peças de um estilo de terra, tiradas de um bloco desenhado inteiro.
- * Bordas e miolo são pares contínuos no desenho: `top`/`bottom` variam por
- * coluna, `left`/`right` por linha, e o miolo é um bloco 2×2.
- */
+/** Tiles cut from one land-style block; edge and center art align by phase. */
 export interface LandPieces {
   readonly corners: {
     readonly topLeft: number;
@@ -22,7 +15,6 @@ export interface LandPieces {
   readonly center: readonly [Pair, Pair];
 }
 
-// Ilha de areia 3×3 (tiles 1–35): o desenho não varia no meio.
 export const SAND_PIECES: LandPieces = {
   corners: { topLeft: 1, topRight: 3, bottomLeft: 33, bottomRight: 35 },
   top: [2, 2],
@@ -35,7 +27,6 @@ export const SAND_PIECES: LandPieces = {
   ],
 };
 
-// Ilha com grama 4×4 (tiles 6–57).
 export const GRASS_PIECES: LandPieces = {
   corners: { topLeft: 6, topRight: 9, bottomLeft: 54, bottomRight: 57 },
   top: [7, 8],
@@ -48,7 +39,6 @@ export const GRASS_PIECES: LandPieces = {
   ],
 };
 
-// Água rasa 3×3 (tiles 10–44): branco translúcido desenhado em volta da terra.
 export const SHALLOW_PIECES: LandPieces = {
   corners: { topLeft: 10, topRight: 12, bottomLeft: 42, bottomRight: 44 },
   top: [11, 11],
@@ -63,12 +53,10 @@ export const SHALLOW_PIECES: LandPieces = {
 
 type Outline = readonly (readonly [number, number])[];
 
-/** Lado do tile (px) em que os contornos abaixo foram medidos. */
+/** Source-art size used when measuring the corner collision outlines. */
 export const OUTLINE_TILE_SIZE = 64;
 
-// Contorno convexo da terra em cada peça de canto (px do tile, sentido
-// horário), medido no alfa da arte. Os cantos são arredondados e cada um tem
-// uma curva diferente; areia e grama compartilham o mesmo contorno.
+// Convex outlines follow each rounded corner's alpha; sand and grass share them.
 const TOP_LEFT: Outline = [
   [4, 31],
   [12, 19],
@@ -105,7 +93,6 @@ const BOTTOM_RIGHT: Outline = [
   [0, 62],
 ];
 
-/** Contorno de colisão por tile de canto (sem espelhamento aplicado). */
 export const CORNER_OUTLINES: ReadonlyMap<number, Outline> = new Map(
   [SAND_PIECES, GRASS_PIECES].flatMap(({ corners }) => [
     [corners.topLeft, TOP_LEFT],
@@ -115,16 +102,13 @@ export const CORNER_OUTLINES: ReadonlyMap<number, Outline> = new Map(
   ]),
 );
 
-/** Tile de chão resolvido: espelhamento nos eixos e giro em quartos de volta. */
 export interface GroundTile {
   readonly tile: number;
   readonly flipX: boolean;
   readonly flipY: boolean;
-  /** Quartos de volta no sentido horário (0–3). */
   readonly rotation: number;
 }
 
-/** Lados da célula voltados para fora da região (água ou outro estilo). */
 export interface CellSides {
   readonly top: boolean;
   readonly bottom: boolean;
@@ -138,9 +122,7 @@ export function isCornerOrCenter({ top, bottom, left, right }: CellSides) {
   return { corner: vertical && horizontal, center: !vertical && !horizontal };
 }
 
-// Fase no período de 4 células: a, b, b espelhado, a espelhado. Assim todo
-// tile do miolo encosta no vizinho original do desenho ou na própria imagem
-// espelhada, sem emendas (repetir o mesmo tile deixava cada quadrado visível).
+// Four-cell phase: original pair, then its mirror, so center tiles meet cleanly.
 const mod4 = (value: number) => ((value % 4) + 4) % 4;
 const phase = (value: number) => {
   const p = mod4(value);
@@ -149,11 +131,7 @@ const phase = (value: number) => {
 
 type Band = "start" | "middle" | "end";
 
-/**
- * Resolve um eixo. Numa borda, a peça original casa com o miolo vizinho quando
- * ele está nas fases 0–1; nas fases 2–3 (miolo espelhado) casa a peça do lado
- * oposto, espelhada. `start` = esquerda/topo, `end` = direita/base.
- */
+/** Matches a border tile to the current phase of the neighboring center. */
 function resolveAxis(
   coord: number,
   atStart: boolean,
@@ -171,10 +149,6 @@ function resolveAxis(
   return { band: "middle", flip: along.flip, index: along.index };
 }
 
-/**
- * Peça pela posição na região, sem espelhar nem alternar: serve a desenhos
- * uniformes, como a água rasa.
- */
 export function resolvePlainTile(
   pieces: LandPieces,
   { top, bottom, left, right }: CellSides,
@@ -194,6 +168,7 @@ export function resolvePlainTile(
   return { tile, flipX: false, flipY: false, rotation: 0 };
 }
 
+/** Chooses a coast or center tile with matching mirrored edges. */
 export function resolveLandTile(
   pieces: LandPieces,
   col: number,
@@ -202,7 +177,6 @@ export function resolveLandTile(
 ): GroundTile {
   const x = resolveAxis(col, sides.left, sides.right);
   const y = resolveAxis(row, sides.top, sides.bottom);
-  // Nas bordas, a peça ao longo do eixo segue a fase da própria célula.
   const xIndex = phase(col).index;
   const yIndex = phase(row).index;
 

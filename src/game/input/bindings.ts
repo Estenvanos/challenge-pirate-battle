@@ -2,13 +2,10 @@ import type { Action } from "./actions";
 
 export interface KeyBinding {
   readonly action: Action;
-  /** Texto do controle na UI. */
   readonly label: string;
-  /** KeyboardEvent.code (independente do layout) e o nome exibido. */
   readonly keys: readonly { readonly code: string; readonly display: string }[];
 }
 
-// Fonte única dos controles de teclado: o InputManager e a UI leem daqui.
 export const KEY_BINDINGS: readonly KeyBinding[] = [
   {
     action: "forward",

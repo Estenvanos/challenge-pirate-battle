@@ -2,7 +2,6 @@ import { z } from "zod";
 import { STORAGE_KEYS } from "../../constants/storage";
 import { readStore, writeStore } from "../../storage/localStore";
 
-// Mudo global de todos os sons (ambiente, interface e partida), salvo no localStorage.
 let muted = readStore(STORAGE_KEYS.muted, z.boolean(), false);
 const listeners = new Set<() => void>();
 

@@ -3,16 +3,11 @@ import { GAME_CONFIG } from "../../../config/gameConfig";
 import type { Enemy } from "../../simulation/entities";
 import { ShipView, type ShipLayers } from "./ShipView";
 
-/** Defasagem do balanço entre navios (rad), para não balançarem em uníssono. */
 const SWAY_PHASE_STEP = 2.4;
 
-/** Tempo para o inimigo recém-nascido surgir por completo (s). */
 const FADE_IN_SEC = 0.4;
 
-/**
- * Um ShipView por inimigo, criado conforme o World. O inimigo destruído sai do
- * World na hora, mas a view fica até o casco terminar de afundar.
- */
+/** Keeps each destroyed ship's view until its sinking animation finishes. */
 export class EnemiesView {
   private readonly views = new Map<string, { enemy: Enemy; view: ShipView }>();
   private created = 0;
@@ -44,7 +39,6 @@ export class EnemiesView {
     }
     for (const [id, { enemy, view }] of this.views) {
       if (alive.has(enemy)) continue;
-      // Destruído (vida 0, parado na última posição): segue afundando.
       const { maxSpeed } = GAME_CONFIG.enemies.kinds[enemy.kind];
       view.sync(enemy, 1, dt, maxSpeed);
       if (!view.sunk) continue;
@@ -53,7 +47,6 @@ export class EnemiesView {
     }
   }
 
-  /** View do inimigo `id`, se ela ainda existe. */
   get(id: string): ShipView | undefined {
     return this.views.get(id)?.view;
   }

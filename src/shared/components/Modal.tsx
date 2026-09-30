@@ -8,7 +8,6 @@ interface ModalProps {
   children: ReactNode;
 }
 
-// Diálogo modal nativo: showModal() já prende o foco, torna o fundo inerte e devolve o foco ao fechar.
 export function Modal({
   labelledBy,
   describedBy,
@@ -18,12 +17,10 @@ export function Modal({
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    // Sincroniza o <dialog> nativo (API imperativa) com a montagem do componente.
     const dialog = dialogRef.current;
     if (!dialog) return;
     if (!dialog.open) dialog.showModal();
-    // O showModal() foca o primeiro focável, que pode ser o painel rolável
-    // (mobile); o foco inicial vai para o elemento marcado com autoFocus.
+    // showModal may focus the scroll panel on mobile; choose the primary action.
     dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus();
     return () => dialog.close();
   }, []);
@@ -35,7 +32,6 @@ export function Modal({
       aria-labelledby={labelledBy}
       aria-describedby={describedBy}
       onCancel={(event) => {
-        // Esc: fecha pelo estado do React em vez do fechamento nativo.
         event.preventDefault();
         onClose();
       }}

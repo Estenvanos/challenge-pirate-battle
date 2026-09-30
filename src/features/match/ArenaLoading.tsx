@@ -7,13 +7,10 @@ const title = pngAsset("ui/menu/title_pirate_battle.png");
 const ship = pngAsset("ships/ship_2.png");
 
 interface ArenaLoadingProps {
-  /** Progresso do carregamento (0–1); `null` quando falhou. */
   progress: number | null;
   onRetry: () => void;
 }
 
-// Tela de carregamento da arena: cobre a partida (HUD e controles) até os assets
-// chegarem. O navio navega sobre a barra de vida do HUD, usada como barra de progresso.
 export function ArenaLoading({ progress, onRetry }: ArenaLoadingProps) {
   const percent = Math.round((progress ?? 0) * 100);
   return (

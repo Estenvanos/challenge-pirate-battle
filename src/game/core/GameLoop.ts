@@ -4,19 +4,13 @@ export interface GameLoopConfig {
 }
 
 export interface GameLoopCallbacks {
-  /** Um passo fixo da simulação. */
+  /** One fixed simulation step. */
   readonly update: (dt: number) => void;
-  /**
-   * Desenho, uma vez por quadro, depois dos passos. `alpha` (0–1) é a fração
-   * do próximo passo já decorrida, para interpolar do estado anterior ao atual.
-   */
+  /** One draw per frame; alpha interpolates between the last two steps. */
   readonly render: (alpha: number) => void;
 }
 
-/**
- * Timestep fixo com acumulador: o tempo real do quadro vira N passos de
- * `stepSec`. O delta é limitado para uma travada não gerar uma avalanche.
- */
+/** Converts frame time into fixed steps and caps long frame stalls. */
 export class GameLoop {
   private accumulator = 0;
 
@@ -35,7 +29,7 @@ export class GameLoop {
     this.callbacks.render(this.accumulator / stepSec);
   }
 
-  /** Avança `sec` de simulação em passos fixos, sem depender do tempo real (testes). */
+  /** Runs deterministic simulation steps for tests, independent of wall time. */
   advance(sec: number): void {
     const { stepSec } = this.config;
     const steps = Math.round(sec / stepSec);

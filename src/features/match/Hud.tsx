@@ -3,14 +3,11 @@ import { useGameSnapshot } from "../../game/bridge/useGameSnapshot";
 import { pngAsset } from "../../shared/utils/assets";
 import { formatDuration } from "../../shared/utils/format";
 
-// Cor do preenchimento da vida conforme a fração restante.
 function healthLevel(ratio: number): "full" | "mid" | "low" {
   if (ratio <= 1 / 3) return "low";
   return ratio <= 2 / 3 ? "mid" : "full";
 }
 
-// HUD do topo: vida, pontuação e tempo restante vêm do jogo (useGameSnapshot).
-// Enquanto a arena carrega, o tempo mostra a sessão cheia.
 export function Hud({ sessionTimeSec }: { sessionTimeSec: number }) {
   const { hp, maxHp, score, timeLeftSec } = useGameSnapshot();
   const ratio = hp / maxHp;

@@ -9,8 +9,6 @@ import {
   type ScenarioId,
 } from "./scenarios";
 
-// Painel dos cenários de rede do MSW (também no build publicado). Trocar ou
-// resetar recarrega a página, para o cache e as latências recomeçarem limpos.
 export function ScenarioPanel() {
   const current = getScenario();
 

@@ -25,7 +25,6 @@ export function MenuButton({
     <button
       type={type}
       className={classes}
-      // O Modal lê isto: o autoFocus do React roda antes do showModal().
       data-autofocus={rest.autoFocus || undefined}
       {...withUiSounds(rest)}
     />

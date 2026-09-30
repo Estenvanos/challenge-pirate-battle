@@ -11,7 +11,6 @@ function fireFront(
   spec: ProjectileSpec,
   config: MatchConfig,
 ): void {
-  // Nasce na proa, para não sair de dentro do casco.
   const { hullHalfLength } = config.enemies.kinds[enemy.kind];
   const x = enemy.x + Math.cos(enemy.rotation) * hullHalfLength;
   const y = enemy.y + Math.sin(enemy.rotation) * hullHalfLength;
@@ -27,10 +26,7 @@ function fireFront(
   });
 }
 
-/**
- * Inimigo armado dispara um projétil frontal quando o jogador está no alcance
- * e a proa aponta para ele, respeitando o próprio cooldown.
- */
+/** Fires only when range, heading and the ship's cooldown all allow it. */
 export function enemyWeaponSystem(
   world: World,
   dt: number,

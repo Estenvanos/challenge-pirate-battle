@@ -17,7 +17,6 @@ function loadConfirmed(): MatchRecord[] {
   return readStore(STORE, z.array(matchRecordSchema), []);
 }
 
-// Fixtures de cada cenário: "empty" só tem os registros confirmados.
 function fixturesForScenario(): readonly MatchRecord[] {
   switch (getScenario()) {
     case "empty":

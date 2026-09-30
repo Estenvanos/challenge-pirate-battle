@@ -1,4 +1,3 @@
-// Caminhos dos PNGs fornecidos, com a variante retina para srcSet.
 export interface AssetSource {
   src: string;
   srcSet: string;
