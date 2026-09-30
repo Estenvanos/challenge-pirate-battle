@@ -7,6 +7,15 @@ import { circleVsPolygon } from "../game/physics/collision";
  */
 export const TEST_MODE = import.meta.env.VITE_GAME_TEST === "true";
 
+/**
+ * Relógio manual nos testes; `?clock=real` mantém o tempo real (profiling
+ * com os ganchos de leitura).
+ */
+export function testManualClock(): boolean {
+  if (!TEST_MODE) return false;
+  return new URLSearchParams(window.location.search).get("clock") !== "real";
+}
+
 /** Seed da partida vinda de `?seed=N` (só em modo de teste). */
 export function testSeed(): number | undefined {
   if (!TEST_MODE) return undefined;
@@ -42,6 +51,11 @@ export interface GameTestApi {
   /** Avança `sec` de jogo ativo em passos fixos (ignorado na pausa). */
   advance(sec: number): void;
   state(): GameTestState | null;
+  /**
+   * Só para o profiling: devolve a vida cheia ao jogador, para a partida de
+   * 3 min chegar ao fim com a arena cheia (pior caso). Os testes não usam.
+   */
+  restorePlayerHealth(): void;
 }
 
 declare global {
@@ -60,6 +74,10 @@ export function exposeGameForTests(game: Game | null): void {
   window.__GAME_TEST__ = {
     ready: () => game?.state != null,
     advance: (sec) => game?.advance(sec),
+    restorePlayerHealth: () => {
+      const player = game?.state?.player;
+      if (player && player.hp > 0) player.hp = player.maxHp;
+    },
     state: () => {
       const world = game?.state;
       if (!world) return null;

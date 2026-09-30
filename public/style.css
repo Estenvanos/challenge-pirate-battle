@@ -82,10 +82,11 @@ img {
   justify-content: center;
 }
 
+/* Mesmo lugar e tamanho no menu e na partida: canto superior esquerdo. */
 .scene__logo {
   position: absolute;
-  right: 24px;
-  bottom: 16px;
+  top: 16px;
+  left: 24px;
   width: 124px;
   pointer-events: none;
 }
@@ -862,11 +863,6 @@ img {
   height: 28px;
 }
 
-/* Na partida, o logo sobe para não cobrir os controles de tiro. */
-.scene:has(.match) .scene__logo {
-  bottom: 204px;
-}
-
 /* ---------- Controls (options) ---------- */
 .controls-list {
   display: grid;
@@ -943,7 +939,7 @@ img {
 /* ---------- Mobile ---------- */
 @media (max-width: 600px) {
   .scene__logo {
-    right: 16px;
+    left: 16px;
     width: 96px;
   }
 
@@ -1048,10 +1044,6 @@ img {
   .round-button--control .round-button__icon {
     width: 28px;
     height: 28px;
-  }
-
-  .scene:has(.match) .scene__logo {
-    bottom: 136px;
   }
 }
 

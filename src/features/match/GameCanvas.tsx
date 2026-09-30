@@ -4,7 +4,7 @@ import { gameStore } from "../../game/bridge/gameStore";
 import { Game, type MatchResult } from "../../game/core/Game";
 import {
   exposeGameForTests,
-  TEST_MODE,
+  testManualClock,
   testSeed,
 } from "../../testing/testHooks";
 import { ArenaLoading } from "./ArenaLoading";
@@ -73,7 +73,7 @@ function GameCanvasHost({
         options,
         debugIslands: DEBUG_ISLANDS,
         seed: testSeed(),
-        manualClock: TEST_MODE,
+        manualClock: testManualClock(),
         onPlayerHealth: gameStore.setPlayerHealth,
         onScore: gameStore.setScore,
         onTimeLeft: gameStore.setTimeLeft,

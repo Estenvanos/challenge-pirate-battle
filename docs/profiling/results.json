@@ -1,0 +1,1337 @@
+{
+  "environment": {
+    "date": "2026-09-30T20:46:02.009Z",
+    "cpu": "Intel(R) Core(TM) i5-10210U CPU @ 1.60GHz",
+    "cores": 8,
+    "memoryGB": 7.4,
+    "os": "Linux 7.2.7-200.fc44.x86_64",
+    "browser": "Chromium 153.0.8010.12 (headless, ANGLE GL-EGL)",
+    "viewport": "1280x720 @1x",
+    "match": {
+      "sessionTimeSec": 180,
+      "spawnIntervalSec": 3,
+      "seed": 3
+    }
+  },
+  "match": {
+    "renderer": "ANGLE (Intel, Mesa Intel(R) UHD Graphics (CML GT2), OpenGL ES 3.2)",
+    "endReason": "timeUp",
+    "elapsedSec": 180,
+    "score": 6,
+    "durationSec": 181.2,
+    "frames": 10867,
+    "avgFps": 60,
+    "frameTimeMs": {
+      "median": 16.7,
+      "p95": 16.7,
+      "p99": 16.8,
+      "max": 100
+    },
+    "framesOver20ms": 1,
+    "entities": {
+      "maxEnemies": 44,
+      "avgEnemies": 21.9,
+      "maxProjectiles": 9,
+      "avgProjectiles": 3.2
+    },
+    "samples": [
+      {
+        "t": 0,
+        "enemies": 0,
+        "projectiles": 0,
+        "hp": 100,
+        "score": 0
+      },
+      {
+        "t": 1,
+        "enemies": 0,
+        "projectiles": 0,
+        "hp": 100,
+        "score": 0
+      },
+      {
+        "t": 2,
+        "enemies": 0,
+        "projectiles": 0,
+        "hp": 100,
+        "score": 0
+      },
+      {
+        "t": 3,
+        "enemies": 1,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 0
+      },
+      {
+        "t": 4,
+        "enemies": 1,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 0
+      },
+      {
+        "t": 5,
+        "enemies": 1,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 0
+      },
+      {
+        "t": 6,
+        "enemies": 2,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 0
+      },
+      {
+        "t": 7,
+        "enemies": 2,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 0
+      },
+      {
+        "t": 8,
+        "enemies": 2,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 0
+      },
+      {
+        "t": 9,
+        "enemies": 3,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 0
+      },
+      {
+        "t": 10,
+        "enemies": 3,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 0
+      },
+      {
+        "t": 11,
+        "enemies": 2,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 1
+      },
+      {
+        "t": 12,
+        "enemies": 3,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 1
+      },
+      {
+        "t": 13,
+        "enemies": 3,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 1
+      },
+      {
+        "t": 14,
+        "enemies": 2,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 2
+      },
+      {
+        "t": 15,
+        "enemies": 3,
+        "projectiles": 0,
+        "hp": 100,
+        "score": 2
+      },
+      {
+        "t": 16,
+        "enemies": 3,
+        "projectiles": 0,
+        "hp": 100,
+        "score": 2
+      },
+      {
+        "t": 17,
+        "enemies": 3,
+        "projectiles": 0,
+        "hp": 100,
+        "score": 2
+      },
+      {
+        "t": 18,
+        "enemies": 4,
+        "projectiles": 0,
+        "hp": 100,
+        "score": 2
+      },
+      {
+        "t": 19,
+        "enemies": 4,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 2
+      },
+      {
+        "t": 20,
+        "enemies": 4,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 2
+      },
+      {
+        "t": 21,
+        "enemies": 5,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 2
+      },
+      {
+        "t": 22,
+        "enemies": 5,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 2
+      },
+      {
+        "t": 23,
+        "enemies": 5,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 2
+      },
+      {
+        "t": 24,
+        "enemies": 6,
+        "projectiles": 0,
+        "hp": 100,
+        "score": 2
+      },
+      {
+        "t": 25,
+        "enemies": 5,
+        "projectiles": 0,
+        "hp": 100,
+        "score": 3
+      },
+      {
+        "t": 26,
+        "enemies": 4,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 3
+      },
+      {
+        "t": 27,
+        "enemies": 5,
+        "projectiles": 0,
+        "hp": 100,
+        "score": 3
+      },
+      {
+        "t": 28,
+        "enemies": 5,
+        "projectiles": 0,
+        "hp": 100,
+        "score": 3
+      },
+      {
+        "t": 29,
+        "enemies": 5,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 3
+      },
+      {
+        "t": 30,
+        "enemies": 6,
+        "projectiles": 0,
+        "hp": 100,
+        "score": 3
+      },
+      {
+        "t": 31,
+        "enemies": 6,
+        "projectiles": 0,
+        "hp": 96,
+        "score": 3
+      },
+      {
+        "t": 32,
+        "enemies": 6,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 3
+      },
+      {
+        "t": 33,
+        "enemies": 7,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 3
+      },
+      {
+        "t": 34,
+        "enemies": 7,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 3
+      },
+      {
+        "t": 35,
+        "enemies": 7,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 3
+      },
+      {
+        "t": 36,
+        "enemies": 8,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 3
+      },
+      {
+        "t": 37,
+        "enemies": 8,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 3
+      },
+      {
+        "t": 38,
+        "enemies": 8,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 3
+      },
+      {
+        "t": 39,
+        "enemies": 9,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 3
+      },
+      {
+        "t": 40,
+        "enemies": 9,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 3
+      },
+      {
+        "t": 41,
+        "enemies": 9,
+        "projectiles": 0,
+        "hp": 100,
+        "score": 3
+      },
+      {
+        "t": 42,
+        "enemies": 9,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 43,
+        "enemies": 9,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 44,
+        "enemies": 9,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 45,
+        "enemies": 10,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 46,
+        "enemies": 10,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 47,
+        "enemies": 10,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 48,
+        "enemies": 11,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 49,
+        "enemies": 11,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 50,
+        "enemies": 11,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 51,
+        "enemies": 12,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 52,
+        "enemies": 12,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 53,
+        "enemies": 12,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 54,
+        "enemies": 13,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 55,
+        "enemies": 12,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 56,
+        "enemies": 12,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 57,
+        "enemies": 13,
+        "projectiles": 0,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 58,
+        "enemies": 13,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 59,
+        "enemies": 13,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 60,
+        "enemies": 13,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 61,
+        "enemies": 13,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 62,
+        "enemies": 13,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 63,
+        "enemies": 14,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 64,
+        "enemies": 14,
+        "projectiles": 2,
+        "hp": 96,
+        "score": 4
+      },
+      {
+        "t": 65,
+        "enemies": 14,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 67,
+        "enemies": 15,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 68,
+        "enemies": 15,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 69,
+        "enemies": 15,
+        "projectiles": 0,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 70,
+        "enemies": 16,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 71,
+        "enemies": 16,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 72,
+        "enemies": 16,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 73,
+        "enemies": 17,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 74,
+        "enemies": 16,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 75,
+        "enemies": 16,
+        "projectiles": 3,
+        "hp": 95,
+        "score": 4
+      },
+      {
+        "t": 76,
+        "enemies": 17,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 77,
+        "enemies": 17,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 78,
+        "enemies": 17,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 79,
+        "enemies": 18,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 80,
+        "enemies": 18,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 81,
+        "enemies": 18,
+        "projectiles": 5,
+        "hp": 95,
+        "score": 4
+      },
+      {
+        "t": 82,
+        "enemies": 19,
+        "projectiles": 3,
+        "hp": 95,
+        "score": 4
+      },
+      {
+        "t": 83,
+        "enemies": 19,
+        "projectiles": 5,
+        "hp": 95,
+        "score": 4
+      },
+      {
+        "t": 84,
+        "enemies": 19,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 85,
+        "enemies": 20,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 86,
+        "enemies": 20,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 87,
+        "enemies": 20,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 88,
+        "enemies": 21,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 89,
+        "enemies": 21,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 90,
+        "enemies": 21,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 91,
+        "enemies": 22,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 92,
+        "enemies": 22,
+        "projectiles": 6,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 93,
+        "enemies": 22,
+        "projectiles": 2,
+        "hp": 95,
+        "score": 4
+      },
+      {
+        "t": 94,
+        "enemies": 23,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 95,
+        "enemies": 23,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 96,
+        "enemies": 23,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 97,
+        "enemies": 24,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 98,
+        "enemies": 24,
+        "projectiles": 6,
+        "hp": 91,
+        "score": 4
+      },
+      {
+        "t": 99,
+        "enemies": 24,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 100,
+        "enemies": 25,
+        "projectiles": 6,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 101,
+        "enemies": 25,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 102,
+        "enemies": 25,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 103,
+        "enemies": 26,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 104,
+        "enemies": 26,
+        "projectiles": 3,
+        "hp": 95,
+        "score": 4
+      },
+      {
+        "t": 105,
+        "enemies": 26,
+        "projectiles": 7,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 106,
+        "enemies": 27,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 107,
+        "enemies": 26,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 108,
+        "enemies": 26,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 109,
+        "enemies": 27,
+        "projectiles": 6,
+        "hp": 96,
+        "score": 4
+      },
+      {
+        "t": 110,
+        "enemies": 27,
+        "projectiles": 1,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 111,
+        "enemies": 27,
+        "projectiles": 7,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 112,
+        "enemies": 28,
+        "projectiles": 3,
+        "hp": 95,
+        "score": 4
+      },
+      {
+        "t": 113,
+        "enemies": 28,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 114,
+        "enemies": 28,
+        "projectiles": 5,
+        "hp": 95,
+        "score": 4
+      },
+      {
+        "t": 115,
+        "enemies": 29,
+        "projectiles": 3,
+        "hp": 95,
+        "score": 4
+      },
+      {
+        "t": 116,
+        "enemies": 29,
+        "projectiles": 6,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 117,
+        "enemies": 30,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 118,
+        "enemies": 30,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 119,
+        "enemies": 30,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 120,
+        "enemies": 31,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 121,
+        "enemies": 31,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 122,
+        "enemies": 31,
+        "projectiles": 9,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 123,
+        "enemies": 32,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 124,
+        "enemies": 32,
+        "projectiles": 6,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 125,
+        "enemies": 32,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 126,
+        "enemies": 33,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 127,
+        "enemies": 33,
+        "projectiles": 8,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 128,
+        "enemies": 33,
+        "projectiles": 4,
+        "hp": 95,
+        "score": 4
+      },
+      {
+        "t": 129,
+        "enemies": 34,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 130,
+        "enemies": 34,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 131,
+        "enemies": 34,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 132,
+        "enemies": 35,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 133,
+        "enemies": 34,
+        "projectiles": 7,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 134,
+        "enemies": 34,
+        "projectiles": 3,
+        "hp": 95,
+        "score": 4
+      },
+      {
+        "t": 135,
+        "enemies": 35,
+        "projectiles": 5,
+        "hp": 96,
+        "score": 4
+      },
+      {
+        "t": 136,
+        "enemies": 34,
+        "projectiles": 4,
+        "hp": 95,
+        "score": 4
+      },
+      {
+        "t": 137,
+        "enemies": 34,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 138,
+        "enemies": 35,
+        "projectiles": 6,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 139,
+        "enemies": 35,
+        "projectiles": 6,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 140,
+        "enemies": 35,
+        "projectiles": 2,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 141,
+        "enemies": 36,
+        "projectiles": 6,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 142,
+        "enemies": 36,
+        "projectiles": 4,
+        "hp": 96,
+        "score": 4
+      },
+      {
+        "t": 143,
+        "enemies": 36,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 144,
+        "enemies": 37,
+        "projectiles": 7,
+        "hp": 95,
+        "score": 4
+      },
+      {
+        "t": 145,
+        "enemies": 37,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 146,
+        "enemies": 37,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 147,
+        "enemies": 38,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 148,
+        "enemies": 38,
+        "projectiles": 6,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 149,
+        "enemies": 38,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 150,
+        "enemies": 39,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 151,
+        "enemies": 39,
+        "projectiles": 6,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 152,
+        "enemies": 39,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 153,
+        "enemies": 40,
+        "projectiles": 3,
+        "hp": 95,
+        "score": 4
+      },
+      {
+        "t": 154,
+        "enemies": 40,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 155,
+        "enemies": 40,
+        "projectiles": 6,
+        "hp": 95,
+        "score": 4
+      },
+      {
+        "t": 156,
+        "enemies": 41,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 157,
+        "enemies": 41,
+        "projectiles": 6,
+        "hp": 100,
+        "score": 4
+      },
+      {
+        "t": 158,
+        "enemies": 41,
+        "projectiles": 4,
+        "hp": 95,
+        "score": 4
+      },
+      {
+        "t": 159,
+        "enemies": 41,
+        "projectiles": 6,
+        "hp": 100,
+        "score": 5
+      },
+      {
+        "t": 160,
+        "enemies": 40,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 5
+      },
+      {
+        "t": 161,
+        "enemies": 40,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 5
+      },
+      {
+        "t": 162,
+        "enemies": 41,
+        "projectiles": 4,
+        "hp": 95,
+        "score": 5
+      },
+      {
+        "t": 163,
+        "enemies": 41,
+        "projectiles": 6,
+        "hp": 100,
+        "score": 5
+      },
+      {
+        "t": 164,
+        "enemies": 41,
+        "projectiles": 6,
+        "hp": 100,
+        "score": 5
+      },
+      {
+        "t": 165,
+        "enemies": 42,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 5
+      },
+      {
+        "t": 166,
+        "enemies": 42,
+        "projectiles": 8,
+        "hp": 100,
+        "score": 5
+      },
+      {
+        "t": 167,
+        "enemies": 42,
+        "projectiles": 6,
+        "hp": 100,
+        "score": 5
+      },
+      {
+        "t": 168,
+        "enemies": 43,
+        "projectiles": 8,
+        "hp": 100,
+        "score": 5
+      },
+      {
+        "t": 169,
+        "enemies": 43,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 5
+      },
+      {
+        "t": 170,
+        "enemies": 43,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 5
+      },
+      {
+        "t": 171,
+        "enemies": 44,
+        "projectiles": 4,
+        "hp": 100,
+        "score": 5
+      },
+      {
+        "t": 172,
+        "enemies": 44,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 5
+      },
+      {
+        "t": 173,
+        "enemies": 44,
+        "projectiles": 5,
+        "hp": 100,
+        "score": 5
+      },
+      {
+        "t": 174,
+        "enemies": 44,
+        "projectiles": 4,
+        "hp": 87,
+        "score": 6
+      },
+      {
+        "t": 175,
+        "enemies": 43,
+        "projectiles": 7,
+        "hp": 100,
+        "score": 6
+      },
+      {
+        "t": 176,
+        "enemies": 43,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 6
+      },
+      {
+        "t": 177,
+        "enemies": 44,
+        "projectiles": 8,
+        "hp": 100,
+        "score": 6
+      },
+      {
+        "t": 179,
+        "enemies": 43,
+        "projectiles": 3,
+        "hp": 100,
+        "score": 6
+      },
+      {
+        "t": 180,
+        "enemies": 43,
+        "projectiles": 7,
+        "hp": 96,
+        "score": 6
+      }
+    ]
+  },
+  "memory": [
+    {
+      "cycle": 0,
+      "jsHeapUsedMB": 4.94,
+      "domNodes": 196,
+      "listeners": 181,
+      "canvases": 0
+    },
+    {
+      "cycle": 1,
+      "jsHeapUsedMB": 8.88,
+      "domNodes": 226,
+      "listeners": 202,
+      "canvases": 0
+    },
+    {
+      "cycle": 2,
+      "jsHeapUsedMB": 9.21,
+      "domNodes": 226,
+      "listeners": 202,
+      "canvases": 0
+    },
+    {
+      "cycle": 3,
+      "jsHeapUsedMB": 9.42,
+      "domNodes": 226,
+      "listeners": 202,
+      "canvases": 0
+    },
+    {
+      "cycle": 4,
+      "jsHeapUsedMB": 9.55,
+      "domNodes": 226,
+      "listeners": 202,
+      "canvases": 0
+    },
+    {
+      "cycle": 5,
+      "jsHeapUsedMB": 9.74,
+      "domNodes": 226,
+      "listeners": 202,
+      "canvases": 0
+    }
+  ]
+}
