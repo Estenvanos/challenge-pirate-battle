@@ -25,9 +25,9 @@ export const mediterranean: TileMapDefinition = {
   author: "Estevan",
   grid: [
     "gggggggggg...E......gggggg", //  0
-    "gggggggggg......ss..gggggg", //  1
-    "ggggggg.....ss..ss....gggg", //  2
-    "ggggggg.....ss..ss....gggg", //  3
+    "gggggggggg..........gggggg", //  1
+    "ggggggg...............gggg", //  2
+    "ggggggg...............gggg", //  3
     "ggggggg.................gg", //  4
     "ggggg..ssss.....ggg.....gg", //  5
     "ggggg..ssss..E..ggg.......", //  6
@@ -44,7 +44,7 @@ export const mediterranean: TileMapDefinition = {
   features: [
     "........Q............f....", //  0
     "Q.O#=#O................O.l", //  1
-    ".l#...>.....r...m......<..", //  2
+    ".l#...>................<..", //  2
     "..#mQ.O................O..", //  3
     "f.O.......................", //  4
     "..#l.............O.......R", //  5

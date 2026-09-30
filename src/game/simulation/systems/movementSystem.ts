@@ -61,6 +61,6 @@ export function movementSystem(
     dt,
   );
   for (const enemy of world.enemies) {
-    sail(enemy, enemy.control, config.enemies[enemy.kind], dt);
+    sail(enemy, enemy.control, config.enemies.kinds[enemy.kind], dt);
   }
 }

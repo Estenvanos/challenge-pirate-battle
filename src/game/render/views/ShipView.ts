@@ -57,6 +57,12 @@ export class ShipView {
     this.targetLean = -ship.angularVelocity * SWAY.turnLean;
   }
 
+  /** Troca a aparência do casco (estágio de dano). */
+  setSprite(sprite: ShipSprite): void {
+    const texture = getShipTexture(sprite);
+    if (this.hull.texture !== texture) this.hull.texture = texture;
+  }
+
   destroy(): void {
     this.unsubscribe();
     // A textura é compartilhada pelo cache do Assets; só a cena é destruída.

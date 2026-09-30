@@ -1,3 +1,4 @@
+import type { EnemySpec } from "../../../config/enemies";
 import type { MatchConfig } from "../../../config/gameConfig";
 import type { Point } from "../../arena";
 import { circleVsPolygon } from "../../physics/collision";
@@ -26,11 +27,25 @@ function freeSpawnPoints(
   );
 }
 
+/** Sorteia o tipo na proporção dos `spawnWeight`. */
+function pickKind(world: World, config: MatchConfig): EnemyKind {
+  const entries = Object.entries(config.enemies.kinds) as [
+    EnemyKind,
+    EnemySpec,
+  ][];
+  const total = entries.reduce((sum, [, spec]) => sum + spec.spawnWeight, 0);
+  let roll = world.rng.next() * total;
+  for (const [kind, spec] of entries) {
+    roll -= spec.spawnWeight;
+    if (roll < 0) return kind;
+  }
+  return entries[entries.length - 1][0];
+}
+
 function spawnEnemy(world: World, config: MatchConfig): void {
-  const kind: EnemyKind =
-    world.rng.next() < config.spawn.chaserChance ? "chaser" : "shooter";
-  const motion = config.enemies[kind];
-  const candidates = freeSpawnPoints(world, motion.radius, config);
+  const kind = pickKind(world, config);
+  const spec = config.enemies.kinds[kind];
+  const candidates = freeSpawnPoints(world, spec.radius, config);
   // Sem ponto livre, este spawn é pulado; o próximo intervalo tenta de novo.
   if (candidates.length === 0) return;
   const point = world.rng.pick(candidates);
@@ -42,9 +57,11 @@ function spawnEnemy(world: World, config: MatchConfig): void {
     rotation: angleTo(point, world.player),
     speed: 0,
     angularVelocity: 0,
-    radius: motion.radius,
+    radius: spec.radius,
+    hp: spec.maxHp,
+    maxHp: spec.maxHp,
     control: { forward: false, turn: 0 },
-    fireCooldown: config.enemies.shooter.fireCooldownSec,
+    fireCooldown: spec.weapon?.fireCooldownSec ?? 0,
   });
 }
 

@@ -20,8 +20,8 @@ function fireFront(world: World, enemy: Enemy, config: MatchConfig): void {
 }
 
 /**
- * Shooter dispara um projétil frontal quando o jogador está no alcance e a
- * proa aponta para ele, respeitando o próprio cooldown.
+ * Inimigo armado dispara um projétil frontal quando o jogador está no alcance
+ * e a proa aponta para ele, respeitando o próprio cooldown.
  */
 export function enemyWeaponSystem(
   world: World,
@@ -29,9 +29,10 @@ export function enemyWeaponSystem(
   config: MatchConfig,
 ): void {
   const { player } = world;
-  const { attackRange, aimTolerance, fireCooldownSec } = config.enemies.shooter;
   for (const enemy of world.enemies) {
-    if (enemy.kind !== "shooter") continue;
+    const { weapon } = config.enemies.kinds[enemy.kind];
+    if (!weapon) continue;
+    const { attackRange, aimTolerance, fireCooldownSec } = weapon;
     enemy.fireCooldown = Math.max(0, enemy.fireCooldown - dt);
     if (enemy.fireCooldown > 0) continue;
     if (distance(enemy, player) > attackRange) continue;

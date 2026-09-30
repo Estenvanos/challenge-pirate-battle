@@ -1,5 +1,8 @@
 // Valores de balanceamento do jogo. Sistemas leem daqui; nada de números mágicos.
+import { createEnemyConfig } from "./enemies";
 import type { GameOptions } from "./options";
+
+export type { ShipMotion } from "./enemies";
 
 const PLAYER = Object.freeze({
   /** Velocidade máxima para a frente (px/s). */
@@ -20,20 +23,6 @@ const PLAYER = Object.freeze({
   initialRotation: -Math.PI / 2,
 });
 
-/** Inimigos ~20% mais lentos que o jogador, com a mesma sensação de inércia. */
-const ENEMY_SPEED_FACTOR = 0.8;
-
-// Mesmo modelo de barco do jogador (vela, deriva e leme), em escala.
-const ENEMY_MOTION = Object.freeze({
-  maxSpeed: PLAYER.maxSpeed * ENEMY_SPEED_FACTOR,
-  acceleration: PLAYER.acceleration * ENEMY_SPEED_FACTOR,
-  drag: PLAYER.drag * ENEMY_SPEED_FACTOR,
-  maxTurnSpeed: PLAYER.maxTurnSpeed,
-  turnAcceleration: PLAYER.turnAcceleration,
-  minRudder: PLAYER.minRudder,
-  radius: PLAYER.radius,
-});
-
 export const GAME_CONFIG = Object.freeze({
   loop: Object.freeze({
     /** Passo fixo da simulação (s). */
@@ -45,30 +34,9 @@ export const GAME_CONFIG = Object.freeze({
   spawn: Object.freeze({
     /** Distância mínima (px) do ponto de spawn até o jogador. */
     minPlayerDistance: 360,
-    /** Chance de cada spawn ser Chaser; o resto é Shooter. */
-    chaserChance: 0.6,
   }),
-  enemies: Object.freeze({
-    /**
-     * Erro de rumo (rad) em que a IA vira o leme todo; abaixo disso o giro é
-     * proporcional, para o navio não ficar ziguezagueando sobre o alvo.
-     */
-    fullRudderAngle: 0.6,
-    /** Quantas células à frente no caminho a IA mira (contorno de ilhas). */
-    pathLookahead: 2,
-    chaser: ENEMY_MOTION,
-    shooter: Object.freeze({
-      ...ENEMY_MOTION,
-      /** Recolhe a vela quando o jogador está mais perto que isso (px). */
-      keepDistance: 240,
-      /** Dispara só com o jogador dentro deste alcance (px). */
-      attackRange: 340,
-      /** Só dispara com a proa a até este ângulo do jogador (rad). */
-      aimTolerance: 0.25,
-      /** Intervalo entre disparos (s). */
-      fireCooldownSec: 1.8,
-    }),
-  }),
+  /** Tipos de inimigo e a taxa de spawn de cada um: veja `enemies.ts`. */
+  enemies: createEnemyConfig(PLAYER),
   projectile: Object.freeze({
     /** Velocidade (px/s). */
     speed: 220,
@@ -79,8 +47,6 @@ export const GAME_CONFIG = Object.freeze({
 });
 
 export type GameConfig = typeof GAME_CONFIG;
-
-export type ShipMotion = typeof ENEMY_MOTION;
 
 /**
  * Snapshot congelado de uma partida: config + opções do jogador. Mudanças
