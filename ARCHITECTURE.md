@@ -60,14 +60,32 @@ config ◄── used by game and features
   - An accumulator consumes real frame time.
   - The frame delta is clamped to 0.25 s (`loop.maxFrameDeltaSec`) so a long stall cannot trigger an avalanche of steps.
   - Rendering runs once per frame, after the steps. There is no interpolation yet.
-- Implemented so far: `movementSystem` (player only) → `collisionSystem` (ship↔island, arena bounds).
-- Ship movement has inertia, like a boat. The ship keeps `speed` and `angularVelocity`.
+- Implemented so far (`simulation/stepWorld.ts`): `enemyAiSystem` → `movementSystem` → `enemyWeaponSystem` → `projectileSystem` → `collisionSystem` (ship↔island, enemy↔enemy, arena bounds) → `spawnSystem`.
+- Each match uses `createMatchConfig(options)`, a frozen snapshot of `GAME_CONFIG` plus the saved options (session time, spawn interval).
+- Ship movement has inertia, like a boat. Player and enemies share the same model (`movementSystem`), driven by a `ShipControl` (sail open, rudder −1…1): the player's comes from input, and an enemy's comes from its AI. The ship keeps `speed` and `angularVelocity`.
   - Holding forward accelerates it up to `maxSpeed`. Releasing it lets the ship coast and slow down through `drag`.
   - The rudder changes the turn rate gradually (`turnAcceleration`).
   - Turning is stronger at speed. At a standstill the ship keeps only `minRudder` of its turn rate.
   - Hitting an obstacle removes the part of the speed that pointed into it. A head-on hit stops the ship; a glancing one keeps most of the speed while it slides.
 - `GameClock` is the only time source. It can be paused, and test hooks can step it by hand.
-- `core/random.ts` provides a seeded PRNG (algorithm **TBD**, e.g. mulberry32). It drives spawns and AI variation.
+- `core/random.ts` provides a seeded PRNG (mulberry32). It drives the spawn kind and point. `Game` picks the seed (`GameInitOptions.seed`, or the current time by default).
+
+### Enemies
+
+- **Spawn** (`spawnSystem`): one enemy every `spawn.intervalSec` of active play. The first one appears after one interval.
+  - The kind is Chaser with probability `spawn.chaserChance` (0.6), otherwise Shooter.
+  - The point is drawn among the map's `E` cells that are at least `spawn.minPlayerDistance` (360 px) from the player's **current** position, do not overlap another enemy, and do not touch an island.
+  - If no point qualifies, that spawn is skipped and the next interval tries again.
+  - An enemy spawns at rest, facing the player.
+- **Speed:** enemies use the player's boat model scaled by 0.8: `maxSpeed`, `acceleration` and `drag` are 80% of the player's. They are about 20% slower, accelerate from rest and coast to a stop the same way.
+- **Pathing** (`simulation/navigation.ts`): a flow field (BFS over the water cells, 8-neighbour, no corner cutting) gives each cell its distance to the player's cell. It is shared by all enemies and rebuilt only when the player changes cell.
+  - Each enemy aims at the cell `enemies.pathLookahead` (2) steps down the field, and at the player directly once it is that close.
+  - The rudder is proportional to the heading error and saturates at `fullRudderAngle`.
+- **Chaser:** keeps the sail open toward the player.
+- **Shooter:** approaches with the sail open, and furls it inside `keepDistance`, so it coasts to a stop and keeps turning its bow toward the player.
+  - It fires one front projectile when the player is within `attackRange`, the bow is within `aimTolerance` of the player, and its `fireCooldownSec` has elapsed.
+- **Projectiles** (`projectileSystem`): they fly straight and are removed after `projectile.range`, on leaving the arena, or on hitting an island. They are drawn with a pooled `Sprite` per projectile (`ProjectilesView`).
+- Not implemented yet: damage and HP, the Chaser exploding on the player, and player weapons. Until then, enemies can overlap the player and enemy projectiles pass through it.
 - System order per tick:
   1. input
   2. chaser AI and shooter AI

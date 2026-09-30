@@ -13,11 +13,42 @@ function absorbImpact(ship: Ship, normalX: number, normalY: number): void {
 }
 
 /**
- * Empurra o navio para fora das ilhas pelo vetor de translação mínima (ele
- * desliza ao longo da costa) e o mantém dentro dos limites da arena.
+ * Empurra os navios para fora das ilhas pelo vetor de translação mínima (eles
+ * deslizam ao longo da costa) e os mantém dentro dos limites da arena.
  */
 export function collisionSystem(world: World): void {
-  const ship = world.player;
+  separateEnemies(world.enemies);
+  collideWithArena(world, world.player);
+  for (const enemy of world.enemies) collideWithArena(world, enemy);
+}
+
+/**
+ * Inimigos não se sobrepõem: cada par em contato é afastado metade da
+ * sobreposição para cada lado. O contato com o jogador fica para o dano.
+ */
+function separateEnemies(enemies: readonly Ship[]): void {
+  // ponytail: O(n²) por passo; trocar por grade espacial se o perfil pedir.
+  for (let i = 0; i < enemies.length; i++) {
+    for (let j = i + 1; j < enemies.length; j++) {
+      const a = enemies[i];
+      const b = enemies[j];
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.hypot(dx, dy);
+      const overlap = a.radius + b.radius - dist;
+      if (overlap <= 0) continue;
+      // Centros coincidentes: separa em x para ter uma direção definida.
+      const nx = dist === 0 ? 1 : dx / dist;
+      const ny = dist === 0 ? 0 : dy / dist;
+      a.x -= (nx * overlap) / 2;
+      a.y -= (ny * overlap) / 2;
+      b.x += (nx * overlap) / 2;
+      b.y += (ny * overlap) / 2;
+    }
+  }
+}
+
+function collideWithArena(world: World, ship: Ship): void {
   for (const island of world.islands) {
     const hit = circleVsPolygon(ship, ship.radius, island);
     if (!hit) continue;

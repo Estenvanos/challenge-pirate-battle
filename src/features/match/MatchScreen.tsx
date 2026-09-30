@@ -17,7 +17,7 @@ export function MatchScreen({ config, playerName, onExit }: MatchScreenProps) {
         Battle — {playerName}, {config.sessionTimeSec} s session,{" "}
         {config.spawnIntervalSec} s enemy spawn
       </h1>
-      <GameCanvas />
+      <GameCanvas options={config} />
       <TouchControls />
       <div className="match__bar">
         <MenuButton size="sm" variant="secondary" onClick={onExit}>
