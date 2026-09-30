@@ -4,20 +4,20 @@
 
 ## Where each requirement is answered
 
-| Brief (`proposta.md`)                        | Section                           |
-| -------------------------------------------- | --------------------------------- |
-| §4 Rules vs rendering vs input vs UI state   | [1](#1-overview-and-layers)       |
-| §4 React ↔ PixiJS sync, Strict Mode          | [2](#2-react--pixijs-integration) |
-| §2, §4 Time-based simulation, enemies, pause | [3](#3-simulation-loop)           |
-| §2 Collisions, arena                         | [4](#4-collisions-and-arena)      |
-| §4, §7 Textures, loading, viewport, cleanup  | [5](#5-rendering-and-resources)   |
-| §2, §7 Keyboard and touch                    | [6](#6-input)                     |
-| §3 Local persistence                         | [7](#7-local-persistence)         |
-| §5 Contracts, cache, pending submissions     | [8](#8-ranking-and-match-history) |
-| §6 MSW scenarios                             | [9](#9-msw-mocks)                 |
-| §8, §9 Tests and profiling                   | [10](#10-testing-and-profiling)   |
-| §3 Balancing                                 | [11](#11-balancing-decisions)     |
-| Limitations                                  | [12](#12-known-limitations)       |
+| Requirement                             | Brief section | Answered in                                       |
+| --------------------------------------- | ------------- | ------------------------------------------------- |
+| Rules vs rendering vs input vs UI state | 4             | [1. Overview](#1-overview-and-layers)             |
+| React ↔ PixiJS sync, Strict Mode        | 4             | [2. React ↔ PixiJS](#2-react--pixijs-integration) |
+| Time-based simulation, enemies, pause   | 2, 4          | [3. Simulation](#3-simulation-loop)               |
+| Collisions, arena                       | 2             | [4. Collisions](#4-collisions-and-arena)          |
+| Textures, loading, viewport, cleanup    | 4, 7          | [5. Rendering](#5-rendering-and-resources)        |
+| Keyboard and touch                      | 2, 7          | [6. Input](#6-input)                              |
+| Local persistence                       | 3             | [7. Persistence](#7-local-persistence)            |
+| Contracts, cache, pending submissions   | 5             | [8. Ranking](#8-ranking-and-match-history)        |
+| MSW scenarios                           | 6             | [9. MSW](#9-msw-mocks)                            |
+| Tests and profiling                     | 8, 9          | [10. Testing](#10-testing-and-profiling)          |
+| Balancing                               | 3             | [11. Balancing](#11-balancing-decisions)          |
+| Limitations                             | 11            | [12. Limitations](#12-known-limitations)          |
 
 ## 1. Overview and layers
 
@@ -171,7 +171,7 @@ There is no separate event bus: the simulation pushes `WorldEvent`s, `Game` drai
 
 **Audio.** `SoundManager` plays match sounds from `WorldEvent`s (cloned `HTMLAudioElement`s, so shots overlap). Menu sounds and the ambience loop live in `shared/audio`; a global mute applies everywhere.
 
-**Cleanup.** `Game.destroy()` releases, in order: ticker, listeners, timers, stage children, effect textures, the application, audio. Verified over 5 play cycles (§10).
+**Cleanup.** `Game.destroy()` releases, in order: ticker, listeners, timers, stage children, effect textures, the application, audio. Verified over 5 play cycles (section 10).
 
 ## 6. Input
 
@@ -252,20 +252,20 @@ Invalid input returns `400` with an `ApiError`. The PUT is an idempotent upsert:
 - **Seeds** (`SEEDS` in `tests/helpers/game.ts`, measured with 60 s / 10 s options): `survivor` (3) survives the session while fighting back; `shooterFirst` (1) spawns a Shooter first; `mixed` (7) brings a Chaser then Shooters.
 - **Visual regression:** menu, arena (seeded, frozen) and result, per project, baselines in `tests/visual/__snapshots__/`.
 
-| §8  | Spec                       | Covers                                                         |
-| --- | -------------------------- | -------------------------------------------------------------- |
-| 1   | `options.spec.ts`          | limits, persistence, invalid storage, mid-match changes        |
-| 2   | `assets-loading.spec.ts`   | progress, failure, **Retry**                                   |
-| 3   | `movement.spec.ts`         | forward, rotations, arena bounds, islands                      |
-| 4   | `combat.spec.ts`           | front/broadside, cooldowns, damage, one point per kill         |
-| 5   | `enemies.spec.ts`          | spawn interval/distance, Chaser ram, Shooter fire              |
-| 6   | `match-end.spec.ts`        | time up, death, frozen simulation, clean restart               |
-| 7   | `pause.spec.ts`            | manual, `Esc`, blur, hidden tab; clock and cooldowns frozen    |
-| 8   | `result.spec.ts`           | result data, save status, focus, last result after refresh     |
-| 9   | `navigation-touch.spec.ts` | abandoned match, repeated navigation, multi-touch              |
-| 10  | `ranking-history.spec.ts`  | pagination, keyboard tabs, loading, empty, error               |
-| 11  | `submission.spec.ts`       | one record in both tabs, pending after failure, resend on load |
-| 12  | `retry-race.spec.ts`       | resend after write timeout, late page ignored                  |
+| Test | Spec                       | Covers                                                         |
+| ---- | -------------------------- | -------------------------------------------------------------- |
+| 1    | `options.spec.ts`          | limits, persistence, invalid storage, mid-match changes        |
+| 2    | `assets-loading.spec.ts`   | progress, failure, **Retry**                                   |
+| 3    | `movement.spec.ts`         | forward, rotations, arena bounds, islands                      |
+| 4    | `combat.spec.ts`           | front/broadside, cooldowns, damage, one point per kill         |
+| 5    | `enemies.spec.ts`          | spawn interval/distance, Chaser ram, Shooter fire              |
+| 6    | `match-end.spec.ts`        | time up, death, frozen simulation, clean restart               |
+| 7    | `pause.spec.ts`            | manual, `Esc`, blur, hidden tab; clock and cooldowns frozen    |
+| 8    | `result.spec.ts`           | result data, save status, focus, last result after refresh     |
+| 9    | `navigation-touch.spec.ts` | abandoned match, repeated navigation, multi-touch              |
+| 10   | `ranking-history.spec.ts`  | pagination, keyboard tabs, loading, empty, error               |
+| 11   | `submission.spec.ts`       | one record in both tabs, pending after failure, resend on load |
+| 12   | `retry-race.spec.ts`       | resend after write timeout, late page ignored                  |
 
 - **Bugs the suite found:** late progress callbacks hid the **Retry** button after an asset failure; `showModal()` focused the scroll panel instead of the primary button on mobile (`Modal` now focuses `data-autofocus`).
 - **Profiling** (`npm run profile`, report in [`docs/profiling/`](docs/profiling/README.md)): production build, 3-minute match at 180 s / 3 s, then 5 play-and-exit cycles with forced GC. On an i5-10210U (UHD Graphics), Chromium 153, 1280×720: **60 FPS, p95 16.7 ms, up to 44 enemies**; DOM nodes, listeners and canvases stay flat across cycles.
@@ -307,7 +307,7 @@ Whole-second steps keep the number of distinct configurations small, so ranking 
 
 - **One local player per browser**, no authentication: `playerId` is always `local-player`.
 - **The "server" lives in the browser:** the ranking is per browser; other captains are fixtures.
-- **Refresh abandons the match** (by design, brief §3).
+- **Refresh abandons the match** (by design, brief section 3).
 - **No collision broad phase** — fine up to the measured 44 enemies.
 - **Enemy shots pass through other enemies**, and enemies push each other apart instead of steering around.
 - **Map art:** the tileset has no concave-corner pieces, so inner coast corners are square notches.
