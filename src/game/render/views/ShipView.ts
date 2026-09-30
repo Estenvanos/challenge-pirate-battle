@@ -1,6 +1,10 @@
-import { Container, MeshRope, Point, Sprite, type Texture } from "pixi.js";
-import { getShipTexture } from "../../assets/loadGameAssets";
-import type { ShipSprite } from "../../assets/manifest";
+import { Container, MeshRope, Point, Sprite, Texture } from "pixi.js";
+import type { DamageSprites, ShipSprite } from "../../../config/enemies";
+import {
+  getEffectTexture,
+  getHealthBarTextures,
+  getShipTexture,
+} from "../../assets/loadGameAssets";
 import { angleDelta, lerp } from "../../physics/vector";
 import type { Ship } from "../../simulation/entities";
 
@@ -30,15 +34,67 @@ const WAKE = {
 /** Decaimento do recuo do tiro (1/s). */
 const RECOIL_DECAY = 14;
 
+// Barra de vida sobre o navio: moldura e preenchimento de ui/hud (160×40 px).
+const BAR = {
+  scale: 0.65,
+  /** Folga entre a ponta do casco e a barra (px). */
+  gap: 14,
+  /** Trecho do preenchimento na arte, da vida 0 à cheia (px em x). */
+  fillFrom: 24,
+  fillTo: 139,
+  /** Abaixo desta fração da vida o preenchimento fica vermelho. */
+  lowHp: 1 / 3,
+} as const;
+
+// Naufrágio: o casco cinza encolhe, aderna e some na cor da água.
+const SINK = { sec: 1.6, shrink: 0.45, roll: 0.5, tint: 0x2f7fa8 } as const;
+
+// Clarão avermelhado ao levar dano, e seu decaimento (1/s).
+const HIT_FLASH = { tint: 0xff5a4a, decay: 7 } as const;
+
+// Reparo: uma aura verde rápida se abre em volta do casco e um sinal de vida
+// sobe a partir dele.
+const HEAL = {
+  auraSec: 0.5,
+  /** Diâmetro da aura, do início ao fim, em comprimentos do casco. */
+  auraFrom: 0.8,
+  auraTo: 1.6,
+  plusSec: 0.9,
+  /** Quanto o sinal sobe (px) e sua escala. */
+  plusRise: 46,
+  plusScale: 0.75,
+} as const;
+
+/** Casco cada vez mais danificado conforme a vida cai; cinza ao ser destruído. */
+function damageSprite(
+  { stages, destroyed }: DamageSprites,
+  hp: number,
+  maxHp: number,
+): ShipSprite {
+  if (hp <= 0) return destroyed;
+  const stage = Math.floor(((maxHp - hp) * stages.length) / maxHp);
+  return stages[Math.min(stage, stages.length - 1)];
+}
+
+/** Cor entre `from` e `to` (0xRRGGBB), canal a canal. */
+function mixColor(from: number, to: number, t: number): number {
+  const channel = (shift: number) =>
+    Math.round(lerp((from >> shift) & 0xff, (to >> shift) & 0xff, t)) << shift;
+  return channel(16) | channel(8) | channel(0);
+}
+
 /** Camadas compartilhadas por todos os navios, de baixo para cima. */
 export interface ShipLayers {
   readonly wakes: Container;
   readonly shadows: Container;
   readonly hulls: Container;
+  /** Barras de vida, acima de tudo. */
+  readonly bars: Container;
 }
 
 export interface ShipViewOptions {
-  readonly sprite: ShipSprite;
+  /** Aparência do casco conforme a vida. */
+  readonly sprites: DamageSprites;
   /** Escala do casco; sombra e esteira acompanham. */
   readonly scale: number;
   readonly wakeTexture: Texture;
@@ -60,13 +116,19 @@ interface WakeSide {
 
 /**
  * Espelho visual de um navio: lê a entidade a cada quadro e não guarda estado
- * de jogo. Balanço, sombra, esteira e recuo são só visuais.
+ * de jogo. Balanço, sombra, esteira, recuo, barra de vida e naufrágio são só
+ * visuais.
  */
 export class ShipView {
   private readonly body = new Container();
   private readonly hull: Sprite;
   private readonly shadow: Sprite;
   private readonly wake: WakeSide[];
+  private readonly bar = new Container();
+  private readonly barTextures = getHealthBarTextures();
+  /** Recorte próprio do preenchimento: a largura acompanha a vida. */
+  private readonly fillTexture: Texture;
+  private readonly sprites: DamageSprites;
   private readonly scale: number;
   private readonly reducedMotion: boolean;
   private readonly fadeInSec: number;
@@ -76,9 +138,20 @@ export class ShipView {
   private wakeStarted = false;
   private recoilX = 0;
   private recoilY = 0;
+  private flashAmount = 0;
+  private sinkTime = 0;
+  /** Vida mostrada na barra; ela só é refeita quando a vida muda. */
+  private shownHp = Number.NaN;
+  private readonly layers: ShipLayers;
+  /** Aura e sinal do reparo; criados só no primeiro reparo deste navio. */
+  private healSprites: { aura: Sprite; plus: Sprite } | null = null;
+  /** Tempo desde o último reparo (s). */
+  private healTime = Number.POSITIVE_INFINITY;
 
   constructor(layers: ShipLayers, options: ShipViewOptions) {
-    const texture = getShipTexture(options.sprite);
+    const texture = getShipTexture(options.sprites.stages[0]);
+    this.layers = layers;
+    this.sprites = options.sprites;
     this.scale = options.scale;
     this.reducedMotion = options.reducedMotion;
     this.fadeInSec = options.fadeInSec ?? 0;
@@ -102,6 +175,26 @@ export class ShipView {
     });
     layers.shadows.addChild(this.shadow);
     layers.hulls.addChild(this.body);
+
+    const frame = new Sprite(this.barTextures.frame);
+    frame.anchor.set(0.5);
+    const { source } = this.barTextures.green;
+    this.fillTexture = new Texture({
+      source,
+      frame: this.barTextures.green.frame.clone(),
+      dynamic: true,
+    });
+    const fill = new Sprite(this.fillTexture);
+    fill.anchor.set(0, 0.5);
+    fill.x = -frame.width / 2;
+    this.bar.addChild(frame, fill);
+    this.bar.scale.set(BAR.scale);
+    layers.bars.addChild(this.bar);
+  }
+
+  /** O casco terminou de afundar: a view já pode ser destruída. */
+  get sunk(): boolean {
+    return this.sinkTime >= SINK.sec;
   }
 
   /**
@@ -123,27 +216,76 @@ export class ShipView {
       : Math.sin(
           this.swayTime * SWAY.frequencyHz * Math.PI * 2 + this.swayPhase,
         );
-    if (this.body.alpha < 1) {
+    const sinking = ship.hp <= 0;
+    if (sinking) this.sinkTime += dt;
+    const sink = Math.min(1, this.sinkTime / SINK.sec);
+    // `prefers-reduced-motion`: o naufrágio só esvanece.
+    const sinkMotion = this.reducedMotion ? 0 : sink;
+    if (sinking) {
+      this.body.alpha = 1 - sink * sink;
+    } else if (this.body.alpha < 1) {
       this.body.alpha = Math.min(1, this.body.alpha + dt / this.fadeInSec);
     }
 
-    const { body, shadow } = this;
+    this.setSprite(damageSprite(this.sprites, ship.hp, ship.maxHp));
+    this.flashAmount *= Math.exp(-HIT_FLASH.decay * dt);
+    this.hull.tint = sinking
+      ? mixColor(0xffffff, SINK.tint, sink)
+      : mixColor(0xffffff, HIT_FLASH.tint, this.flashAmount);
+
+    const { body, shadow, bar } = this;
     body.position.set(x + this.recoilX, y + this.recoilY);
-    body.rotation = rotation + SPRITE_FORWARD_OFFSET + sway * SWAY.rotation;
-    body.scale.set(this.scale * (1 + sway * SWAY.scale));
+    body.rotation =
+      rotation +
+      SPRITE_FORWARD_OFFSET +
+      sway * SWAY.rotation +
+      sinkMotion * SINK.roll;
+    body.scale.set(
+      this.scale * (1 + sway * SWAY.scale) * (1 - sinkMotion * SINK.shrink),
+    );
+
+    bar.visible = !sinking;
+    bar.alpha = body.alpha;
+    bar.position.set(
+      x,
+      y - (this.hull.texture.height / 2) * this.scale - BAR.gap,
+    );
+    this.syncBar(ship.hp, ship.maxHp);
+
     shadow.position.set(body.x + SHADOW.x, body.y + SHADOW.y);
     shadow.rotation = body.rotation;
     shadow.scale.copyFrom(body.scale);
     shadow.alpha = SHADOW.alpha * body.alpha;
 
+    this.syncHeal(x, y, dt);
     this.syncWake(x, y, rotation, ship.speed, dt);
     const wakeAlpha =
       Math.min(1, ship.speed / (maxSpeed * WAKE.fullAlphaAt)) * body.alpha;
     for (const { rope } of this.wake) rope.alpha = wakeAlpha;
   }
 
+  /** Clarão no casco ao levar dano. */
+  flash(): void {
+    this.flashAmount = 1;
+  }
+
+  /** Anima o reparo: aura verde em volta do casco e sinal de vida subindo. */
+  heal(): void {
+    if (!this.healSprites) {
+      const aura = new Sprite(getEffectTexture("heal_aura"));
+      aura.anchor.set(0.5);
+      const plus = new Sprite(getEffectTexture("heal_plus"));
+      plus.anchor.set(0.5);
+      // A aura fica sob o casco (na camada das sombras); o sinal, acima de tudo.
+      this.layers.shadows.addChild(aura);
+      this.layers.bars.addChild(plus);
+      this.healSprites = { aura, plus };
+    }
+    this.healTime = 0;
+  }
+
   /** Troca a aparência do casco (estágio de dano). */
-  setSprite(sprite: ShipSprite): void {
+  private setSprite(sprite: ShipSprite): void {
     const texture = getShipTexture(sprite);
     if (this.hull.texture === texture) return;
     this.hull.texture = texture;
@@ -162,6 +304,49 @@ export class ShipView {
     this.body.destroy({ children: true });
     this.shadow.destroy();
     for (const { rope } of this.wake) rope.destroy();
+    this.bar.destroy({ children: true });
+    this.healSprites?.aura.destroy();
+    this.healSprites?.plus.destroy();
+    // Só o recorte: a imagem (source) é do cache do Assets.
+    this.fillTexture.destroy();
+  }
+
+  private syncHeal(x: number, y: number, dt: number): void {
+    if (!this.healSprites) return;
+    const { aura, plus } = this.healSprites;
+    this.healTime += dt;
+
+    const auraT = this.healTime / HEAL.auraSec;
+    aura.visible = auraT < 1;
+    if (aura.visible) {
+      const hullLength = this.hull.texture.height * this.scale;
+      aura.position.set(x, y);
+      aura.scale.set(
+        (hullLength * lerp(HEAL.auraFrom, HEAL.auraTo, auraT)) /
+          aura.texture.width,
+      );
+      aura.alpha = 1 - auraT;
+    }
+
+    const plusT = this.healTime / HEAL.plusSec;
+    plus.visible = plusT < 1;
+    if (plus.visible) {
+      // Sobe rápido e desacelera; some só na segunda metade.
+      const rise = 1 - (1 - plusT) * (1 - plusT);
+      plus.position.set(x, y - rise * HEAL.plusRise);
+      plus.scale.set(HEAL.plusScale * Math.min(1, 0.5 + plusT * 4));
+      plus.alpha = Math.min(1, (1 - plusT) * 2);
+    }
+  }
+
+  private syncBar(hp: number, maxHp: number): void {
+    if (hp === this.shownHp) return;
+    this.shownHp = hp;
+    const ratio = hp / maxHp;
+    const { green, red } = this.barTextures;
+    this.fillTexture.source = (ratio <= BAR.lowHp ? red : green).source;
+    this.fillTexture.frame.width = lerp(BAR.fillFrom, BAR.fillTo, ratio);
+    this.fillTexture.update();
   }
 
   /**

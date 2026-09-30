@@ -16,6 +16,9 @@ export interface Ship {
   prevY: number;
   prevRotation: number;
   readonly radius: number;
+  /** Vida atual; em 0 o navio está destruído. */
+  hp: number;
+  readonly maxHp: number;
 }
 
 /** Comando de um navio em um passo: vela (0 recolhida … 1 toda aberta) e leme (-1 bombordo … 1 boreste). */
@@ -26,9 +29,6 @@ export interface ShipControl {
 
 export interface Enemy extends Ship {
   readonly kind: EnemyKind;
-  /** Vida atual; ainda sem sistema de dano, só define a aparência. */
-  hp: number;
-  readonly maxHp: number;
   /** Comando decidido pela IA; o movimento só o aplica. */
   readonly control: ShipControl;
   /** Segundos até poder disparar de novo. */
@@ -49,5 +49,7 @@ export interface Projectile {
   travelled: number;
   /** Alcance da arma que o disparou (px). */
   readonly range: number;
+  /** Vida que tira do navio atingido. */
+  readonly damage: number;
   readonly radius: number;
 }

@@ -1,4 +1,4 @@
-import { emptyActionState, type ActionState } from "./actions";
+import { emptyActionState, type Action, type ActionState } from "./actions";
 import { ACTION_BY_CODE } from "./bindings";
 
 function isEditable(target: EventTarget | null): boolean {
@@ -37,6 +37,12 @@ export class InputManager {
       this.state[action] = false;
     }
   };
+
+  /** Entrada dos controles de toque: mesma regra do teclado (não pressiona na pausa). */
+  setAction(action: Action, pressed: boolean): void {
+    if (pressed && !this.enabled) return;
+    this.state[action] = pressed;
+  }
 
   destroy(): void {
     window.removeEventListener("keydown", this.onKeyDown);
