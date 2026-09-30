@@ -11,9 +11,9 @@ A 2D top-down naval shooter that runs entirely in the browser. Sail between isla
 
 **🔗 Play it:** <!-- TODO: deploy URL --> _coming soon_
 
-<!-- TODO: add docs/screenshots/gameplay.png -->
+[![Gameplay demo — click to watch the video](public/assets/demo/gameplay.png)](public/assets/demo/demo.mp4)
 
-![Gameplay](docs/screenshots/gameplay.png)
+▶️ [Watch the gameplay video](public/assets/demo/demo.mp4)
 
 ## Table of contents
 
@@ -53,15 +53,13 @@ Pirate Battle was built for a front-end game development challenge. The game cor
 
 ## Screenshots
 
-<!-- TODO: replace the images in docs/screenshots/ -->
-
-| Main menu                              | Gameplay                                   |
-| -------------------------------------- | ------------------------------------------ |
-| ![Menu](docs/screenshots/menu.png)     | ![Gameplay](docs/screenshots/gameplay.png) |
-| **Result**                             | **Captain's Log (ranking / history)**      |
-| ![Result](docs/screenshots/result.png) | ![Captain's Log](docs/screenshots/log.png) |
-| **Mobile**                             |                                            |
-| ![Mobile](docs/screenshots/mobile.png) |                                            |
+| Main menu                                 | Gameplay                                             |
+| ----------------------------------------- | ---------------------------------------------------- |
+| ![Menu](public/assets/demo/main_menu.png) | ![Gameplay](public/assets/demo/gameplay.png)         |
+| **Result**                                | **Captain's Log (ranking / history)**                |
+| ![Result](public/assets/demo/result.png)  | ![Captain's Log](public/assets/demo/captain_log.png) |
+| **Mobile**                                |                                                      |
+| ![Mobile](public/assets/demo/mobile.png)  |                                                      |
 
 ## Controls
 
