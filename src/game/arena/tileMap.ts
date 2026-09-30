@@ -4,8 +4,11 @@
 import {
   CORNER_OUTLINES,
   GRASS_PIECES,
+  OUTLINE_TILE_SIZE,
   resolveLandTile,
+  resolvePlainTile,
   SAND_PIECES,
+  SHALLOW_PIECES,
   type CellSides,
   type GroundTile,
   type LandPieces,
@@ -14,10 +17,12 @@ import { resolveFeatures, type LandStyle, type OverlayTile } from "./features";
 
 export type { GroundTile, OverlayTile };
 
-export const TILE_SIZE = 64;
+// Os tiles são desenhados no tamanho da arte retina (128 px): o mapa fica em
+// escala dobrada em relação aos navios.
+export const TILE_SIZE = 128;
 // Recuo dos polígonos em lados voltados para a água, casando com a borda
-// transparente (~2 px) da arte dos tiles de costa.
-export const COAST_INSET_PX = 2;
+// transparente (~4 px) da arte dos tiles de costa.
+export const COAST_INSET_PX = 4;
 
 export const WATER_TILE = 73;
 
@@ -59,6 +64,11 @@ export interface TileMap {
    * elas repetem a borda mais próxima, para o cenário continuar além dela.
    */
   groundAt(col: number, row: number): GroundTile | null;
+  /**
+   * Tile de água rasa da célula (`null` = mar aberto): um anel de uma célula
+   * em volta da terra, desenhado sob ela. Também aceita células fora da arena.
+   */
+  shallowAt(col: number, row: number): GroundTile | null;
   /** Fortes e enfeites desenhados por cima do chão (só dentro da arena). */
   readonly overlays: readonly OverlayTile[];
   readonly islands: readonly Polygon[];
@@ -157,6 +167,28 @@ export function buildTileMap(def: TileMapDefinition): TileMap {
     return resolveLandTile(LAND_STYLES[char], col, row, sidesAt(col, row));
   };
 
+  // Água rasa: a terra dilatada em uma célula (8 vizinhos).
+  const isShallow = (col: number, row: number) => {
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (isLandStyle(charAtClamped(col + dc, row + dr))) return true;
+      }
+    }
+    return false;
+  };
+  const shallowAt = (col: number, row: number): GroundTile | null => {
+    if (!isShallow(col, row)) return null;
+    // Mesma prioridade de `sidesAt` para faixas de uma célula só.
+    const top = !isShallow(col, row - 1);
+    const left = !isShallow(col - 1, row);
+    return resolvePlainTile(SHALLOW_PIECES, {
+      top,
+      bottom: !top && !isShallow(col, row + 1),
+      left,
+      right: !left && !isShallow(col + 1, row),
+    });
+  };
+
   return {
     name: def.name,
     author: def.author,
@@ -167,6 +199,7 @@ export function buildTileMap(def: TileMapDefinition): TileMap {
     height: rows * TILE_SIZE,
     waterTile: WATER_TILE,
     groundAt,
+    shallowAt,
     overlays: features.overlays,
     islands: buildIslandPolygons(cols, rows, isLand, groundAt),
     playerSpawn: playerSpawn!,
@@ -192,9 +225,10 @@ function buildIslandPolygons(
       if (!ground || !outline) continue;
       used.add(row * cols + col);
       const { flipX, flipY } = ground;
+      const scale = TILE_SIZE / OUTLINE_TILE_SIZE;
       const points = outline.map(([x, y]) => ({
-        x: col * TILE_SIZE + (flipX ? TILE_SIZE - x : x),
-        y: row * TILE_SIZE + (flipY ? TILE_SIZE - y : y),
+        x: col * TILE_SIZE + (flipX ? TILE_SIZE - x * scale : x * scale),
+        y: row * TILE_SIZE + (flipY ? TILE_SIZE - y * scale : y * scale),
       }));
       // Um espelhamento só inverte o sentido dos vértices.
       polygons.push(flipX !== flipY ? points.reverse() : points);

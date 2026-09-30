@@ -1,11 +1,12 @@
 import type { TileMapDefinition } from "../tileMap";
 
 // Mapa "Mediterranean" — desenhado à mão por Estevan.
-// Inspirado no Mediterrâneo ocidental: Península Ibérica (com um forte e torres de vigia) e França
-// no alto à esquerda, Itália descendo em escada à direita, Córsega e Sardenha no
-// centro, Baleares (Menorca, Maiorca, Ibiza) a oeste, Norte da África embaixo
-// com ruínas e a ponta da Tunísia, e a Sicília no canto inferior direito.
-// Colunas 0–25, linhas 0–15 (tiles de 64 px → arena 1664×1024).
+// Inspirado no Mediterrâneo ocidental: Península Ibérica (com um forte) no alto
+// à esquerda, Itália descendo à direita, Córsega e Sardenha no centro, Baleares
+// a oeste, Norte da África embaixo com ruínas, e a Sicília à direita.
+// As regiões são retângulos: o tileset não tem peça de canto côncavo, e em
+// 128 px o degrau quadrado de uma costa em escada fica evidente.
+// Colunas 0–15, linhas 0–8 (tiles de 128 px → arena 2048×1152).
 //
 // Terreno ("grid"):
 //   "." água · "s" areia · "g" terra com grama
@@ -24,39 +25,25 @@ export const mediterranean: TileMapDefinition = {
   name: "Mediterranean",
   author: "Estevan",
   grid: [
-    "gggggggggg...E......gggggg", //  0
-    "gggggggggg..........gggggg", //  1
-    "ggggggg...............gggg", //  2
-    "ggggggg...............gggg", //  3
-    "ggggggg.................gg", //  4
-    "ggggg..ssss.....ggg.....gg", //  5
-    "ggggg..ssss..E..ggg.......", //  6
-    "ggggg..ssss.....ggg.....E.", //  7
-    "ggggg..ssss.....ggg.......", //  8
-    "..........................", //  9
-    ".E...ss.....P.........gggg", // 10
-    ".....ss..........ggg..gggg", // 11
-    ".................ggg..gggg", // 12
-    "gggggggggggggggggggg......", // 13
-    "gggggggggggggggggggg...E..", // 14
-    "gggggggggggggggggggg......", // 15
+    "gggg...E.....ggg", // 0
+    "gggg.........ggg", // 1
+    "......ss........", // 2
+    "......ss........", // 3
+    "E..ss...P..ggg.E", // 4
+    "...ss......ggg..", // 5
+    "...........ggg..", // 6
+    "ggggggggg......E", // 7
+    "ggggggggg..E....", // 8
   ],
   features: [
-    "........Q............f....", //  0
-    "Q.O#=#O................O.l", //  1
-    ".l#...>................<..", //  2
-    "..#mQ.O................O..", //  3
-    "f.O.......................", //  4
-    "..#l.............O.......R", //  5
-    ".m>....r.........=R.......", //  6
-    "..O#O............#........", //  7
-    "...k.....b......l.........", //  8
-    "..........................", //  9
-    ".....r................f...", // 10
-    "..................Q....O^#", // 11
-    ".......................b..", // 12
-    "...k....b.................", // 13
-    "..l..O%%%O.l..#+#.l.......", // 14
-    ".............m...f........", // 15
+    "lO#O............", // 0
+    "...............Q", // 1
+    "................", // 2
+    "................", // 3
+    "................", // 4
+    "............l...", // 5
+    "................", // 6
+    "................", // 7
+    "..O%%O.l........", // 8
   ],
 };

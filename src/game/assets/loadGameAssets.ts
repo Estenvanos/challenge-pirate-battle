@@ -2,6 +2,8 @@ import { Assets, type Texture } from "pixi.js";
 import {
   buildManifestBundles,
   CANNON_BALL,
+  EFFECTS_BUNDLE,
+  MUZZLE_FLASH,
   SHIPS_BUNDLE,
   tileAlias,
   TILES_BUNDLE,
@@ -12,7 +14,7 @@ let bundlesRegistered = false;
 
 function registerBundles() {
   if (bundlesRegistered) return;
-  for (const bundle of buildManifestBundles(window.devicePixelRatio || 1)) {
+  for (const bundle of buildManifestBundles()) {
     Assets.addBundle(bundle.name, bundle.assets);
   }
   bundlesRegistered = true;
@@ -24,7 +26,10 @@ function registerBundles() {
  */
 export async function loadGameAssets(onProgress?: (progress: number) => void) {
   registerBundles();
-  await Assets.loadBundle([TILES_BUNDLE, SHIPS_BUNDLE], onProgress);
+  await Assets.loadBundle(
+    [TILES_BUNDLE, SHIPS_BUNDLE, EFFECTS_BUNDLE],
+    onProgress,
+  );
 }
 
 export function getTileTexture(tile: number): Texture {
@@ -42,5 +47,11 @@ export function getShipTexture(ship: ShipSprite): Texture {
 export function getCannonBallTexture(): Texture {
   const texture = Assets.get<Texture>(CANNON_BALL);
   if (!texture) throw new Error("Cannon ball texture is not loaded");
+  return texture;
+}
+
+export function getMuzzleFlashTexture(): Texture {
+  const texture = Assets.get<Texture>(MUZZLE_FLASH);
+  if (!texture) throw new Error("Muzzle flash texture is not loaded");
   return texture;
 }
