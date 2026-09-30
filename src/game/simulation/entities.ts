@@ -1,4 +1,7 @@
 // Entidades são dados puros; sistemas as alteram, views só as leem.
+import type { EnemyKind } from "../../config/enemies";
+
+export type { EnemyKind };
 
 export interface Ship {
   readonly id: string;
@@ -19,10 +22,11 @@ export interface ShipControl {
   turn: number;
 }
 
-export type EnemyKind = "chaser" | "shooter";
-
 export interface Enemy extends Ship {
   readonly kind: EnemyKind;
+  /** Vida atual; ainda sem sistema de dano, só define a aparência. */
+  hp: number;
+  readonly maxHp: number;
   /** Comando decidido pela IA; o movimento só o aplica. */
   readonly control: ShipControl;
   /** Segundos até poder disparar de novo. */

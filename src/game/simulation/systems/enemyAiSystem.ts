@@ -20,13 +20,14 @@ function steerToward(
  * movementSystem, com a mesma física do jogador.
  * O rumo segue o campo de fluxo até o jogador (contorna ilhas); perto dele,
  * mira direto.
- * - Chaser: vela sempre aberta, rumo ao jogador.
- * - Shooter: aproxima-se e recolhe a vela dentro de `keepDistance`; à deriva
- *   ele para aos poucos e segue virando a proa para o jogador.
+ * - Sem arma (Chaser): vela sempre aberta, rumo ao jogador.
+ * - Com arma (Shooters): aproxima-se e recolhe a vela dentro de
+ *   `keepDistance`; à deriva ele para aos poucos e segue virando a proa para
+ *   o jogador.
  */
 export function enemyAiSystem(world: World, config: MatchConfig): void {
   const { player } = world;
-  const { fullRudderAngle, pathLookahead, shooter } = config.enemies;
+  const { fullRudderAngle, pathLookahead, kinds } = config.enemies;
   updateFlowField(world.flowField, world.navGrid, player);
   for (const enemy of world.enemies) {
     const waypoint = nextWaypoint(
@@ -36,7 +37,8 @@ export function enemyAiSystem(world: World, config: MatchConfig): void {
       pathLookahead,
     );
     steerToward(enemy, waypoint ?? player, fullRudderAngle);
+    const { weapon } = kinds[enemy.kind];
     enemy.control.forward =
-      enemy.kind === "chaser" || distance(enemy, player) > shooter.keepDistance;
+      !weapon || distance(enemy, player) > weapon.keepDistance;
   }
 }

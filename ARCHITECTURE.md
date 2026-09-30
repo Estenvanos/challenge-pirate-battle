@@ -73,7 +73,7 @@ config ◄── used by game and features
 ### Enemies
 
 - **Spawn** (`spawnSystem`): one enemy every `spawn.intervalSec` of active play. The first one appears after one interval.
-  - The kind is Chaser with probability `spawn.chaserChance` (0.6), otherwise Shooter.
+  - The kind is drawn in proportion to each kind's `spawnWeight`: Chaser 0.5, Shooter 0.35, Big Shooter 0.15.
   - The point is drawn among the map's `E` cells that are at least `spawn.minPlayerDistance` (360 px) from the player's **current** position, do not overlap another enemy, and do not touch an island.
   - If no point qualifies, that spawn is skipped and the next interval tries again.
   - An enemy spawns at rest, facing the player.
@@ -81,11 +81,16 @@ config ◄── used by game and features
 - **Pathing** (`simulation/navigation.ts`): a flow field (BFS over the water cells, 8-neighbour, no corner cutting) gives each cell its distance to the player's cell. It is shared by all enemies and rebuilt only when the player changes cell.
   - Each enemy aims at the cell `enemies.pathLookahead` (2) steps down the field, and at the player directly once it is that close.
   - The rudder is proportional to the heading error and saturates at `fullRudderAngle`.
+- **Kinds** (`src/config/enemies.ts`, exposed as `config.enemies.kinds`): each `EnemySpec` holds the boat motion, `spawnWeight`, `maxHp`, `spriteScale`, the damage sprites and an optional `weapon`. Systems never check the kind by name: a kind with a `weapon` behaves as a shooter, and one without it as a chaser. Adding or rebalancing an enemy only touches this file.
+  - **Chaser:** medium red ship, no weapon.
+  - **Shooter:** medium yellow ship, armed.
+  - **Big Shooter:** a Shooter with twice the HP (6 vs 3), drawn at 1.2× with a matching collision radius (~31 px, so it still fits one-tile channels).
 - **Chaser:** keeps the sail open toward the player.
 - **Shooter:** approaches with the sail open, and furls it inside `keepDistance`, so it coasts to a stop and keeps turning its bow toward the player.
   - It fires one front projectile when the player is within `attackRange`, the bow is within `aimTolerance` of the player, and its `fireCooldownSec` has elapsed.
 - **Projectiles** (`projectileSystem`): they fly straight and are removed after `projectile.range`, on leaving the arena, or on hitting an island. They are drawn with a pooled `Sprite` per projectile (`ProjectilesView`).
-- Not implemented yet: damage and HP, the Chaser exploding on the player, and player weapons. Until then, enemies can overlap the player and enemy projectiles pass through it.
+- Enemies carry `hp`/`maxHp` (set at spawn), but nothing reduces `hp` yet.
+- Not implemented yet: damage, the Chaser exploding on the player, and player weapons. Until then, enemies can overlap the player and enemy projectiles pass through it.
 - System order per tick:
   1. input
   2. chaser AI and shooter AI
@@ -134,7 +139,7 @@ config ◄── used by game and features
   - The 2×2 dune (4/5/20/21) and the sand clearing in grass (36/37/52/53) were tried and removed, because their tone doesn't match the surrounding tiles and they showed as squares.
   - 68/69 (sand with pebbles) have no seamless pairing with the sand interior. Tiles 10–12, 26–28, 42–44, 58/59 and 74/75 are empty in the sheet.
 - Cells outside the grid repeat the nearest edge (`groundAt` accepts any coordinate). Coastlines touching the arena border continue off-screen, and the renderer draws a 12-cell margin so the scenery fills the letterbox. The tileset has no concave-corner pieces, so inner corners are square notches.
-- Island collision: land is decomposed greedily into maximal rectangles (convex polygons, ready for circle-vs-polygon). Sides facing water are inset by `COAST_INSET_PX` (2 px, the transparent bevel of the coast art). `ARENA_MAP` (`game/arena/index.ts`) is the resolved map consumed by rendering and, later, by collision and spawn systems.
+- Island collision: each corner cell uses the rounded outline of its own corner tile (`CORNER_OUTLINES` in `autotile.ts`, convex hulls measured from the alpha of the art and mirrored like the tile), so a ship only hits where land is actually drawn. The rest of the land is decomposed greedily into maximal rectangles. Every piece is a convex polygon, ready for circle-vs-polygon. Rectangle sides facing water are inset by `COAST_INSET_PX` (2 px, the transparent bevel of the coast art). `ARENA_MAP` (`game/arena/index.ts`) is the resolved map consumed by rendering and, later, by collision and spawn systems.
 - Dev aid: `?debugIslands` in the URL (dev only) outlines the collision polygons.
 
 ## 5. Rendering and resource management
@@ -147,7 +152,7 @@ config ◄── used by game and features
 - Sea sway: `ShipView` animates the hull sprite on the Pixi ticker (`PixiRenderer.onFrame`), independently of the simulation. The animation combines roll, pitch (length scale) and heave, using sine waves with different periods, plus a lean out of the turn that follows `angularVelocity`. It is visual only: collision uses the entity, not the sprite.
 - Textures are loaded once and reused. Projectile and effect views are pooled.
 - Views (`ShipView`, `ProjectileView`, `HealthBarView`, `IslandView`) read from `World` every frame and own no gameplay state.
-- The ship sprite degrades visually as HP drops.
+- Enemy sprites degrade as HP drops (`EnemiesView`): each kind lists its `sprites.stages` (intact → most damaged: red `ship_3/9/15`, yellow `ship_6/12/18`), split evenly over `maxHp`, and a grey `sprites.destroyed` hull (`ship_21`/`ship_24`) shown at 0 HP. `SHIP_SPRITES` is derived from these lists, so every stage is preloaded. The player's ship has no damage stages yet.
 - Viewport (`render/PixiRenderer.ts`): sets `resolution` and `autoDensity` from the DPR and fits the whole arena in the host (contain scale, centred), recomputed by a `ResizeObserver`. The letterbox area is filled by the map's off-arena margin (scenery only, not playable). `screenToArena` converts pointer coordinates to arena coordinates.
 - `TileMapView` builds the static map once (water, then ground sprites with anchor 0.5, ±1 scale for mirroring and quarter-turn rotation, then the fort/decoration overlays).
 - `destroy()` releases, in order: ticker, listeners, timers, stage children, the application, and the audio loops.

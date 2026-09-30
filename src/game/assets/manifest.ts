@@ -1,6 +1,11 @@
 // Bundles do PIXI.Assets. A variante retina (2×) é escolhida pelo DPR na
 // primeira carga e carregada com resolution 2, mantendo o tamanho lógico.
 
+import type { ShipSprite } from "../../config/enemies";
+import { GAME_CONFIG } from "../../config/gameConfig";
+
+export type { ShipSprite };
+
 export const TILES_BUNDLE = "tiles";
 
 // Tiles numerados de 1 a 96 (png/*/tiles/tile_N.png). Cada tile tem a própria
@@ -13,10 +18,17 @@ export const tileAlias = (tile: number) => `tile_${tile}`;
 export const SHIPS_BUNDLE = "ships";
 
 // Navios usados no jogo (png/*/ships/<nome>.png); a proa aponta para baixo (+y).
-// ship_2 (pirata preto): jogador · ship_3 (vermelho): Chaser · ship_6 (amarelo): Shooter.
-export const SHIP_SPRITES = ["ship_2", "ship_3", "ship_6"] as const;
-
-export type ShipSprite = (typeof SHIP_SPRITES)[number];
+// ship_2 (pirata preto) é o jogador; os dos inimigos, com seus estágios de
+// dano, vêm de `config/enemies.ts`.
+export const SHIP_SPRITES: readonly ShipSprite[] = [
+  ...new Set<ShipSprite>([
+    "ship_2",
+    ...Object.values(GAME_CONFIG.enemies.kinds).flatMap(({ sprites }) => [
+      ...sprites.stages,
+      sprites.destroyed,
+    ]),
+  ]),
+];
 
 export const CANNON_BALL = "cannon_ball";
 

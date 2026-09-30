@@ -48,6 +48,57 @@ export const GRASS_PIECES: LandPieces = {
   ],
 };
 
+type Outline = readonly (readonly [number, number])[];
+
+// Contorno convexo da terra em cada peça de canto (px do tile, sentido
+// horário), medido no alfa da arte. Os cantos são arredondados e cada um tem
+// uma curva diferente; areia e grama compartilham o mesmo contorno.
+const TOP_LEFT: Outline = [
+  [4, 31],
+  [12, 19],
+  [50, 4],
+  [64, 2],
+  [64, 64],
+  [1, 64],
+];
+const TOP_RIGHT: Outline = [
+  [0, 1],
+  [33, 4],
+  [44, 11],
+  [53, 28],
+  [62, 59],
+  [62, 64],
+  [0, 64],
+];
+const BOTTOM_LEFT: Outline = [
+  [2, 0],
+  [64, 0],
+  [64, 63],
+  [35, 61],
+  [22, 55],
+  [11, 36],
+  [2, 5],
+];
+const BOTTOM_RIGHT: Outline = [
+  [0, 0],
+  [63, 0],
+  [61, 29],
+  [52, 45],
+  [36, 53],
+  [5, 62],
+  [0, 62],
+];
+
+/** Contorno de colisão por tile de canto (sem espelhamento aplicado). */
+export const CORNER_OUTLINES: ReadonlyMap<number, Outline> = new Map(
+  [SAND_PIECES, GRASS_PIECES].flatMap(({ corners }) => [
+    [corners.topLeft, TOP_LEFT],
+    [corners.topRight, TOP_RIGHT],
+    [corners.bottomLeft, BOTTOM_LEFT],
+    [corners.bottomRight, BOTTOM_RIGHT],
+  ]),
+);
+
 /** Tile de chão resolvido: espelhamento nos eixos e giro em quartos de volta. */
 export interface GroundTile {
   readonly tile: number;

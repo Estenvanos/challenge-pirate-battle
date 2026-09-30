@@ -2,6 +2,7 @@
 // tiles, polígonos de colisão das ilhas e pontos de spawn. Módulo puro.
 
 import {
+  CORNER_OUTLINES,
   GRASS_PIECES,
   resolveLandTile,
   SAND_PIECES,
@@ -167,20 +168,39 @@ export function buildTileMap(def: TileMapDefinition): TileMap {
     waterTile: WATER_TILE,
     groundAt,
     overlays: features.overlays,
-    islands: buildIslandPolygons(cols, rows, isLand),
+    islands: buildIslandPolygons(cols, rows, isLand, groundAt),
     playerSpawn: playerSpawn!,
     enemySpawns,
   };
 }
 
-// Decompõe a terra em retângulos máximos (corrida horizontal estendida para
-// baixo). Cada retângulo é convexo, o que simplifica a colisão círculo/polígono.
+// Células de canto usam o contorno arredondado da própria arte; o resto da
+// terra é decomposto em retângulos máximos (corrida horizontal estendida para
+// baixo). Todos são convexos, o que simplifica a colisão círculo/polígono.
 function buildIslandPolygons(
   cols: number,
   rows: number,
   isLand: (col: number, row: number) => boolean,
+  groundAt: (col: number, row: number) => GroundTile | null,
 ): Polygon[] {
+  const polygons: Polygon[] = [];
   const used = new Set<number>();
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const ground = isLand(col, row) ? groundAt(col, row) : null;
+      const outline = ground && CORNER_OUTLINES.get(ground.tile);
+      if (!ground || !outline) continue;
+      used.add(row * cols + col);
+      const { flipX, flipY } = ground;
+      const points = outline.map(([x, y]) => ({
+        x: col * TILE_SIZE + (flipX ? TILE_SIZE - x : x),
+        y: row * TILE_SIZE + (flipY ? TILE_SIZE - y : y),
+      }));
+      // Um espelhamento só inverte o sentido dos vértices.
+      polygons.push(flipX !== flipY ? points.reverse() : points);
+    }
+  }
+
   const free = (col: number, row: number) =>
     isLand(col, row) && !used.has(row * cols + col);
   // Só recua lados totalmente voltados para água (não para terra nem borda).
@@ -199,7 +219,6 @@ function buildIslandPolygons(
     return true;
   };
 
-  const polygons: Polygon[] = [];
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
       if (!free(col, row)) continue;
