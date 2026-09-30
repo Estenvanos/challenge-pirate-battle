@@ -3,11 +3,12 @@ import {
   clampOption,
   type GameOptions,
 } from "../../config/options";
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { isMuted, setMuted, subscribeMuted } from "../../shared/audio/mute";
 import { MenuButton } from "../../shared/components/MenuButton";
 import { Panel } from "../../shared/components/Panel";
 import { RoundButton } from "../../shared/components/RoundButton";
+import { ControlsList } from "./ControlsList";
 
 interface OptionsFieldsProps {
   options: GameOptions;
@@ -109,12 +110,35 @@ export function OptionsScreen({
   onChange,
   onBack,
 }: OptionsScreenProps) {
+  const [view, setView] = useState<"options" | "controls">("options");
+
+  if (view === "controls") {
+    return (
+      <Panel labelledBy="controls-title">
+        <h1 id="controls-title" className="panel__title">
+          Controls
+        </h1>
+        <ControlsList />
+        <MenuButton autoFocus onClick={() => setView("options")}>
+          Back
+        </MenuButton>
+      </Panel>
+    );
+  }
+
   return (
     <Panel labelledBy="options-title">
       <h1 id="options-title" className="panel__title">
         Options
       </h1>
       <OptionsFields options={options} onChange={onChange} />
+      <MenuButton
+        variant="secondary"
+        size="sm"
+        onClick={() => setView("controls")}
+      >
+        Controls
+      </MenuButton>
       <MenuButton onClick={onBack}>Main Menu</MenuButton>
     </Panel>
   );

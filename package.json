@@ -8,17 +8,24 @@
     "build": "npm run lint && tsc && vite build",
     "lint": "eslint .",
     "dev": "vite",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview",
+    "test:e2e": "playwright test tests/e2e",
+    "test:report": "playwright show-report",
+    "test:visual": "playwright test tests/visual",
+    "test:visual:update": "playwright test tests/visual --update-snapshots"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.0",
     "axios": "^1.20.0",
     "pixi.js": "^8.8.1",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@playwright/test": "^1.63.0",
     "@tanstack/react-query-devtools": "^5.104.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

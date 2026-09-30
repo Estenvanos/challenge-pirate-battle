@@ -8,7 +8,7 @@ import {
   formatLogDate,
 } from "../../shared/utils/format";
 import { LogState } from "../log/LogState";
-import { LOG_PAGE_SIZE } from "../log/constants";
+import { LOG_PAGE_SIZE } from "../../constants/ui";
 
 interface HistoryTableProps {
   playerName: string | null;

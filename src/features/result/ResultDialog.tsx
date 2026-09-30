@@ -1,13 +1,9 @@
 import type { ReactNode } from "react";
 import type { MatchResult } from "../../game/core/Game";
+import { RESULT_TITLES } from "../../constants/ui";
 import { MenuButton } from "../../shared/components/MenuButton";
 import { Modal } from "../../shared/components/Modal";
 import { formatDuration, formatEndReason } from "../../shared/utils/format";
-
-const TITLES: Record<MatchResult["endReason"], string> = {
-  timeUp: "Battle Complete",
-  playerDestroyed: "Game Over",
-};
 
 interface ResultDialogProps {
   result: MatchResult;
@@ -43,7 +39,7 @@ export function ResultDialog({
     // Esc não fecha: o resultado só sai por uma das duas ações.
     <Modal labelledBy="result-title" describedBy="result-desc" onClose={noop}>
       <h2 id="result-title" className="panel__title result__title">
-        {TITLES[result.endReason]}
+        {RESULT_TITLES[result.endReason]}
       </h2>
       <div id="result-desc" className="result">
         <p className="result__score">

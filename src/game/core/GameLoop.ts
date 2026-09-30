@@ -34,4 +34,12 @@ export class GameLoop {
     }
     this.callbacks.render(this.accumulator / stepSec);
   }
+
+  /** Avança `sec` de simulação em passos fixos, sem depender do tempo real (testes). */
+  advance(sec: number): void {
+    const { stepSec } = this.config;
+    const steps = Math.round(sec / stepSec);
+    for (let i = 0; i < steps; i++) this.callbacks.update(stepSec);
+    this.callbacks.render(this.accumulator / stepSec);
+  }
 }

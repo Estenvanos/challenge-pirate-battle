@@ -1,26 +1,18 @@
 import type { MouseEvent, PointerEvent } from "react";
+import { UI_SOUND_URLS, UI_SOUND_VOLUME } from "../../constants/audio";
 import { isMuted } from "./mute";
 
 // Sons de interface dos menus (fora da partida; os sons do jogo ficam no SoundManager).
-const UI_SOUNDS = {
-  hover: "/assets/sounds/ui_hover.wav",
-  click: "/assets/sounds/ui_click.wav",
-  open: "/assets/sounds/ui_open.wav",
-  close: "/assets/sounds/ui_close.wav",
-} as const;
-
-export type UiSound = keyof typeof UI_SOUNDS;
-
-const UI_VOLUME = 0.5;
+export type UiSound = keyof typeof UI_SOUND_URLS;
 
 const cache = new Map<UiSound, HTMLAudioElement>();
 
 function getAudio(sound: UiSound): HTMLAudioElement {
   let audio = cache.get(sound);
   if (!audio) {
-    audio = new Audio(UI_SOUNDS[sound]);
+    audio = new Audio(UI_SOUND_URLS[sound]);
     audio.preload = "auto";
-    audio.volume = UI_VOLUME;
+    audio.volume = UI_SOUND_VOLUME;
     cache.set(sound, audio);
   }
   return audio;

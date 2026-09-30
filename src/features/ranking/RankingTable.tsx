@@ -5,7 +5,7 @@ import { useRanking } from "../../hooks/useRanking";
 import { Pagination } from "../../shared/components/Pagination";
 import { formatLogDate } from "../../shared/utils/format";
 import { LogState } from "../log/LogState";
-import { LOG_PAGE_SIZE } from "../log/constants";
+import { LOG_PAGE_SIZE } from "../../constants/ui";
 
 interface RankingTableProps {
   options: GameOptions;

@@ -1,26 +1,27 @@
 import { QueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
+import { ZodError } from "zod";
+import { QUERY_DEFAULTS } from "../constants/api";
 
-const MAX_RETRIES = 3;
-const RETRY_BASE_DELAY_MS = 500;
-const RETRY_MAX_DELAY_MS = 8000;
-const STALE_TIME_MS = 30_000;
-
-function isClientError(error: unknown): boolean {
+// 4xx e resposta fora do contrato não se resolvem sozinhos: não vale repetir.
+function isPermanentError(error: unknown): boolean {
+  if (error instanceof ZodError) return true;
   const status = isAxiosError(error) ? error.response?.status : undefined;
   return status !== undefined && status >= 400 && status < 500;
 }
 
 export function createQueryClient(): QueryClient {
+  const { staleTimeMs, maxRetries, retryBaseDelayMs, retryMaxDelayMs } =
+    QUERY_DEFAULTS;
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: STALE_TIME_MS,
+        staleTime: staleTimeMs,
         refetchOnWindowFocus: true,
         retry: (failureCount, error) =>
-          !isClientError(error) && failureCount < MAX_RETRIES,
+          !isPermanentError(error) && failureCount < maxRetries,
         retryDelay: (attempt) =>
-          Math.min(RETRY_BASE_DELAY_MS * 2 ** attempt, RETRY_MAX_DELAY_MS),
+          Math.min(retryBaseDelayMs * 2 ** attempt, retryMaxDelayMs),
       },
     },
   });

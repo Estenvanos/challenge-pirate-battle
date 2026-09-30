@@ -1,22 +1,20 @@
+import { z } from "zod";
+import { STORAGE_KEYS } from "../constants/storage";
 import {
-  isMatchRecord,
+  matchRecordSchema,
   type MatchConfig,
   type MatchRecord,
   type RankingEntry,
-} from "../api/contracts";
+  type SubmitMatchResponse,
+} from "../schemas/match";
 import { readStore, removeStore, writeStore } from "../storage/localStore";
 import { fixtureMatches, manyPagesMatches } from "./fixtures/matches";
 import { getScenario } from "./scenarios";
 
-const STORE_KEY = "mockDb";
-const STORE_VERSION = 1;
-
-function isMatchRecordList(value: unknown): value is MatchRecord[] {
-  return Array.isArray(value) && value.every(isMatchRecord);
-}
+const STORE = STORAGE_KEYS.mockDb;
 
 function loadConfirmed(): MatchRecord[] {
-  return readStore(STORE_KEY, STORE_VERSION, isMatchRecordList, []);
+  return readStore(STORE, z.array(matchRecordSchema), []);
 }
 
 // Fixtures de cada cenário: "empty" só tem os registros confirmados.
@@ -79,17 +77,14 @@ export function queryMatches(playerId: string): MatchRecord[] {
     .sort(compareHistory);
 }
 
-export function upsertMatch(record: MatchRecord): {
-  record: MatchRecord;
-  created: boolean;
-} {
+export function upsertMatch(record: MatchRecord): SubmitMatchResponse {
   const existing = allMatches().find((m) => m.matchId === record.matchId);
   if (existing) return { record: existing, created: false };
 
-  writeStore(STORE_KEY, STORE_VERSION, [...loadConfirmed(), record]);
+  writeStore(STORE, [...loadConfirmed(), record]);
   return { record, created: true };
 }
 
 export function resetMockDb(): void {
-  removeStore(STORE_KEY);
+  removeStore(STORE);
 }

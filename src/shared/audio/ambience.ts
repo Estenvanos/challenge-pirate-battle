@@ -1,29 +1,19 @@
+import { AMBIENCE } from "../../constants/audio";
 import { isMuted, subscribeMuted } from "./mute";
 
 // Som de fundo do jogo inteiro: loop do mar mais um papagaio de vez em quando.
-const OCEAN_URL = "/assets/sounds/ocean_ambience_loop.wav";
-const PARROT_URLS = [
-  "/assets/sounds/parrot_squawk_1.wav",
-  "/assets/sounds/parrot_squawk_2.wav",
-  "/assets/sounds/parrot_squawk_3.wav",
-];
-
-const OCEAN_VOLUME = 0.6;
-const PARROT_VOLUME = 0.12;
-const PARROT_MIN_GAP_MS = 15_000;
-const PARROT_MAX_GAP_MS = 40_000;
 
 /** Liga o som ambiente e devolve a função que o desliga. */
 export function startAmbience(): () => void {
-  const ocean = new Audio(OCEAN_URL);
+  const ocean = new Audio(AMBIENCE.oceanUrl);
   ocean.loop = true;
-  ocean.volume = OCEAN_VOLUME;
+  ocean.volume = AMBIENCE.oceanVolume;
   ocean.muted = isMuted();
   const unsubscribeMuted = subscribeMuted(() => (ocean.muted = isMuted()));
 
-  const parrots = PARROT_URLS.map((url) => {
+  const parrots = AMBIENCE.parrotUrls.map((url) => {
     const audio = new Audio(url);
-    audio.volume = PARROT_VOLUME;
+    audio.volume = AMBIENCE.parrotVolume;
     return audio;
   });
 
@@ -40,8 +30,8 @@ export function startAmbience(): () => void {
   let parrotTimer = 0;
   const scheduleParrot = () => {
     const gap =
-      PARROT_MIN_GAP_MS +
-      Math.random() * (PARROT_MAX_GAP_MS - PARROT_MIN_GAP_MS);
+      AMBIENCE.parrotMinGapMs +
+      Math.random() * (AMBIENCE.parrotMaxGapMs - AMBIENCE.parrotMinGapMs);
     parrotTimer = window.setTimeout(() => {
       // Só canta junto com o mar (aba visível e áudio já liberado).
       if (!ocean.paused && !isMuted()) {

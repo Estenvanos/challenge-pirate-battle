@@ -867,6 +867,30 @@ img {
   bottom: 204px;
 }
 
+/* ---------- Controls (options) ---------- */
+.controls-list {
+  display: grid;
+  width: min(380px, 100%);
+  gap: 8px;
+  margin: 0;
+  text-align: left;
+}
+
+.controls-list__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--color-cream);
+  font-weight: 700;
+}
+
+.controls-list__row dd {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+}
+
 /* ---------- Mock API scenario panel ---------- */
 .scenario-panel {
   position: absolute;
@@ -1077,10 +1101,8 @@ img {
 
 /* Placa de madeira com o número entalhado: veios em gradiente, e o texto escuro
    com sombra clara embaixo e escura em cima, como uma ranhura na tábua. */
-.result__score {
-  min-width: 3.2em;
-  margin: 16px 0 0;
-  padding: 0.3em 0.9em 0.2em;
+.result__score,
+.carved-key {
   border: 3px solid var(--color-wood-dark);
   border-radius: 10px;
   background:
@@ -1097,11 +1119,28 @@ img {
     0 4px 10px rgba(0, 0, 0, 0.45);
   color: #4a2a0c;
   font-family: var(--font-carved);
-  font-size: clamp(2.5rem, 9vh, 4.25rem);
   line-height: 1;
   text-shadow:
     0 -2px 1px rgba(30, 15, 2, 0.7),
     0 2px 0 rgba(255, 214, 150, 0.55);
+}
+
+.result__score {
+  min-width: 3.2em;
+  margin: 16px 0 0;
+  padding: 0.3em 0.9em 0.2em;
+  font-size: clamp(2.5rem, 9vh, 4.25rem);
+}
+
+/* Tecla entalhada: a mesma plaquinha de madeira da pontuação, em tamanho menor. */
+.carved-key {
+  display: inline-block;
+  min-width: 2.6em;
+  padding: 0.45em 0.8em 0.35em;
+  border-width: 2px;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  text-align: center;
 }
 
 /* Moldura de madeira (o mesmo 9-slice do painel, menor) em volta do título. */

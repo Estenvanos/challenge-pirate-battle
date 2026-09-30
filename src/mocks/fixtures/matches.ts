@@ -1,4 +1,4 @@
-import type { EndReason, MatchConfig, MatchRecord } from "../../api/contracts";
+import type { EndReason, MatchConfig, MatchRecord } from "../../schemas/match";
 import { fixturePlayers, LOCAL_PLAYER_ID } from "./players";
 
 export const fixtureConfigs: readonly MatchConfig[] = [

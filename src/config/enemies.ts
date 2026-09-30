@@ -88,7 +88,7 @@ const WEAPON: EnemyWeapon = Object.freeze({
   attackRange: 560,
   aimTolerance: 0.14,
   fireCooldownSec: 2.2,
-  projectile: Object.freeze({ speed: 520, range: 620, damage: 5 }),
+  projectile: Object.freeze({ speed: 400, range: 620, damage: 5 }),
 });
 
 /** O navio grande atira mais fraco: compensa a vida maior. */

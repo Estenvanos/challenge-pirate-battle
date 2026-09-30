@@ -1,22 +1,16 @@
-import { isMatchRecord, type MatchRecord } from "../api/contracts";
+import { STORAGE_KEYS } from "../constants/storage";
+import { matchRecordSchema, type MatchRecord } from "../schemas/match";
 import { readStore, removeStore, writeStore } from "./localStore";
 
 // Último resultado concluído, mostrado no menu mesmo depois de um refresh.
-const KEY = "lastResult";
-const VERSION = 1;
-
-function isStoredResult(value: unknown): value is MatchRecord | null {
-  return value === null || isMatchRecord(value);
-}
-
 export function readLastResult(): MatchRecord | null {
-  return readStore(KEY, VERSION, isStoredResult, null);
+  return readStore(STORAGE_KEYS.lastResult, matchRecordSchema.nullable(), null);
 }
 
 export function writeLastResult(record: MatchRecord): boolean {
-  return writeStore(KEY, VERSION, record);
+  return writeStore(STORAGE_KEYS.lastResult, record);
 }
 
 export function clearLastResult(): void {
-  removeStore(KEY);
+  removeStore(STORAGE_KEYS.lastResult);
 }

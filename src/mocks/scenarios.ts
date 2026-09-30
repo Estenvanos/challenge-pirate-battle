@@ -1,5 +1,7 @@
 import { delay, HttpResponse } from "msw";
-import type { ApiError } from "../api/contracts";
+import { z } from "zod";
+import { STORAGE_KEYS } from "../constants/storage";
+import type { ApiError } from "../schemas/match";
 import { createRng } from "../game/core/random";
 import { readStore, removeStore, writeStore } from "../storage/localStore";
 
@@ -24,8 +26,7 @@ export const SCENARIOS = {
 export type ScenarioId = keyof typeof SCENARIOS;
 export type Endpoint = "ranking" | "history" | "submit";
 
-const KEY = "scenario";
-const VERSION = 1;
+const STORE = STORAGE_KEYS.scenario;
 const URL_PARAM = "scenario";
 
 const SLOW_MS = 2500;
@@ -35,21 +36,20 @@ const OUT_OF_ORDER_MS = { slow: 2500, fast: 300 } as const;
 /** Seed fixa: a mesma sequência de latências a cada carregamento da página. */
 const LATENCY_SEED = 1;
 
-function isScenarioId(value: unknown): value is ScenarioId {
-  return (
-    typeof value === "string" &&
-    Object.prototype.hasOwnProperty.call(SCENARIOS, value)
-  );
-}
+const scenarioIdSchema = z.enum(
+  Object.keys(SCENARIOS) as [ScenarioId, ...ScenarioId[]],
+);
 
 function initialScenario(): ScenarioId {
   // A URL vence e fica salva: os testes do Playwright escolhem o cenário assim.
-  const fromUrl = new URLSearchParams(window.location.search).get(URL_PARAM);
-  if (isScenarioId(fromUrl)) {
-    writeStore(KEY, VERSION, fromUrl);
-    return fromUrl;
+  const fromUrl = scenarioIdSchema.safeParse(
+    new URLSearchParams(window.location.search).get(URL_PARAM),
+  );
+  if (fromUrl.success) {
+    writeStore(STORE, fromUrl.data);
+    return fromUrl.data;
   }
-  return readStore(KEY, VERSION, isScenarioId, "success");
+  return readStore(STORE, scenarioIdSchema, "success");
 }
 
 const scenario = initialScenario();
@@ -64,13 +64,13 @@ export function getScenario(): ScenarioId {
 
 /** Salva o cenário e recarrega: cache, latências e pendentes recomeçam limpos. */
 export function selectScenario(id: ScenarioId): void {
-  writeStore(KEY, VERSION, id);
+  writeStore(STORE, id);
   reloadWithoutScenarioParam();
 }
 
 /** Volta ao cenário de sucesso e recarrega. */
 export function resetScenario(): void {
-  removeStore(KEY);
+  removeStore(STORE);
   reloadWithoutScenarioParam();
 }
 

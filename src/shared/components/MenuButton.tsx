@@ -21,5 +21,13 @@ export function MenuButton({
   ]
     .filter(Boolean)
     .join(" ");
-  return <button type={type} className={classes} {...withUiSounds(rest)} />;
+  return (
+    <button
+      type={type}
+      className={classes}
+      // O Modal lê isto: o autoFocus do React roda antes do showModal().
+      data-autofocus={rest.autoFocus || undefined}
+      {...withUiSounds(rest)}
+    />
+  );
 }

@@ -6,17 +6,19 @@
 
 Pirate Battle is a single-player 2D top-down naval shooter that runs entirely in the browser.
 
-| Layer | Folder | Responsibility | Technology |
-| --- | --- | --- | --- |
-| App shell | `src/app` | Routing, providers, global styles | React |
-| Screens | `src/features` | Menu, options, match (HUD, touch controls, pause), result, ranking, history | React |
-| Bridge | `src/game/bridge` | Throttled snapshot of game state for the UI | `useSyncExternalStore` |
-| Game core | `src/game` | Simulation, physics, arena, input, rendering, assets, audio | TypeScript + PixiJS |
-| Config | `src/config` | Typed balancing config and options limits | TypeScript |
-| Server-state hooks | `src/hooks` | `useRanking`, `useMatchHistory`, `useSubmitMatch` (only place calling `useQuery`/`useMutation`) | TanStack Query |
-| Remote data | `src/api` | Contracts, HTTP client, QueryClient, per-service calls and query options, pending submissions | Axios + TanStack Query |
-| Mocks | `src/mocks` | REST mocks for ranking and history | MSW |
-| Persistence | `src/storage` | Typed, safe `localStorage` access | — |
+| Layer              | Folder            | Responsibility                                                                                     | Technology             |
+| ------------------ | ----------------- | -------------------------------------------------------------------------------------------------- | ---------------------- |
+| App shell          | `src/app`         | Routing, providers, global styles                                                                  | React                  |
+| Screens            | `src/features`    | Menu, options, match (HUD, touch controls, pause), result, ranking, history                        | React                  |
+| Bridge             | `src/game/bridge` | Throttled snapshot of game state for the UI                                                        | `useSyncExternalStore` |
+| Game core          | `src/game`        | Simulation, physics, arena, input, rendering, assets, audio                                        | TypeScript + PixiJS    |
+| Config             | `src/config`      | Typed balancing config and options limits (tunable)                                                | TypeScript             |
+| Constants          | `src/constants`   | Fixed identifiers shared across files: storage keys, API routes and timings, sound URLs, UI labels | TypeScript             |
+| Schemas            | `src/schemas`     | API contracts and runtime validation; types come from `z.infer`                                    | Zod                    |
+| Server-state hooks | `src/hooks`       | `useRanking`, `useMatchHistory`, `useSubmitMatch` (only place calling `useQuery`/`useMutation`)    | TanStack Query         |
+| Remote data        | `src/api`         | HTTP client, QueryClient, per-service calls and query options, pending submissions                 | Axios + TanStack Query |
+| Mocks              | `src/mocks`       | REST mocks for ranking and history                                                                 | MSW                    |
+| Persistence        | `src/storage`     | Typed, safe `localStorage` access                                                                  | —                      |
 
 ### Dependency direction
 
@@ -26,7 +28,8 @@ features ──► game/bridge ──► game/core ──► game/simulation ─
    │                              └──► game/render, game/input, game/assets, game/audio
    ├──► hooks ──► api/services ──► (HTTP) ──► mocks (MSW, network layer)
    └──► storage
-config ◄── used by game and features
+config, constants ◄── used by every layer (constants imports only types)
+schemas ◄── api, storage, mocks, features (never game)
 ```
 
 - `src/game/**` has no dependency on React, `api`, `features` or `mocks`.
@@ -37,8 +40,8 @@ config ◄── used by game and features
 ### Screens
 
 - `app/App.tsx` holds a typed screen state (`menu` | `options` | `log` | `match`). There is no router: a refresh always lands on the menu, which abandons any running match.
-- **Menu:** Play, Options, and shortcuts to the Captain's Log tabs.
-- **Options:** steppers for session time and spawn interval, saved on every change (`storage/optionsStorage.ts`). Below them, a **Sound** toggle (On/Muted, `aria-pressed`) mutes every sound in the tab at once: ambience, UI and match sounds. It is global, not part of `GameOptions` (so it never splits the ranking), lives in `shared/audio/mute.ts` (in-memory flag + subscribers, persisted under the `muted` key) and applies immediately, also in the pause menu mid-match.
+- **Menu:** Play, Options, and shortcuts to the Captain's Log tabs. A note under Options ("Controls are in Options → Controls.", linked to the button via `aria-describedby`) points to the controls list.
+- **Options:** steppers for session time and spawn interval, saved on every change (`storage/optionsStorage.ts`). Below them, a **Sound** toggle (On/Muted, `aria-pressed`) mutes every sound in the tab at once: ambience, UI and match sounds. It is global, not part of `GameOptions` (so it never splits the ranking), lives in `shared/audio/mute.ts` (in-memory flag + subscribers, persisted under the `muted` key) and applies immediately, also in the pause menu mid-match. A **Controls** button switches the same panel to the controls list (`features/options/ControlsList.tsx`): each action from `KEY_BINDINGS` with its keys as `<kbd class="carved-key">`, small wooden plaques that share the carved style of the result score, plus a note on the touch buttons.
 - **Captain's Log:** `Ranking` and `Match History` tabs (WAI-ARIA tabs, arrow-key switching). The ranking is filtered by the current options; history shows the local player (`config/player.ts`). Both use 5 rows per page.
 - **Player name:** Play opens the `PlayerNameDialog` modal when no name is saved yet. It uses a native `<dialog>` (`showModal()` traps focus, makes the page inert and restores focus on close) inside the same `Panel`. The input is framed with the secondary button sprite. The name is validated (2–16 chars; letters, numbers, spaces, `'`, `-`, `_`), saved, and the match starts. `playerId` stays fixed as `local-player`.
 - **Match:** Play freezes a snapshot of the options and opens the full-viewport match screen: `GameCanvas` (the Pixi arena with the player's ship) plus a top-right bar with the `Hud` counters (score, then time left) and the round Pause button, in the sample's order. The `Hud` (`features/match/Hud.tsx`, a `<dl>` over the `counter_panel`/`icon_score`/`icon_time` sprites) shows the **live** score and time left from `useGameSnapshot` (the full session time while the arena loads), and, on a second row below the counters, right-aligned with the Pause button, the player's **live** health from `useGameSnapshot` (`icon_heart` plus the `health_frame` bar; the fill is clipped to `hp / maxHp` and turns from green to amber at 2/3 and red at 1/3). Pausing opens `PauseMenu` (`sample_pause.png`), with `ui_open.wav` when it opens and `ui_close.wav` when it closes (played by `MatchScreen` on the change of `paused && !result`, not on mount): the shared `Modal` with **Resume**, **Options** (the same steppers as the Options screen, `OptionsFields`; changes apply to the next match) and **Main Menu**. While assets load, `ArenaLoading` (`features/match/ArenaLoading.tsx`) covers the whole match (HUD and controls included) with the menu background and a `Panel`: the title art, the player's ship (`ship_2`, bobbing, turned to face right) sailing along a progress bar built from the HUD's `health_frame`/`health_fill_green` sprites (`role="progressbar"`), and a tip. On failure the same panel offers **Retry**, which remounts the canvas via a `key` bump. `TouchControls` (rendered by `GameCanvas`, next to the Pixi host) shows the sample's on-screen buttons as two compact triangles (round button sprites, 64 px; 56 px on mobile): movement at the bottom left (forward on top, turn left and right side by side below) and weapons at the bottom right (front on top, left and right broadsides below). Holding a button holds its input action (§6). A weapon button is covered by a white veil while that weapon reloads: `Game` reports the remaining cooldown of each weapon (`onCooldowns`, 1 → 0, only when it changes) and `GameCanvas` writes it to the CSS variables `--cooldown-front|left|right` on `.game-canvas`, so there is no React render per frame and the veil freezes on pause. Each button shows its keyboard keys below it (hidden on `pointer: coarse` devices), read from `KEY_BINDINGS` (`game/input/bindings.ts`, the same source the `InputManager` uses) and exposed through `aria-keyshortcuts`. In the match the Jungle Gaming logo moves up so it doesn't cover the weapon buttons, and in dev the TanStack Query Devtools button sits at the top left. Score, the match timer and the result screen are not implemented yet.
@@ -53,7 +56,8 @@ config ◄── used by game and features
 - The UI is synced from the game in two ways. Neither causes a React render every frame.
   - **Snapshots:** `gameStore` (`game/bridge`) holds the snapshot and React reads it with `useGameSnapshot` (`useSyncExternalStore`). It carries the player's HP, the score and the time left in whole seconds. `Game` reports them through `GameInitOptions` callbacks (`onPlayerHealth` on each hit, `onScore` on each kill, `onTimeLeft` once per second), `GameCanvas` forwards them to `gameStore` and resets the store when the match unmounts. All three change at discrete moments, so React never renders per frame.
   - **Match end:** `Game` calls `onMatchEnd` once with a `MatchResult` (score, active duration, end reason), 1 s of frame time after the simulation ends so the last explosion is seen. `MatchScreen` keeps the result in state, submits the record and shows the result dialog.
-  - **Events:** `EventBus` emits discrete events (enemy destroyed, player hit, match ended, paused/resumed). The HUD, `LiveRegion` and result flow consume them.
+  - **Screen reader:** `MatchAnnouncer` (`features/match/MatchAnnouncer.tsx`) is a visually hidden `role="status"` region fed by `useGameSnapshot`. Its text is the score, a time mark (1 minute, 30 s and 10 s left) and "Health low" at 1/3 HP or less, so it only changes, and is only read, at those moments, never per frame or per second.
+- **Events:** `EventBus` emits discrete events (enemy destroyed, player hit, match ended, paused/resumed). The HUD, `LiveRegion` and result flow consume them.
 - Each match starts from a frozen snapshot of `gameConfig` merged with the saved options.
 
 ## 3. Simulation loop
@@ -209,28 +213,29 @@ config ◄── used by game and features
 
 ## 7. Local persistence
 
-| Key | Content | Module |
-| --- | --- | --- |
-| options | session time, spawn interval (validated against `config/options.ts` limits) | `storage/optionsStorage.ts` |
-| muted | global sound mute | `shared/audio/mute.ts` |
-| player name | captain name chosen by the player (`null` until set) | `storage/playerStorage.ts` |
-| last result | last completed match result | `storage/lastResultStorage.ts` |
-| pending submissions | queue of unconfirmed match records | `api/pendingSubmissions.ts` |
-| mock DB | confirmed records (MSW) | `mocks/mockDb.ts` |
-| scenario | selected MSW scenario | `mocks/scenarios` |
+| Key                 | Content                                                                     | Module                         |
+| ------------------- | --------------------------------------------------------------------------- | ------------------------------ |
+| options             | session time, spawn interval (validated against `config/options.ts` limits) | `storage/optionsStorage.ts`    |
+| muted               | global sound mute                                                           | `shared/audio/mute.ts`         |
+| player name         | captain name chosen by the player (`null` until set)                        | `storage/playerStorage.ts`     |
+| last result         | last completed match result                                                 | `storage/lastResultStorage.ts` |
+| pending submissions | queue of unconfirmed match records                                          | `api/pendingSubmissions.ts`    |
+| mock DB             | confirmed records (MSW)                                                     | `mocks/mockDb.ts`              |
+| scenario            | selected MSW scenario                                                       | `mocks/scenarios`              |
 
-All access goes through `storage/localStore.ts`, which handles namespacing, versioning, `try/catch`, validation and fallback to defaults.
+Keys and versions are declared once in `constants/storage.ts` (`STORAGE_KEYS`). All access goes through `storage/localStore.ts` (`readStore(entry, schema, fallback)`), which handles namespacing, versioning, `try/catch`, validation with the given Zod schema, and fallback to defaults.
 
 A match that is abandoned, whether by refreshing or by leaving the match screen, is never recorded.
 
 ## 8. Ranking and match history
 
-- **Contracts** (`api/contracts.ts`), shared by the client and the MSW handlers:
+- **Contracts** (`schemas/match.ts`, Zod), shared by the client and the MSW handlers. Each schema is the source of both the type and the runtime check:
   - `MatchRecord`: matchId, playerId, playerName, date (ISO), score, durationSec (effective), endReason (`timeUp` | `playerDestroyed`), config (`MatchConfig`).
   - `RankingEntry`: a match plus its global 1-based `position`.
   - `Page<T>`: items, page, pageSize, totalItems, totalPages. Default page size is 10 and the maximum is 50.
   - `ApiError` (`code`, `message`) and `SubmitMatchResponse` (`record`, `created`).
-  - `isMatchRecord` runtime validator, used by the PUT handler and by persisted data.
+  - `matchRecordSchema` validates the PUT body and persisted data. The services parse every response with its schema, so a payload outside the contract fails as a query error, and the `QueryClient` does not retry it (just like a 4xx).
+  - Query strings are parsed by `schemas/query.ts` (`pageParamsSchema`, `rankingQuerySchema`). Routes, page sizes and timings live in `constants/api.ts`, shared by the Axios client and the MSW handlers.
 - **Endpoints** (relative paths, so they work on any origin):
   - `GET /api/ranking?sessionTime&spawnInterval&page&pageSize`: `sessionTime` and `spawnInterval` are required. Returns `Page<RankingEntry>`.
   - `GET /api/matches?playerId&page&pageSize`: `playerId` is required. Returns `Page<MatchRecord>`, newest first.
@@ -243,7 +248,7 @@ A match that is abandoned, whether by refreshing or by leaving the match screen,
 - **Layout:**
   - `api/httpClient.ts`: the single Axios instance (`baseURL: /api`, timeout).
   - `api/queryClient.ts`: `createQueryClient()` with the defaults below.
-  - `api/services/<service>/service.ts`: plain Axios calls typed with the contracts; no TanStack imports.
+  - `api/services/<service>/service.ts`: plain Axios calls whose responses are parsed with the schemas; no TanStack imports.
   - `api/services/<service>/queries.ts`: query key factories (`rankingKeys`, `matchesKeys`) and `queryOptions`/`mutationOptions` factories; no React hooks.
   - Services: `ranking` (GET ranking) and `matches` (GET history, PUT submit).
   - `src/hooks/`: React hooks built on those options; components use these, never `api/services` directly.
@@ -275,63 +280,87 @@ A match that is abandoned, whether by refreshing or by leaving the match screen,
 - The local player (`local-player`) has no fixture matches, so their history starts empty.
 - **Scenarios** (`mocks/scenarios.ts`, `SCENARIOS`). `simulateNetwork(endpoint)` runs at the start of every handler and either delays the request or returns the simulated failure:
 
-  | Id | Behaviour |
-  | --- | --- |
-  | `success` | Default. No delay. |
-  | `empty` | No fixtures: only records confirmed in this browser. |
-  | `manyPages` | 200 extra rival matches and 30 local-player matches. |
-  | `slow` | Every request waits 2.5 s. |
-  | `variableLatency` | 200–2000 ms per request, from the seeded RNG (`createRng(1)`), so the sequence is the same on every load. |
-  | `outOfOrder` | Requests alternate between 2.5 s and 0.3 s, so the second of two quick requests resolves first. |
-  | `timeout` | Never answers; Axios gives up after its 8 s timeout. |
-  | `networkError` | `HttpResponse.error()` (connection failure). |
-  | `clientError` / `serverError` | 400 / 500 with an `ApiError`. 4xx is not retried, 5xx is. |
-  | `rankingDown` / `historyDown` | 503 on that read only. |
-  | `timeoutAfterWrite` | The first PUT of each match is saved but never answered; the resend returns `200 {created: false}`, so nothing is duplicated. |
-  | `downAtMatchEnd` | Every PUT returns 503. The record stays pending; switching back to `success` resends it on load (or through **Try again**). |
+  | Id                            | Behaviour                                                                                                                     |
+  | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+  | `success`                     | Default. No delay.                                                                                                            |
+  | `empty`                       | No fixtures: only records confirmed in this browser.                                                                          |
+  | `manyPages`                   | 200 extra rival matches and 30 local-player matches.                                                                          |
+  | `slow`                        | Every request waits 2.5 s.                                                                                                    |
+  | `variableLatency`             | 200–2000 ms per request, from the seeded RNG (`createRng(1)`), so the sequence is the same on every load.                     |
+  | `outOfOrder`                  | Requests alternate between 2.5 s and 0.3 s, so the second of two quick requests resolves first.                               |
+  | `timeout`                     | Never answers; Axios gives up after its 8 s timeout.                                                                          |
+  | `networkError`                | `HttpResponse.error()` (connection failure).                                                                                  |
+  | `clientError` / `serverError` | 400 / 500 with an `ApiError`. 4xx is not retried, 5xx is.                                                                     |
+  | `rankingDown` / `historyDown` | 503 on that read only.                                                                                                        |
+  | `timeoutAfterWrite`           | The first PUT of each match is saved but never answered; the resend returns `200 {created: false}`, so nothing is duplicated. |
+  | `downAtMatchEnd`              | Every PUT returns 503. The record stays pending; switching back to `success` resends it on load (or through **Try again**).   |
 
 - **Selection:** `?scenario=<id>` in the URL (saved, used by Playwright) or the `ScenarioPanel` (a `<details>` at the bottom left of every screen except the match, also in the published build). The choice is stored under the `scenario` key. Changing it reloads the page, so the query cache, the latency sequence and the in-memory state start clean.
 - **Reset:** the panel's **Reset mock data** clears the confirmed records (`resetMockDb`), the pending queue, the last result and the scenario, then reloads.
 
 ## 10. Testing and profiling
 
-- Playwright E2E runs on Chromium, desktop and mobile. Specs map to the required test list.
-- Visual regression covers the menu, the arena in a stable state and the result screen. Baselines are versioned.
-- Determinism comes from `window.__GAME_TEST__`: seed, clock control and state reads. It is enabled in test mode only.
+- **Playwright** (`playwright.config.ts`): projects `desktop` (Desktop Chrome, 1280×720) and `mobile` (Pixel 7 landscape, touch). `webServer` starts Vite on port 4173 with `VITE_GAME_TEST=true`. Reports: `list` plus HTML (`playwright-report/`); traces and screenshots are kept for failures. Two workers and a 60 s timeout, because every page renders the arena with software WebGL. `prefers-reduced-motion` is emulated.
+- **Test hooks** (`src/testing/testHooks.ts`), installed only when `VITE_GAME_TEST` is `true`, so the published build has none:
+  - `?seed=N` seeds the match RNG.
+  - `GameInitOptions.manualClock`: real time no longer moves the simulation or the animations; `window.__GAME_TEST__.advance(sec)` runs that many fixed steps (`GameLoop.advance`), and does nothing while paused, like the real loop. The Pixi ticker drops to 1 FPS, which is enough for screenshots and keeps the page responsive.
+  - `window.__GAME_TEST__.state()` returns a plain copy of the `World`: player, enemies, projectiles, cooldowns, score, time, end reason and whether the player overlaps an island.
+  - The hooks only observe and move the clock. Movement and combat go through the real keyboard (`page.keyboard`) or touch (CDP touch events on the on-screen buttons).
+- **Layout:** `tests/fixtures/test.ts` (fresh context per test, fails on any `pageerror` or `console.error` except the browser's own network-failure lines), `tests/helpers/game.ts` (`GamePage`: open with seeded storage and scenario, `play`, `advance`, `hold`, `turnTo`, `fight`, `finishByTime`, `finishByDeath`), `tests/e2e/*.spec.ts` (one file per item of the brief §8), `tests/visual/visual.spec.ts`.
+- **Seeds** (`SEEDS` in the helpers, measured with 60 s / 10 s options): `survivor` (3) reaches the end of the session while `fight()` shoots back; `shooterFirst` (1) spawns a Shooter first and an idle player dies at about 41 s; `mixed` (7, 2 s spawns) brings a Chaser and then Shooters.
+- **Coverage (§8):**
+
+  | § | Spec |
+  | --- | --- |
+  | 1 | `options.spec.ts`: limits, persistence after refresh, invalid storage, mid-match changes apply to the next match |
+  | 2 | `assets-loading.spec.ts`: progress bar while a tile is held, failure → **Retry** (runs with the service worker blocked, so `page.route` sees asset requests) |
+  | 3 | `movement.spec.ts`: forward, both rotations, arena bounds, island blocking |
+  | 4 | `combat.spec.ts`: front and broadside shots, cooldowns, damage, one point per kill |
+  | 5 | `enemies.spec.ts`: spawn interval and distance, Chaser ram (no point), Shooter fires in range |
+  | 6 | `match-end.spec.ts`: time up and death freeze the simulation; Play Again starts a clean match |
+  | 7 | `pause.spec.ts`: manual pause, `Esc`, blur, hidden tab; clock and cooldowns frozen, input dropped |
+  | 8 | `result.spec.ts`: score, time, reason, save status, focus, last result after refresh |
+  | 9 | `navigation-touch.spec.ts`: abandoned match not recorded, repeated navigation frees the canvas, multi-touch (mobile) |
+  | 10 | `ranking-history.spec.ts`: pagination, keyboard tabs, loading, empty, errors |
+  | 11 | `submission.spec.ts`: one record in both tabs, pending after failure, new match while pending, resend on load |
+  | 12 | `retry-race.spec.ts`: resend after a write timeout without duplicates; a late page never replaces the one on screen |
+
+- **Visual regression:** menu, arena (seeded, 12 s of game time, frozen) and result, per project. Baselines are versioned under `tests/visual/__snapshots__/<project>/`; `npm run test:visual:update` regenerates them. They depend on the local fonts and renderer, so a different OS may need its own baselines.
+- **Bugs the suite found:** after an asset failure, late progress callbacks put the loading screen back over the error (the **Retry** button disappeared); and `showModal()` moved focus to the scrollable panel on mobile instead of the `autoFocus` button (`Modal` now focuses the element marked `data-autofocus` after opening).
 - Profiling results go in `docs/profiling/`: FPS, p95 frame time, entity count over a 3-minute match, and memory after 5 cycles. The reference environment is **TBD**.
 
 ## 11. Balancing decisions
 
 Values live in `src/config/gameConfig.ts` (`GAME_CONFIG`, frozen).
 
-| Value | Setting | Why |
-| --- | --- | --- |
-| Player max speed | 210 px/s | Crosses the 2048 px arena in about 10 s. Fast, arcade-style. |
-| Acceleration / drag | 320 / 240 px/s² | About 0.66 s to reach full speed and about 0.9 s to stop. |
-| Turn speed | 2.5 rad/s (constant) | Turn circle radius of about 84 px at full speed, under one 128 px tile, and the ship can turn in place. |
-| Chaser speed / turn | 150 px/s, 2.0 rad/s | Slower than the player, so it can be outrun, but close enough to catch a player who turns a lot. |
-| Shooter speed / turn | 125 px/s, 1.7 rad/s | The slowest turner: the player can sail out of its aim. |
-| Shooter hold / attack range | 380 / 560 px | It stops well inside its range and keeps firing from a distance. |
-| Shooter aim tolerance / cooldown | 0.14 rad / 2.2 s | It only fires when well aligned, and not often. |
-| Enemy projectile | 520 px/s, range 620 px | Slower than the player's shots, so it can be dodged. |
-| Spawn distance from player | 700 px | About 3 s of sailing away, so a new enemy is never an immediate hit. |
-| Ship sprite scale | 1.35 | Player and medium enemies are drawn at 1.35× the source art; the Big Shooter at 1.2× that (1.62). Radius and hull length follow the scale. |
-| Player collision radius | 34 px | About half the hull width of `ship_2` at 1.35×. It fits through one-tile (128 px) channels. |
-| Hull half length | 67 px | Bow-to-centre distance at 1.35×, used for the island collision of bow and stern. |
-| Front cannon | 0.45 s cooldown, 720 px/s, range 720 px | One fast, long shot, so it can fire often. |
-| Broadside | 1.2 s cooldown (per side), 620 px/s, range 460 px | Each broadside fires 3 projectiles, so it reloads slower and reaches less than the front cannon. |
-| Broadside shot spacing | 32 px | The 3 shots span 64 px, within the hull length. |
-| Player HP / shot damage | 100 / 5.75 | 15% above the enemy shot (5). Front and broadside shots hurt the same; a full broadside (3 hits) is worth 17.25. |
-| Chaser HP / ram damage | 30 / 10 | Dies to 6 shots (two broadsides). Ten rams sink the player, so it must be shot before it arrives. |
-| Shooter HP / shot damage | 45 / 5 | 8 shots to destroy; 20 of its hits sink the player. |
-| Big Shooter HP / shot damage | 55 / 4 | The toughest hull (10 shots) with the weakest shot. |
+| Value                            | Setting                                           | Why                                                                                                                                        |
+| -------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Player max speed                 | 210 px/s                                          | Crosses the 2048 px arena in about 10 s. Fast, arcade-style.                                                                               |
+| Acceleration / drag              | 320 / 240 px/s²                                   | About 0.66 s to reach full speed and about 0.9 s to stop.                                                                                  |
+| Turn speed                       | 2.5 rad/s (constant)                              | Turn circle radius of about 84 px at full speed, under one 128 px tile, and the ship can turn in place.                                    |
+| Chaser speed / turn              | 150 px/s, 2.0 rad/s                               | Slower than the player, so it can be outrun, but close enough to catch a player who turns a lot.                                           |
+| Shooter speed / turn             | 125 px/s, 1.7 rad/s                               | The slowest turner: the player can sail out of its aim.                                                                                    |
+| Shooter hold / attack range      | 380 / 560 px                                      | It stops well inside its range and keeps firing from a distance.                                                                           |
+| Shooter aim tolerance / cooldown | 0.14 rad / 2.2 s                                  | It only fires when well aligned, and not often.                                                                                            |
+| Enemy projectile                 | 400 px/s, range 620 px                            | Much slower than the player's shots (~1.5 s of flight), so it can be dodged.                                                                                      |
+| Spawn distance from player       | 700 px                                            | About 3 s of sailing away, so a new enemy is never an immediate hit.                                                                       |
+| Ship sprite scale                | 1.35                                              | Player and medium enemies are drawn at 1.35× the source art; the Big Shooter at 1.2× that (1.62). Radius and hull length follow the scale. |
+| Player collision radius          | 34 px                                             | About half the hull width of `ship_2` at 1.35×. It fits through one-tile (128 px) channels.                                                |
+| Hull half length                 | 67 px                                             | Bow-to-centre distance at 1.35×, used for the island collision of bow and stern.                                                           |
+| Front cannon                     | 0.45 s cooldown, 720 px/s, range 720 px           | One fast, long shot, so it can fire often.                                                                                                 |
+| Broadside                        | 1.2 s cooldown (per side), 620 px/s, range 460 px | Each broadside fires 3 projectiles, so it reloads slower and reaches less than the front cannon.                                           |
+| Broadside shot spacing           | 32 px                                             | The 3 shots span 64 px, within the hull length.                                                                                            |
+| Player HP / shot damage          | 100 / 5.75                                        | 15% above the enemy shot (5). Front and broadside shots hurt the same; a full broadside (3 hits) is worth 17.25.                           |
+| Chaser HP / ram damage           | 30 / 10                                           | Dies to 6 shots (two broadsides). Ten rams sink the player, so it must be shot before it arrives.                                          |
+| Shooter HP / shot damage         | 45 / 5                                            | 8 shots to destroy; 20 of its hits sink the player.                                                                                        |
+| Big Shooter HP / shot damage     | 55 / 4                                            | The toughest hull (10 shots) with the weakest shot.                                                                                        |
 
 Option limits (`src/config/options.ts`):
 
-| Option | Min | Max | Step | Default |
-| --- | --- | --- | --- | --- |
-| Game session time | 60 s | 180 s | 10 s | 120 s |
-| Enemy spawn time | 1 s | 10 s | 1 s | 3 s |
+| Option            | Min  | Max   | Step | Default |
+| ----------------- | ---- | ----- | ---- | ------- |
+| Game session time | 60 s | 180 s | 10 s | 120 s   |
+| Enemy spawn time  | 1 s  | 10 s  | 1 s  | 3 s     |
 
 Whole-second steps keep the number of distinct configurations small, so ranking groups stay populated.
 

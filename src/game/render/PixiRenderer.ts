@@ -73,6 +73,11 @@ export class PixiRenderer {
     this.kickY -= Math.sin(angle) * amount;
   }
 
+  /** Limita os quadros por segundo (0 = sem limite). */
+  setMaxFps(fps: number): void {
+    if (this.app) this.app.ticker.maxFPS = fps;
+  }
+
   /** Registra uma chamada por quadro (delta em ms); retorna a função que a remove. */
   onFrame(callback: (deltaMs: number) => void): () => void {
     const app = this.app;
