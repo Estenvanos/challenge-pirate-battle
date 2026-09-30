@@ -36,6 +36,19 @@ export class Game {
   private input: InputManager | null = null;
   private stopLoop: (() => void) | null = null;
   private destroyed = false;
+  private paused = false;
+
+  /**
+   * Congela simulação, relógio e animações. O momentum fica no World, então
+   * retomar continua de onde parou. Pode ser chamado antes do fim do init.
+   */
+  setPaused(paused: boolean): void {
+    this.paused = paused;
+    if (!this.input) return;
+    // Limpa na pausa e na retomada: nada acumula do período pausado.
+    this.input.clear();
+    this.input.enabled = !paused;
+  }
 
   /** Rejeita se os assets falharem; seguro de chamar destroy() a qualquer momento. */
   async init(host: HTMLElement, options: GameInitOptions): Promise<void> {
@@ -58,9 +71,13 @@ export class Game {
     const world = createWorld(ARENA_MAP, config, options.seed ?? Date.now());
     const clock = new GameClock();
     const input = new InputManager();
+    input.enabled = !this.paused;
     this.input = input;
+    // Pausado, nenhum quadro chega ao loop nem às animações das views.
     const onFrame = (callback: (deltaMs: number) => void) =>
-      renderer.onFrame(callback);
+      renderer.onFrame((deltaMs) => {
+        if (!this.paused) callback(deltaMs);
+      });
     const enemiesView = new EnemiesView(onFrame);
     this.enemiesView = enemiesView;
     const shipView = new ShipView("ship_2", onFrame);
@@ -85,7 +102,7 @@ export class Game {
       },
     });
     shipView.sync(world.player);
-    this.stopLoop = renderer.onFrame((deltaMs) => loop.frame(deltaMs));
+    this.stopLoop = onFrame((deltaMs) => loop.frame(deltaMs));
   }
 
   destroy(): void {

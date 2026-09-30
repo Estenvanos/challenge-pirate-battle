@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { GameOptions } from "../../config/options";
 import { Game } from "../../game/core/Game";
 import { MenuButton } from "../../shared/components/MenuButton";
+import { usePause } from "./PauseProvider";
 
 // Em dev, `?debugIslands` desenha os polígonos de colisão das ilhas.
 const DEBUG_ISLANDS =
@@ -34,7 +35,9 @@ function GameCanvasHost({
   options,
   onRetry,
 }: GameCanvasProps & { onRetry: () => void }) {
+  const { paused } = usePause();
   const hostRef = useRef<HTMLDivElement>(null);
+  const gameRef = useRef<Game | null>(null);
   const [load, setLoad] = useState<LoadState>({
     status: "loading",
     progress: 0,
@@ -46,6 +49,7 @@ function GameCanvasHost({
     if (!host) return;
     let cancelled = false;
     const game = new Game();
+    gameRef.current = game;
     game
       .init(host, {
         options,
@@ -69,9 +73,15 @@ function GameCanvasHost({
       );
     return () => {
       cancelled = true;
+      gameRef.current = null;
       game.destroy(); // seguro antes do fim do init e se chamado duas vezes
     };
   }, [options]);
+
+  useEffect(() => {
+    // Sincroniza a pausa da UI com o Game (roda depois do efeito que o cria).
+    gameRef.current?.setPaused(paused);
+  }, [paused, options]);
 
   return (
     <div className="game-canvas">

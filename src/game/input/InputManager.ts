@@ -18,6 +18,9 @@ function isEditable(target: EventTarget | null): boolean {
 export class InputManager {
   private readonly state = emptyActionState();
 
+  /** Desligado fora do gameplay (pausa): não captura nem bloqueia teclas. */
+  enabled = true;
+
   get actions(): ActionState {
     return this.state;
   }
@@ -45,7 +48,7 @@ export class InputManager {
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
     const action = ACTION_BY_CODE.get(event.code);
-    if (!action || isEditable(event.target)) return;
+    if (!this.enabled || !action || isEditable(event.target)) return;
     event.preventDefault();
     this.state[action] = true;
   };

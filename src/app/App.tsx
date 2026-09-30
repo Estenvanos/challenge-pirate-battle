@@ -83,6 +83,8 @@ export function App() {
           <MatchScreen
             config={screen.config}
             playerName={screen.playerName}
+            options={options}
+            onOptionsChange={changeOptions}
             onExit={goToMenu}
           />
         );

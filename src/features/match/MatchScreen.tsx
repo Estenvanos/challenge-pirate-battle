@@ -1,16 +1,59 @@
+import { useEffect } from "react";
 import type { GameOptions } from "../../config/options";
-import { MenuButton } from "../../shared/components/MenuButton";
+import { ACTION_BY_CODE } from "../../game/input/bindings";
+import { RoundButton } from "../../shared/components/RoundButton";
 import { GameCanvas } from "./GameCanvas";
+import { PauseMenu } from "./PauseMenu";
+import { usePause } from "./PauseProvider";
 import { TouchControls } from "./TouchControls";
 
 interface MatchScreenProps {
   config: Readonly<GameOptions>;
   playerName: string;
+  /** Opções salvas (valem para a próxima partida), editáveis no menu de pausa. */
+  options: GameOptions;
+  onOptionsChange: (options: GameOptions) => void;
   onExit: () => void;
 }
 
-// Tela da partida: arena com o navio do jogador; HUD e combate virão depois.
-export function MatchScreen({ config, playerName, onExit }: MatchScreenProps) {
+const PAUSE_CODES = [...ACTION_BY_CODE]
+  .filter(([, action]) => action === "pause")
+  .map(([code]) => code);
+
+// Tela da partida: arena, controles e pausa; HUD e combate virão depois.
+export function MatchScreen({
+  config,
+  playerName,
+  options,
+  onOptionsChange,
+  onExit,
+}: MatchScreenProps) {
+  const { paused, setPaused } = usePause();
+
+  useEffect(() => {
+    // Sincroniza com window/document: tecla de pausa e pausa automática ao perder o foco.
+    const pause = () => setPaused(true);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!PAUSE_CODES.includes(event.code)) return;
+      // A tecla alterna a pausa só aqui: sem o preventDefault, o <dialog> recém-aberto
+      // trataria o mesmo Esc como "fechar" e a partida retomaria na hora.
+      event.preventDefault();
+      if (!event.repeat) setPaused((current) => !current);
+    };
+    const onVisibilityChange = () => {
+      if (document.hidden) pause();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("blur", pause);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("blur", pause);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      setPaused(false); // sair da partida nunca deixa a pausa ligada
+    };
+  }, [setPaused]);
+
   return (
     <section className="match" aria-labelledby="match-title">
       <h1 id="match-title" className="visually-hidden">
@@ -20,10 +63,22 @@ export function MatchScreen({ config, playerName, onExit }: MatchScreenProps) {
       <GameCanvas options={config} />
       <TouchControls />
       <div className="match__bar">
-        <MenuButton size="sm" variant="secondary" onClick={onExit}>
-          Main Menu
-        </MenuButton>
+        <RoundButton
+          icon="pause"
+          label="Pause"
+          className="round-button--control"
+          aria-keyshortcuts={PAUSE_CODES.join(" ")}
+          onClick={() => setPaused(true)}
+        />
       </div>
+      {paused && (
+        <PauseMenu
+          options={options}
+          onOptionsChange={onOptionsChange}
+          onResume={() => setPaused(false)}
+          onExit={onExit}
+        />
+      )}
     </section>
   );
 }
