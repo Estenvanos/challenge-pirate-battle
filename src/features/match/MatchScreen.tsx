@@ -3,6 +3,7 @@ import type { GameOptions } from "../../config/options";
 import { ACTION_BY_CODE } from "../../game/input/bindings";
 import { RoundButton } from "../../shared/components/RoundButton";
 import { GameCanvas } from "./GameCanvas";
+import { Hud } from "./Hud";
 import { PauseMenu } from "./PauseMenu";
 import { usePause } from "./PauseProvider";
 import { TouchControls } from "./TouchControls";
@@ -20,7 +21,7 @@ const PAUSE_CODES = [...ACTION_BY_CODE]
   .filter(([, action]) => action === "pause")
   .map(([code]) => code);
 
-// Tela da partida: arena, controles e pausa; HUD e combate virão depois.
+// Tela da partida: arena, controles, pausa e HUD (ainda estático); combate virá depois.
 export function MatchScreen({
   config,
   playerName,
@@ -63,6 +64,7 @@ export function MatchScreen({
       <GameCanvas options={config} />
       <TouchControls />
       <div className="match__bar">
+        <Hud sessionTimeSec={config.sessionTimeSec} />
         <RoundButton
           icon="pause"
           label="Pause"

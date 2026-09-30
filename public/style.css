@@ -513,10 +513,104 @@ img {
 .match__bar {
   position: absolute;
   top: 8px;
-  left: 8px;
+  right: 8px;
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: start;
+  gap: 8px 16px;
+}
+
+/* A pausa fica na 3ª coluna, ao lado dos contadores. */
+.match__bar .round-button--control {
+  grid-area: 1 / 3;
+}
+
+/* ---------- HUD (pontuação e tempo à esquerda da pausa, vida embaixo) ---------- */
+/* Subgrid da barra: o HUD ocupa as três colunas, então a vida pode encostar na borda
+   direita, embaixo da pausa. */
+.hud {
+  display: grid;
+  margin: 0;
+  grid-area: 1 / 1 / 3 / -1;
+  grid-template-rows: subgrid;
+  grid-template-columns: subgrid;
+}
+
+.hud__counter {
   display: flex;
+  width: 160px;
+  height: 56px;
   align-items: center;
-  gap: 16px;
+  justify-content: center;
+  gap: 8px;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-variant-numeric: tabular-nums;
+  background: center / 100% 100% no-repeat;
+  background-image: image-set(
+    url("/assets/png/default/ui/hud/counter_panel.png") 1x,
+    url("/assets/png/retina/ui/hud/counter_panel.png") 2x
+  );
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+}
+
+.hud__icon {
+  width: 28px;
+  height: 28px;
+}
+
+.hud__value {
+  margin: 0;
+}
+
+/* Vida: coração + barra do sample, alinhados à direita. */
+.hud__health {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-self: end;
+  align-items: center;
+  gap: 8px;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+}
+
+.hud__heart {
+  width: 36px;
+  height: 36px;
+}
+
+/* Moldura e preenchimento têm o mesmo tamanho (256×48), então se sobrepõem exatos. */
+.hud__bar {
+  position: relative;
+  display: grid;
+  width: 256px;
+  margin: 0;
+  aspect-ratio: 256 / 48;
+  place-items: center;
+  background: center / 100% 100% no-repeat;
+  background-image: image-set(
+    url("/assets/png/default/ui/hud/health_frame.png") 1x,
+    url("/assets/png/retina/ui/hud/health_frame.png") 2x
+  );
+}
+
+.hud__fill {
+  position: absolute;
+  inset: 0;
+  background: center / 100% 100% no-repeat;
+  background-image: image-set(
+    url("/assets/png/default/ui/hud/health_fill_green.png") 1x,
+    url("/assets/png/retina/ui/hud/health_fill_green.png") 2x
+  );
+}
+
+.hud__bar-value {
+  position: relative;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 /* O canvas preenche a área; o Pixi faz o letterbox da arena dentro dele. */
@@ -617,6 +711,17 @@ img {
   height: 32px;
 }
 
+/* A pausa acompanha a altura dos contadores do HUD. */
+.match__bar .round-button--control {
+  width: 56px;
+  height: 56px;
+}
+
+.match__bar .round-button--control .round-button__icon {
+  width: 28px;
+  height: 28px;
+}
+
 /* Na partida, o logo sobe para não cobrir os controles de tiro. */
 .scene:has(.match) .scene__logo {
   bottom: 168px;
@@ -627,6 +732,52 @@ img {
   .scene__logo {
     right: 16px;
     width: 96px;
+  }
+
+  /* Contadores menores para caber ao lado da pausa. */
+  .match__bar,
+  .hud {
+    gap: 8px;
+  }
+
+  .hud__counter {
+    width: 112px;
+    height: 40px;
+    gap: 4px;
+    font-size: 1rem;
+  }
+
+  .hud__icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .hud__health {
+    gap: 4px;
+  }
+
+  .hud__heart {
+    width: 28px;
+    height: 28px;
+  }
+
+  .hud__bar {
+    width: 192px;
+  }
+
+  .hud__bar-value {
+    font-size: 0.8rem;
+  }
+
+  /* 44 px: mínimo confortável para toque, mesmo com o contador em 40 px. */
+  .match__bar .round-button--control {
+    width: 44px;
+    height: 44px;
+  }
+
+  .match__bar .round-button--control .round-button__icon {
+    width: 22px;
+    height: 22px;
   }
 
   .panel {
