@@ -1,3 +1,5 @@
+import { isMuted } from "../../shared/audio/mute";
+
 // Sons da partida. Cada som pode ter variações, tocadas em rodízio.
 const SOUNDS = {
   cannonFire: [
@@ -6,6 +8,17 @@ const SOUNDS = {
     "/assets/sounds/cannon_fire_3.wav",
   ],
   cannonBroadside: ["/assets/sounds/cannon_broadside.wav"],
+  woodHit: [
+    "/assets/sounds/ship_wood_hit_1.wav",
+    "/assets/sounds/ship_wood_hit_2.wav",
+  ],
+  shipExplosion: [
+    "/assets/sounds/ship_explosion_1.wav",
+    "/assets/sounds/ship_explosion_2.wav",
+  ],
+  shipSinking: ["/assets/sounds/ship_sinking.wav"],
+  gameOver: ["/assets/sounds/game_over.wav"],
+  gameComplete: ["/assets/sounds/game_complete.wav"],
 } as const;
 
 export type GameSound = keyof typeof SOUNDS;
@@ -31,6 +44,7 @@ export class SoundManager {
   }
 
   play(sound: GameSound): void {
+    if (isMuted()) return;
     const variants = SOUNDS[sound];
     const index = this.nextVariant.get(sound) ?? 0;
     this.nextVariant.set(sound, (index + 1) % variants.length);
