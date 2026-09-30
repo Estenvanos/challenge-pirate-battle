@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { GameOptions } from "../../config/options";
 import { Game } from "../../game/core/Game";
 import { MenuButton } from "../../shared/components/MenuButton";
 
@@ -13,14 +14,26 @@ type LoadState =
   | { status: "error" };
 
 // Cada tentativa é uma montagem nova (key), então "Retry" não precisa de efeito.
-export function GameCanvas() {
+interface GameCanvasProps {
+  /** Snapshot congelado das opções; fixo durante a partida. */
+  options: Readonly<GameOptions>;
+}
+
+export function GameCanvas({ options }: GameCanvasProps) {
   const [attempt, setAttempt] = useState(0);
   return (
-    <GameCanvasHost key={attempt} onRetry={() => setAttempt((n) => n + 1)} />
+    <GameCanvasHost
+      key={attempt}
+      options={options}
+      onRetry={() => setAttempt((n) => n + 1)}
+    />
   );
 }
 
-function GameCanvasHost({ onRetry }: { onRetry: () => void }) {
+function GameCanvasHost({
+  options,
+  onRetry,
+}: GameCanvasProps & { onRetry: () => void }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [load, setLoad] = useState<LoadState>({
     status: "loading",
@@ -35,6 +48,7 @@ function GameCanvasHost({ onRetry }: { onRetry: () => void }) {
     const game = new Game();
     game
       .init(host, {
+        options,
         debugIslands: DEBUG_ISLANDS,
         onLoadProgress: (progress) => {
           if (!cancelled) setLoad({ status: "loading", progress });
@@ -57,7 +71,7 @@ function GameCanvasHost({ onRetry }: { onRetry: () => void }) {
       cancelled = true;
       game.destroy(); // seguro antes do fim do init e se chamado duas vezes
     };
-  }, []);
+  }, [options]);
 
   return (
     <div className="game-canvas">

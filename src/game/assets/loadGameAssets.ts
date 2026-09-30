@@ -1,6 +1,7 @@
 import { Assets, type Texture } from "pixi.js";
 import {
   buildManifestBundles,
+  CANNON_BALL,
   SHIPS_BUNDLE,
   tileAlias,
   TILES_BUNDLE,
@@ -35,5 +36,11 @@ export function getTileTexture(tile: number): Texture {
 export function getShipTexture(ship: ShipSprite): Texture {
   const texture = Assets.get<Texture>(ship);
   if (!texture) throw new Error(`Ship texture ${ship} is not loaded`);
+  return texture;
+}
+
+export function getCannonBallTexture(): Texture {
+  const texture = Assets.get<Texture>(CANNON_BALL);
+  if (!texture) throw new Error("Cannon ball texture is not loaded");
   return texture;
 }
