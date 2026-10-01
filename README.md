@@ -73,6 +73,8 @@ Pirate Battle was built for a front-end game development challenge. The game cor
 
 On touch devices, use the on-screen buttons: movement at the bottom left, weapons at the bottom right. You can move and fire at the same time. **Landscape** is recommended on phones.
 
+The same list is in the game: **main menu → Controls** (also under **Options → Controls**).
+
 ## Getting started
 
 **Requirements:** Node.js 20+ and npm.

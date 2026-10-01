@@ -1234,7 +1234,9 @@ img {
 }
 
 /* Moldura de madeira (o mesmo 9-slice do painel, menor) em volta do título. */
+/* Teto na fonte: em telas altas "Battle Complete" quebraria em duas linhas. */
 .result__title {
+  font-size: clamp(1.5rem, 4.5vh, 2.1rem);
   padding: 2px 12px;
   border-style: solid;
   border-width: 20px 16px;
