@@ -51,7 +51,6 @@ export function MatchScreen({
   }, [menuOpen]);
 
   function handleMatchEnd(ended: MatchResult) {
-    setResult(ended);
     const record: MatchRecord = {
       matchId,
       playerId: LOCAL_PLAYER_ID,
@@ -63,6 +62,8 @@ export function MatchScreen({
       endReason: ended.endReason,
       config: { ...config },
     };
+    // Mesma duração arredondada do registro, para o diálogo e o histórico baterem.
+    setResult({ ...ended, durationSec: record.durationSec });
     writeLastResult(record);
     submission.mutate(record);
   }
