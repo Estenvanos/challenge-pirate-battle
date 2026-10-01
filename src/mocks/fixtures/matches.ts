@@ -40,7 +40,6 @@ export const fixtureMatches: readonly MatchRecord[] = Array.from(
   (_, index) => buildMatch(index),
 );
 
-// Cenário "manyPages": muitos rivais e um histórico longo do jogador local.
 const MANY_PAGES_RIVALS = 200;
 const MANY_PAGES_LOCAL = 30;
 

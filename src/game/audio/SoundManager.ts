@@ -3,9 +3,7 @@ import { isMuted } from "../../shared/audio/mute";
 
 export type GameSound = keyof typeof GAME_SOUND_URLS;
 
-// Originais pré-carregados uma vez por página e compartilhados entre partidas:
-// criar um Audio por partida baixava tudo de novo (pelo service worker do MSW)
-// e fazia a memória crescer a cada ciclo (docs/profiling).
+// Share preloaded originals across matches; each play clones one for overlap.
 let sources: Map<string, HTMLAudioElement> | null = null;
 
 function getSources(): Map<string, HTMLAudioElement> {
@@ -20,10 +18,7 @@ function getSources(): Map<string, HTMLAudioElement> {
   return sources;
 }
 
-/**
- * Toca os efeitos sonoros do jogo. Cada execução usa um clone do original,
- * para disparos seguidos se sobreporem em vez de cortar o som anterior.
- */
+/** Owns active match sounds and stops them when the match ends. */
 export class SoundManager {
   private readonly sources = getSources();
   private readonly playing = new Set<HTMLAudioElement>();
@@ -43,7 +38,6 @@ export class SoundManager {
     audio.addEventListener("ended", () => this.playing.delete(audio), {
       once: true,
     });
-    // O navegador bloqueia áudio antes da primeira interação: ignora a rejeição.
     audio.play().catch(() => this.playing.delete(audio));
   }
 

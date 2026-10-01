@@ -7,7 +7,6 @@ import { applyDamage } from "./damageSystem";
 
 type EndCause = Extract<WorldEvent, { type: "projectileEnded" }>["cause"];
 
-/** Cria um projétil em (x, y) voando na direção `angle` (rad). */
 export function spawnProjectile(
   world: World,
   owner: Projectile["owner"],
@@ -33,10 +32,7 @@ export function spawnProjectile(
   });
 }
 
-/**
- * O casco é uma cápsula: o segmento entre popa e proa, engrossado pelo raio
- * (a mesma forma dos três círculos da colisão com ilhas).
- */
+/** Tests a projectile circle against the ship's capsule-shaped hull. */
 export function hitsShip(
   projectile: {
     readonly x: number;
@@ -51,7 +47,6 @@ export function hitsShip(
   const dirY = Math.sin(ship.rotation);
   const dx = projectile.x - ship.x;
   const dy = projectile.y - ship.y;
-  // Ponto do eixo do casco mais próximo do projétil.
   const along = Math.max(-reach, Math.min(reach, dx * dirX + dy * dirY));
   return (
     Math.hypot(dx - dirX * along, dy - dirY * along) <=
@@ -59,11 +54,7 @@ export function hitsShip(
   );
 }
 
-/**
- * Por que o projétil some neste passo, ou `null` se ele segue voando. Ao
- * acertar um navio já aplica o dano: como o projétil some no mesmo passo, ele
- * fere uma única vez.
- */
+/** Applies damage once and returns the reason this projectile is removed. */
 function endCause(
   world: World,
   projectile: Projectile,
@@ -73,12 +64,10 @@ function endCause(
   const { width, height } = world.arena;
   if (x < -radius || y < -radius || x > width + radius || y > height + radius)
     return "bounds";
-  // Tiro do jogador só acerta inimigos; tiro inimigo, só o jogador.
   const target =
     projectile.owner === "player"
       ? world.enemies.find(
           (enemy) =>
-            // Quem já foi a 0 neste passo não absorve mais tiros.
             enemy.hp > 0 &&
             hitsShip(
               projectile,
@@ -101,7 +90,6 @@ function endCause(
   return null;
 }
 
-/** Move os projéteis e remove os que passaram do alcance, saíram da arena ou bateram numa ilha ou num navio. */
 export function projectileSystem(
   world: World,
   dt: number,

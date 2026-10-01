@@ -55,7 +55,6 @@ export const historyHandlers = [
       }
 
       const result = upsertMatch(record);
-      // Gravou, mas a resposta se perde: o reenvio deve achar o registro existente.
       if (hangsAfterWrite(record.matchId)) await delay("infinite");
       return HttpResponse.json<SubmitMatchResponse>(result, {
         status: result.created ? 201 : 200,

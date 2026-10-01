@@ -14,7 +14,6 @@ interface PauseState {
 
 const PauseContext = createContext<PauseState | null>(null);
 
-// Dono único do estado de pausa da partida; envolve a aplicação inteira.
 export function PauseProvider({ children }: { children: ReactNode }) {
   const [paused, setPaused] = useState(false);
   return <PauseContext value={{ paused, setPaused }}>{children}</PauseContext>;

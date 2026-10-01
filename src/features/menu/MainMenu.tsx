@@ -58,7 +58,6 @@ export function MainMenu({ onPlay, onOptions, onOpenLog }: MainMenuProps) {
           {formatEndReason(lastResult.endReason)}
         </p>
       )}
-      {/* Sempre montado: a região viva precisa existir antes de o texto mudar. */}
       <p className="menu__pending" role="status">
         {pending.length > 0 &&
           (saving ? (

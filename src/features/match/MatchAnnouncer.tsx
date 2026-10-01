@@ -1,6 +1,5 @@
 import { useGameSnapshot } from "../../game/bridge/useGameSnapshot";
 
-// Marcos do tempo anunciados; entre eles o texto não muda, então nada é lido.
 const TIME_MARKS_SEC = [10, 30, 60] as const;
 const LOW_HEALTH_RATIO = 1 / 3;
 
@@ -11,8 +10,6 @@ function timeMessage(timeLeftSec: number | null): string | null {
   return mark === 60 ? "1 minute left" : `${mark} seconds left`;
 }
 
-// Região viva da partida: anuncia pontos, marcos de tempo e vida baixa, só
-// quando o texto muda (nunca por quadro ou a cada segundo).
 export function MatchAnnouncer() {
   const { hp, maxHp, score, timeLeftSec } = useGameSnapshot();
   const message = [

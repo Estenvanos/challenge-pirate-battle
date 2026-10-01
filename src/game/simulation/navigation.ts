@@ -1,27 +1,20 @@
 import type { Point } from "../arena";
 
-/** Grade de navegação: quais células são água. */
 export interface NavGrid {
   readonly cols: number;
   readonly rows: number;
   readonly tileSize: number;
-  /** `true` onde um navio pode passar. */
   readonly water: readonly boolean[];
 }
 
-/**
- * Campo de fluxo até o jogador: distância em passos (BFS) de cada célula de
- * água até a célula do jogador. Todos os inimigos compartilham o mesmo campo;
- * ele só é refeito quando o jogador muda de célula.
- */
+/** Shared BFS distances to the player, rebuilt only when its cell changes. */
 export interface FlowField {
   targetCell: number;
-  /** Passos até o alvo; -1 = inalcançável ou terra. */
+  /** -1 means land or unreachable water. */
   readonly distance: Int16Array;
 }
 
-// Vizinhança de 8 células; diagonais só quando as duas ortogonais são água,
-// para o navio não cortar a quina de uma ilha.
+// Diagonal movement requires both adjacent orthogonal cells to be water.
 const NEIGHBOURS = [
   [1, 0],
   [-1, 0],
@@ -96,7 +89,6 @@ export function createFlowField(grid: NavGrid): FlowField {
   };
 }
 
-/** Refaz o BFS se o alvo mudou de célula. */
 export function updateFlowField(
   field: FlowField,
   grid: NavGrid,
@@ -118,11 +110,7 @@ export function updateFlowField(
   }
 }
 
-/**
- * Ponto para onde navegar: desce o campo `lookahead` células a partir da
- * posição atual. `null` quando já está perto do alvo (ou sem caminho), e
- * então o inimigo mira direto no jogador.
- */
+/** Looks ahead along the flow field; null means steer directly at the player. */
 export function nextWaypoint(
   field: FlowField,
   grid: NavGrid,

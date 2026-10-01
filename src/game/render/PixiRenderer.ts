@@ -5,29 +5,23 @@ export interface ArenaSize {
   readonly height: number;
 }
 
-/** Decaimento do tranco da tela (1/s). */
 const KICK_DECAY = 16;
 
-/**
- * Dono da Application do Pixi. Ajusta a arena à área do host mantendo a
- * proporção (letterbox); redimensionar muda só a apresentação.
- */
+/** Owns the Pixi application and fits the fixed arena into the host. */
 export class PixiRenderer {
-  /** Container em coordenadas da arena; tudo do jogo é desenhado aqui. */
   readonly world = new Container();
 
   private app: Application | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private destroyed = false;
-  /** Posição do mundo no letterbox, sem o tranco. */
   private baseX = 0;
   private baseY = 0;
-  /** Tranco da tela (px da arena), que decai sozinho. */
   private kickX = 0;
   private kickY = 0;
 
   constructor(private readonly arena: ArenaSize) {}
 
+  /** Safe if destroy() is called before the asynchronous Pixi init completes. */
   async init(host: HTMLElement): Promise<void> {
     const app = new Application();
     await app.init({
@@ -37,7 +31,6 @@ export class PixiRenderer {
       backgroundAlpha: 0,
       antialias: false,
     });
-    // destroy() pode ter sido chamado durante o init assíncrono.
     if (this.destroyed) {
       app.destroy(true, { children: true });
       return;
@@ -46,7 +39,6 @@ export class PixiRenderer {
     host.appendChild(app.canvas);
     app.stage.addChild(this.world);
 
-    // O resizeTo do Pixi redimensiona o canvas; o observer recalcula o letterbox.
     this.resizeObserver = new ResizeObserver(() => {
       app.resize();
       this.fitArena();
@@ -63,22 +55,16 @@ export class PixiRenderer {
     });
   }
 
-  /**
-   * Tranco da tela no sentido oposto a `angle` (rad), de `amount` px da arena.
-   * Só visual; ignorado com `prefers-reduced-motion`.
-   */
   kick(angle: number, amount: number): void {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     this.kickX -= Math.cos(angle) * amount;
     this.kickY -= Math.sin(angle) * amount;
   }
 
-  /** Limita os quadros por segundo (0 = sem limite). */
   setMaxFps(fps: number): void {
     if (this.app) this.app.ticker.maxFPS = fps;
   }
 
-  /** Registra uma chamada por quadro (delta em ms); retorna a função que a remove. */
   onFrame(callback: (deltaMs: number) => void): () => void {
     const app = this.app;
     if (!app) return () => {};
@@ -89,7 +75,7 @@ export class PixiRenderer {
     };
   }
 
-  /** Converte coordenadas do canvas (px CSS) para coordenadas da arena. */
+  /** Maps CSS canvas coordinates into fixed arena coordinates. */
   screenToArena(x: number, y: number): { x: number; y: number } {
     const scale = this.world.scale.x || 1;
     return {
@@ -107,7 +93,6 @@ export class PixiRenderer {
     app.ticker.stop();
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
-    // Texturas compartilhadas ficam no cache do Assets; só a cena é destruída.
     app.stage.destroy({ children: true });
     app.destroy(true);
   }

@@ -1,6 +1,3 @@
-// Mapa em tiles da arena: converte os desenhos ASCII (terreno + elementos) em
-// tiles, polígonos de colisão das ilhas e pontos de spawn. Módulo puro.
-
 import {
   CORNER_OUTLINES,
   GRASS_PIECES,
@@ -17,11 +14,9 @@ import { resolveFeatures, type LandStyle, type OverlayTile } from "./features";
 
 export type { GroundTile, OverlayTile };
 
-// Os tiles são desenhados no tamanho da arte retina (128 px): o mapa fica em
-// escala dobrada em relação aos navios.
+// Retina artwork is drawn at 128 px, twice the source tile size.
 export const TILE_SIZE = 128;
-// Recuo dos polígonos em lados voltados para a água, casando com a borda
-// transparente (~4 px) da arte dos tiles de costa.
+// Recede exposed coast colliders to match the transparent art edge.
 export const COAST_INSET_PX = 4;
 
 export const WATER_TILE = 73;
@@ -38,15 +33,12 @@ export interface Point {
   readonly y: number;
 }
 
-/** Polígono convexo em coordenadas da arena (px), vértices em sentido horário. */
 export type Polygon = readonly Point[];
 
 export interface TileMapDefinition {
   readonly name: string;
   readonly author: string;
-  /** Terreno: uma string por linha; veja a legenda no arquivo do mapa. */
   readonly grid: readonly string[];
-  /** Elementos sobre a terra (mesmo tamanho do terreno; "." = nada). */
   readonly features: readonly string[];
 }
 
@@ -59,17 +51,10 @@ export interface TileMap {
   readonly width: number;
   readonly height: number;
   readonly waterTile: number;
-  /**
-   * Tile de terra da célula (`null` = só água). Aceita células fora da arena:
-   * elas repetem a borda mais próxima, para o cenário continuar além dela.
-   */
+  /** Out-of-bounds cells repeat the nearest edge for continuous scenery. */
   groundAt(col: number, row: number): GroundTile | null;
-  /**
-   * Tile de água rasa da célula (`null` = mar aberto): um anel de uma célula
-   * em volta da terra, desenhado sob ela. Também aceita células fora da arena.
-   */
+  /** One-cell shallow-water ring around land, including scenery margins. */
   shallowAt(col: number, row: number): GroundTile | null;
-  /** Fortes e enfeites desenhados por cima do chão (só dentro da arena). */
   readonly overlays: readonly OverlayTile[];
   readonly islands: readonly Polygon[];
   readonly playerSpawn: Point;
@@ -84,6 +69,7 @@ function cellCenter(col: number, row: number): Point {
   return { x: (col + 0.5) * TILE_SIZE, y: (row + 0.5) * TILE_SIZE };
 }
 
+/** Validates the ASCII map and derives render tiles and island colliders. */
 export function buildTileMap(def: TileMapDefinition): TileMap {
   const fail = (message: string): never => {
     throw new Error(`Tile map "${def.name}": ${message}`);
@@ -123,15 +109,12 @@ export function buildTileMap(def: TileMapDefinition): TileMap {
   const isLand = (col: number, row: number) =>
     inside(col, row) && isLandStyle(charAt(col, row));
 
-  // Fora da grade, repete a borda mais próxima: costas encostadas na borda
-  // continuam para fora da arena, sem contorno.
+  // Extend shorelines beyond the playable arena without adding a new border.
   const clamp = (value: number, max: number) =>
     Math.min(max - 1, Math.max(0, value));
   const charAtClamped = (col: number, row: number) =>
     charAt(clamp(col, cols), clamp(row, rows));
 
-  // Lados voltados para fora da região (água ou outro estilo). Numa faixa de
-  // uma célula só, topo/esquerda têm prioridade.
   const sidesAt = (col: number, row: number): CellSides => {
     const char = charAtClamped(col, row);
     const same = (c: number, r: number) => charAtClamped(c, r) === char;
@@ -167,7 +150,6 @@ export function buildTileMap(def: TileMapDefinition): TileMap {
     return resolveLandTile(LAND_STYLES[char], col, row, sidesAt(col, row));
   };
 
-  // Água rasa: a terra dilatada em uma célula (8 vizinhos).
   const isShallow = (col: number, row: number) => {
     for (let dr = -1; dr <= 1; dr++) {
       for (let dc = -1; dc <= 1; dc++) {
@@ -178,7 +160,6 @@ export function buildTileMap(def: TileMapDefinition): TileMap {
   };
   const shallowAt = (col: number, row: number): GroundTile | null => {
     if (!isShallow(col, row)) return null;
-    // Mesma prioridade de `sidesAt` para faixas de uma célula só.
     const top = !isShallow(col, row - 1);
     const left = !isShallow(col - 1, row);
     return resolvePlainTile(SHALLOW_PIECES, {
@@ -207,9 +188,7 @@ export function buildTileMap(def: TileMapDefinition): TileMap {
   };
 }
 
-// Células de canto usam o contorno arredondado da própria arte; o resto da
-// terra é decomposto em retângulos máximos (corrida horizontal estendida para
-// baixo). Todos são convexos, o que simplifica a colisão círculo/polígono.
+/** Rounded art corners plus merged convex rectangles for the remaining land. */
 function buildIslandPolygons(
   cols: number,
   rows: number,
@@ -230,14 +209,12 @@ function buildIslandPolygons(
         x: col * TILE_SIZE + (flipX ? TILE_SIZE - x * scale : x * scale),
         y: row * TILE_SIZE + (flipY ? TILE_SIZE - y * scale : y * scale),
       }));
-      // Um espelhamento só inverte o sentido dos vértices.
       polygons.push(flipX !== flipY ? points.reverse() : points);
     }
   }
 
   const free = (col: number, row: number) =>
     isLand(col, row) && !used.has(row * cols + col);
-  // Só recua lados totalmente voltados para água (não para terra nem borda).
   const facesWater = (
     fromCol: number,
     toCol: number,

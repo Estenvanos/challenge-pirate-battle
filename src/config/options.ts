@@ -1,5 +1,3 @@
-// Opções que o jogador pode ajustar na tela Options. Cada partida congela um snapshot delas ao iniciar.
-
 export interface GameOptions {
   sessionTimeSec: number;
   spawnIntervalSec: number;
@@ -12,11 +10,10 @@ export interface OptionLimits {
   default: number;
 }
 
+/** Session time is 60–180 active seconds; spawn interval is 1–10 seconds. */
 export const OPTIONS_LIMITS: Readonly<Record<keyof GameOptions, OptionLimits>> =
   {
-    // Duração exigida pela proposta: 60 a 180 s de jogo ativo.
     sessionTimeSec: { min: 60, max: 180, step: 10, default: 120 },
-    // Intervalo positivo, em segundos inteiros, para agrupar bem o ranking.
     spawnIntervalSec: { min: 1, max: 10, step: 1, default: 3 },
   };
 

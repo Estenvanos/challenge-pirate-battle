@@ -28,7 +28,6 @@ export async function getMatchHistory(
   return matchPageSchema.parse(data);
 }
 
-/** Upsert idempotente: reenviar o mesmo matchId retorna o registro existente. */
 export async function submitMatch(
   record: MatchRecord,
 ): Promise<SubmitMatchResponse> {

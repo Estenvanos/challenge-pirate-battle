@@ -2,24 +2,17 @@ import { Container, Graphics, Sprite, TilingSprite } from "pixi.js";
 import type { GroundTile, TileMap } from "../../arena";
 import { getTileTexture } from "../../assets/loadGameAssets";
 
-// Células desenhadas além de cada borda da arena, repetindo o litoral, para o
-// cenário cobrir a tela inteira no letterbox (cobre de ~4:3 a ~21:9).
 const MARGIN_TILES = 6;
 
-/** Deriva do desenho da água (px/s): o mar parece correr devagar. */
 const WATER_DRIFT = { x: 7, y: 3.5 } as const;
 
 const SHALLOW_ALPHA = 0.9;
 
 export interface TileMapViewOptions {
-  /** Desenha os polígonos de colisão das ilhas por cima (depuração). */
   readonly debugIslands?: boolean;
 }
 
-/**
- * Cena do mapa: água, água rasa, terra (tiles espelhados/girados), fortes e
- * enfeites. Montada uma vez; só o desenho da água desliza durante a partida.
- */
+/** Builds static map layers once; only water motion changes per frame. */
 export class TileMapView {
   readonly container = new Container();
 
@@ -30,8 +23,6 @@ export class TileMapView {
     const { tileSize } = map;
     const margin = MARGIN_TILES * tileSize;
 
-    // Um único sprite repetido cobre o mar inteiro; os cantos transparentes
-    // da costa deixam a água aparecer.
     const waterTexture = getTileTexture(map.waterTile);
     waterTexture.source.style.addressMode = "repeat";
     const water = new TilingSprite({
@@ -55,7 +46,6 @@ export class TileMapView {
       { tile, flipX, flipY, rotation }: GroundTile,
     ) => {
       const sprite = new Sprite(getTileTexture(tile));
-      // Âncora no centro para espelhar/girar sem deslocar o tile.
       sprite.anchor.set(0.5);
       sprite.scale.set(flipX ? -1 : 1, flipY ? -1 : 1);
       sprite.rotation = (rotation * Math.PI) / 2;
@@ -86,7 +76,6 @@ export class TileMapView {
     }
   }
 
-  /** Avança a deriva da água; `dt` é o tempo do quadro (s). */
   update(dt: number): void {
     this.time += dt;
     this.water.tilePosition.set(

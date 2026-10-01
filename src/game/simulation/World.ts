@@ -18,18 +18,16 @@ export interface WorldMap {
   readonly cols: number;
   readonly rows: number;
   readonly tileSize: number;
-  /** Terra da célula; `null` = água. */
+  /** Returns land at a cell, or null for water. */
   groundAt(col: number, row: number): unknown;
 }
 
-/** Acontecimento pontual de um passo, para quem reage fora da simulação (áudio, efeitos). */
+/** Discrete simulation events consumed by presentation and UI callbacks. */
 export type WorldEvent =
   | {
       readonly type: "shotFired";
-      /** Proa (um projétil) ou bordada (vários). */
       readonly weapon: "front" | "side";
       readonly shipId: string;
-      /** Boca do canhão (centro da bordada) e direção do disparo (rad). */
       readonly x: number;
       readonly y: number;
       readonly angle: number;
@@ -37,7 +35,6 @@ export type WorldEvent =
     }
   | {
       readonly type: "projectileEnded";
-      /** Fim do alcance (cai na água), ilha, borda da arena ou casco de um navio. */
       readonly cause: "range" | "island" | "bounds" | "ship";
       readonly x: number;
       readonly y: number;
@@ -46,7 +43,6 @@ export type WorldEvent =
   | {
       readonly type: "shipDamaged";
       readonly shipId: string;
-      /** Ponto do impacto. */
       readonly x: number;
       readonly y: number;
     }
@@ -55,10 +51,8 @@ export type WorldEvent =
       readonly id: string;
       readonly x: number;
       readonly y: number;
-      /** Tiro do jogador ou a própria abalroada (que não vale ponto). */
       readonly cause: "shot" | "ram";
     }
-  /** O jogador recuperou vida (reparo por inimigos destruídos). */
   | { readonly type: "playerRepaired" }
   | {
       readonly type: "playerDestroyed";
@@ -66,34 +60,29 @@ export type WorldEvent =
       readonly y: number;
     };
 
-/** Por que a partida terminou: o tempo acabou ou o jogador foi destruído. */
 export type EndReason = "timeUp" | "playerDestroyed";
 
-/** Estado contínuo da partida. Uma partida nova cria um World novo. */
+/** Continuous match state; a restart creates a new instance. */
 export interface World {
   readonly arena: { readonly width: number; readonly height: number };
   readonly islands: readonly Polygon[];
   readonly enemySpawns: readonly Point[];
   readonly navGrid: NavGrid;
-  /** Caminho até o jogador, compartilhado pelos inimigos. */
+  /** One flow field toward the player, shared by all enemies. */
   readonly flowField: FlowField;
   readonly rng: Rng;
   readonly player: Ship;
-  /** Segundos até cada arma do jogador poder disparar de novo. */
   readonly playerCooldowns: { front: number; left: number; right: number };
   enemies: Enemy[];
   projectiles: Projectile[];
-  /** Eventos dos últimos passos; quem consome (o `Game`) esvazia a lista. */
+  /** Drained by Game after each fixed step. */
   readonly events: WorldEvent[];
-  /** Tempo acumulado desde o último spawn (s). */
   spawnTimer: number;
-  /** Contador para ids únicos de inimigos e projéteis. */
   nextId: number;
-  /** Pontos: um por inimigo destruído por tiro do jogador. */
   score: number;
-  /** Tempo de jogo ativo já decorrido (s); pausas não contam. */
+  /** Active play time; pauses never advance it. */
   elapsedSec: number;
-  /** Motivo do fim; `null` enquanto a partida corre. Encerrada, a simulação não avança mais. */
+  /** Once set, further simulation steps cannot change the match. */
   endReason: EndReason | null;
 }
 

@@ -19,7 +19,6 @@ interface RoundButtonProps extends Omit<
 > {
   icon: RoundIcon;
   label: string;
-  /** Sem sons de interface (controles da partida). */
   silent?: boolean;
 }
 

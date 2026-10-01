@@ -24,7 +24,6 @@ const FIELDS: readonly { key: keyof GameOptions; label: string }[] = [
   { key: "spawnIntervalSec", label: "Enemy spawn time" },
 ];
 
-// Liga/desliga todo o som da aba. Vale na hora, inclusive na partida em curso.
 function SoundToggle() {
   const muted = useSyncExternalStore(subscribeMuted, isMuted);
   return (
@@ -45,7 +44,6 @@ function SoundToggle() {
   );
 }
 
-// Steppers das opções, usados na tela de opções e no menu de pausa.
 export function OptionsFields({ options, onChange }: OptionsFieldsProps) {
   function step(key: keyof GameOptions, direction: 1 | -1) {
     const next = clampOption(

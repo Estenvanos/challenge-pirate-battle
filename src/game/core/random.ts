@@ -1,7 +1,4 @@
-// PRNG com seed (mulberry32): mesma seed, mesma partida.
-
 export interface Rng {
-  /** Número em [0, 1). */
   next(): number;
   pick<T>(items: readonly T[]): T;
 }

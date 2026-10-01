@@ -6,11 +6,6 @@ import { angleTo, distance } from "../../physics/vector";
 import type { EnemyKind } from "../entities";
 import type { World } from "../World";
 
-/**
- * Pontos "E" onde um navio de raio `radius` pode nascer agora: longe do
- * jogador (sem dano imediato inevitável), sem sobrepor outro navio e sem
- * encostar em ilha.
- */
 function freeSpawnPoints(
   world: World,
   radius: number,
@@ -27,7 +22,6 @@ function freeSpawnPoints(
   );
 }
 
-/** Sorteia o tipo na proporção dos `spawnWeight`. */
 function pickKind(world: World, config: MatchConfig): EnemyKind {
   const entries = Object.entries(config.enemies.kinds) as [
     EnemyKind,
@@ -46,7 +40,6 @@ function spawnEnemy(world: World, config: MatchConfig): void {
   const kind = pickKind(world, config);
   const spec = config.enemies.kinds[kind];
   const candidates = freeSpawnPoints(world, spec.radius, config);
-  // Sem ponto livre, este spawn é pulado; o próximo intervalo tenta de novo.
   if (candidates.length === 0) return;
   const point = world.rng.pick(candidates);
   const rotation = angleTo(point, world.player);
@@ -69,7 +62,7 @@ function spawnEnemy(world: World, config: MatchConfig): void {
   world.events.push({ type: "enemySpawned", x: point.x, y: point.y });
 }
 
-/** Um inimigo a cada `spawn.intervalSec` de jogo ativo. */
+/** Spawns only at free, distant map points after each active-time interval. */
 export function spawnSystem(
   world: World,
   dt: number,

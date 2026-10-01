@@ -1,5 +1,3 @@
-// Contratos da API, compartilhados pelo cliente HTTP e pelos handlers do MSW.
-// Cada schema é a fonte do tipo (z.infer) e da validação em tempo de execução.
 import { z } from "zod";
 
 export const endReasonSchema = z.enum(["timeUp", "playerDestroyed"]);
@@ -15,10 +13,8 @@ export const matchRecordSchema = z.object({
   matchId: z.string().min(1),
   playerId: z.string().min(1),
   playerName: z.string().min(1),
-  /** Data ISO 8601 do fim da partida. */
   date: z.iso.datetime(),
   score: z.number().int().nonnegative(),
-  /** Duração efetiva (ativa, sem pausas) em segundos. */
   durationSec: z.number().nonnegative(),
   endReason: endReasonSchema,
   config: matchConfigSchema,
@@ -35,7 +31,6 @@ export const rankingEntrySchema = matchRecordSchema
     date: true,
   })
   .extend({
-    /** Posição a partir de 1, contando todas as páginas. */
     position: z.number().int().positive(),
   });
 export type RankingEntry = z.infer<typeof rankingEntrySchema>;
@@ -60,7 +55,6 @@ export type ApiError = z.infer<typeof apiErrorSchema>;
 
 export const submitMatchResponseSchema = z.object({
   record: matchRecordSchema,
-  /** false quando a partida já estava registrada (reenvio idempotente). */
   created: z.boolean(),
 });
 export type SubmitMatchResponse = z.infer<typeof submitMatchResponseSchema>;

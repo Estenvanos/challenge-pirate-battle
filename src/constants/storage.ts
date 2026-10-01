@@ -1,6 +1,3 @@
-// Chaves do localStorage num só lugar: evita colisão e deixa a versão de cada formato à vista.
-// Mudou o formato salvo? Suba a `version`: o dado antigo é ignorado e volta ao padrão.
-
 export const STORAGE_NAMESPACE = "pirate-battle:";
 
 export interface StorageEntry {

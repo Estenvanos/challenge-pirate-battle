@@ -1,8 +1,5 @@
-// Arquivos e volumes de todos os sons: partida, interface e ambiente.
-
 const SOUNDS_DIR = "/assets/sounds";
 
-/** Sons da partida. Cada som pode ter variações, tocadas em rodízio. */
 export const GAME_SOUND_URLS = {
   cannonFire: [
     `${SOUNDS_DIR}/cannon_fire_1.wav`,
@@ -24,7 +21,6 @@ export const GAME_SOUND_URLS = {
 } as const;
 
 export const GAME_SOUND_VOLUME = 0.5;
-/** Sons de interface dos menus. */
 export const UI_SOUND_URLS = {
   hover: `${SOUNDS_DIR}/ui_hover.wav`,
   click: `${SOUNDS_DIR}/ui_click.wav`,
@@ -34,7 +30,6 @@ export const UI_SOUND_URLS = {
 
 export const UI_SOUND_VOLUME = 0.5;
 
-/** Loop do mar mais um papagaio de vez em quando. */
 export const AMBIENCE = Object.freeze({
   oceanUrl: `${SOUNDS_DIR}/ocean_ambience_loop.wav`,
   oceanVolume: 0.6,

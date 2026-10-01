@@ -5,11 +5,7 @@ import { spawnProjectile } from "./projectileSystem";
 
 type Weapon = MatchConfig["player"]["weapons"]["front" | "side"];
 
-/**
- * Dispara os projéteis da arma, paralelos na direção `angle`, lado a lado ao
- * longo do casco e nascendo a `muzzle` px do centro, para não saírem de dentro
- * dele.
- */
+/** Emits parallel shots from the hull without spawning inside it. */
 function fire(
   world: World,
   weapon: "front" | "side",
@@ -45,10 +41,6 @@ function fire(
   });
 }
 
-/**
- * Armas do jogador: proa e uma bordada por lado, cada uma com o próprio
- * cooldown. Segurar a ação repete o disparo no ritmo do cooldown.
- */
 export function playerWeaponSystem(
   world: World,
   actions: ActionState,
@@ -59,6 +51,7 @@ export function playerWeaponSystem(
   const { rotation, radius } = world.player;
   const { hullHalfLength } = config.player;
   const cooldowns = world.playerCooldowns;
+  // Positive rotation is clockwise on screen; starboard is +π/2.
   const weapons = [
     {
       slot: "front",
@@ -67,7 +60,6 @@ export function playerWeaponSystem(
       muzzle: hullHalfLength,
       spec: front,
     },
-    // Rotação positiva é horária (y para baixo): boreste fica em +π/2.
     {
       slot: "left",
       pressed: actions.fireLeft,

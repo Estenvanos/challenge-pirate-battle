@@ -11,7 +11,6 @@ interface ControlDefinition {
   label: string;
 }
 
-// Mesma disposição do sample: ação principal em cima, laterais embaixo.
 const MOVEMENT: readonly ControlDefinition[] = [
   { action: "forward", icon: "forward", label: "Move forward" },
   { action: "rotateLeft", icon: "turn_left", label: "Turn left" },
@@ -24,14 +23,12 @@ const WEAPONS: readonly ControlDefinition[] = [
   { action: "fireRight", icon: "fire_right", label: "Fire right cannons" },
 ];
 
-// Teclas de cada ação, da mesma fonte que o InputManager usa.
 function keysFor(action: Action) {
   return KEY_BINDINGS.find((binding) => binding.action === action)?.keys ?? [];
 }
 
 type OnAction = (action: Action, pressed: boolean) => void;
 
-// Controles na tela: disparam as mesmas ações do teclado enquanto pressionados.
 export function TouchControls({ onAction }: { onAction: OnAction }) {
   return (
     <>
@@ -78,8 +75,6 @@ function ControlGroup({
               label={controlLabel}
               className="round-button--control"
               silent
-              // Captura o ponteiro: cada dedo segura o seu botão (multi-touch) e
-              // soltar fora dele ainda encerra a ação.
               onPointerDown={(event) => {
                 event.currentTarget.setPointerCapture(event.pointerId);
                 onAction(action, true);
@@ -93,7 +88,6 @@ function ControlGroup({
               }
             />
             {keys.length > 0 && (
-              // Legenda visual; leitores de tela recebem aria-keyshortcuts.
               <span className="touch-control__keys" aria-hidden="true">
                 {keys.map(({ display }) => display).join(" / ")}
               </span>

@@ -1,7 +1,5 @@
 import { KEY_BINDINGS } from "../../game/input/bindings";
 
-// Teclas de cada ação (mesma fonte do InputManager), entalhadas em plaquinhas
-// de madeira como a pontuação do resultado.
 export function ControlsList() {
   return (
     <>

@@ -30,21 +30,21 @@ Target: **60 FPS** during combat in an optimized build (`proposta.md` §9). Raw 
 | Metric                     | Value                    |
 | -------------------------- | ------------------------ |
 | Duration                   | 180 s (ended by time)    |
-| Frames                     | 10 867                   |
+| Frames                     | 10 864                   |
 | Average FPS                | **60.0**                 |
 | Frame time, median         | 16.7 ms                  |
-| Frame time, **p95**        | **16.7 ms**              |
+| Frame time, **p95**        | **16.8 ms**              |
 | Frame time, p99            | 16.8 ms                  |
 | Frame time, max            | 100 ms (1 frame > 20 ms) |
-| Enemies, average / maximum | 21.9 / **44**            |
-| Projectiles, avg / max     | 3.2 / 9                  |
+| Enemies, average / maximum | 22 / **44**              |
+| Projectiles, avg / max     | 3.3 / 10                 |
 
 Entities over time (enemies / projectiles in flight):
 
 | t (s)       | 0   | 20  | 40  | 60  | 81  | 101 | 121 | 141 | 161 |
 | ----------- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Enemies     | 0   | 4   | 9   | 13  | 18  | 25  | 31  | 36  | 40  |
-| Projectiles | 0   | 2   | 5   | 2   | 5   | 4   | 3   | 6   | 5   |
+| Projectiles | 0   | 1   | 3   | 3   | 6   | 3   | 2   | 5   | 5   |
 
 The frame rate stays at the display rate for the whole match, including the last minute with 40+ ships, their wakes, smoke and health bars. The single long frame (100 ms) is a one-off stall, not a trend.
 
@@ -52,12 +52,12 @@ The frame rate stays at the display rate for the whole match, including the last
 
 | After cycle | JS heap (MB) | DOM nodes | Listeners | Canvases |
 | ----------- | ------------ | --------- | --------- | -------- |
-| 0 (menu)    | 4.94         | 196       | 181       | 0        |
-| 1           | 8.88         | 226       | 202       | 0        |
-| 2           | 9.21         | 226       | 202       | 0        |
-| 3           | 9.42         | 226       | 202       | 0        |
+| 0 (menu)    | 4.95         | 196       | 181       | 0        |
+| 1           | 8.86         | 226       | 202       | 0        |
+| 2           | 9.20         | 226       | 202       | 0        |
+| 3           | 9.39         | 226       | 202       | 0        |
 | 4           | 9.55         | 226       | 202       | 0        |
-| 5           | 9.74         | 226       | 202       | 0        |
+| 5           | 9.73         | 226       | 202       | 0        |
 
 - The first match adds about 4 MB: textures, the loaded modules, the shared sounds and the query cache. They are loaded once and reused.
 - After that, DOM nodes, event listeners and canvases stay flat: every `Game` releases its ticker, listeners, views and WebGL context when the player leaves.

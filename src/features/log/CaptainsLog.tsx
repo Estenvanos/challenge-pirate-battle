@@ -23,7 +23,6 @@ export function CaptainsLog({
 }: CaptainsLogProps) {
   const tabRefs = useRef<Partial<Record<LogTab, HTMLButtonElement | null>>>({});
 
-  // Setas alternam entre as abas (padrão WAI-ARIA de tabs).
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
     event.preventDefault();

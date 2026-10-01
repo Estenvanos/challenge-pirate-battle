@@ -1,15 +1,11 @@
 import { dot, normalize, type Vec2 } from "./vector";
 
 export interface Penetration {
-  /** Direção (unitária) para empurrar o círculo para fora. */
   readonly normal: Vec2;
   readonly depth: number;
 }
 
-/**
- * Círculo vs polígono convexo por SAT: testa as normais das arestas e o eixo
- * do vértice mais próximo. Retorna o vetor de translação mínima, ou null.
- */
+/** SAT collision against a convex polygon; returns minimum translation. */
 export function circleVsPolygon(
   center: Vec2,
   radius: number,
@@ -42,9 +38,8 @@ export function circleVsPolygon(
     }
     const c = dot(center, axis);
     const overlap = Math.min(max - (c - radius), c + radius - min);
-    if (overlap <= 0) return null; // eixo separador: sem contato
+    if (overlap <= 0) return null; // A separating axis means no collision.
     if (!best || overlap < best.depth) {
-      // A normal aponta do polígono para o círculo.
       const pushOut = c - (min + max) / 2 >= 0 ? 1 : -1;
       best = {
         normal: { x: axis.x * pushOut, y: axis.y * pushOut },

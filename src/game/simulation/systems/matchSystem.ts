@@ -1,11 +1,7 @@
 import type { MatchConfig } from "../../../config/gameConfig";
 import type { World } from "../World";
 
-/**
- * Cronômetro da partida: conta só o tempo de jogo ativo (os passos da
- * simulação) e encerra por tempo quando a sessão acaba. Roda por último: se o
- * jogador foi destruído neste passo, vale a derrota.
- */
+/** Runs last: player death wins ties with the match timer. */
 export function matchSystem(
   world: World,
   dt: number,
