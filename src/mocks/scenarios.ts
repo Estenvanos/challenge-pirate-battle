@@ -5,22 +5,85 @@ import type { ApiError } from "../schemas/match";
 import { createRng } from "../game/core/random";
 import { readStore, removeStore, writeStore } from "../storage/localStore";
 
+interface ScenarioInfo {
+  readonly label: string;
+  /** Section of the Network menu. */
+  readonly group: string;
+  readonly description: string;
+}
+
 export const SCENARIOS = {
-  success: "Success",
-  empty: "Empty lists",
-  manyPages: "Many pages",
-  slow: "Slow (2.5 s)",
-  variableLatency: "Variable latency",
-  outOfOrder: "Out-of-order responses",
-  timeout: "Timeout",
-  networkError: "Network error",
-  clientError: "HTTP 400",
-  serverError: "HTTP 500",
-  rankingDown: "Ranking read fails",
-  historyDown: "History read fails",
-  timeoutAfterWrite: "Timeout after saving a match",
-  downAtMatchEnd: "API down when saving a match",
-} as const;
+  success: {
+    label: "Success",
+    group: "Data",
+    description: "Fixture data, no delay.",
+  },
+  empty: {
+    label: "Empty lists",
+    group: "Data",
+    description: "Only matches saved here.",
+  },
+  manyPages: {
+    label: "Many pages",
+    group: "Data",
+    description: "Extra matches to paginate.",
+  },
+  slow: {
+    label: "Slow",
+    group: "Latency",
+    description: "Every request waits 2.5 s.",
+  },
+  variableLatency: {
+    label: "Variable latency",
+    group: "Latency",
+    description: "200–2000 ms, seeded.",
+  },
+  outOfOrder: {
+    label: "Out-of-order responses",
+    group: "Latency",
+    description: "Alternates 2.5 s and 0.3 s.",
+  },
+  timeout: {
+    label: "Timeout",
+    group: "Failures",
+    description: "Never answers (8 s timeout).",
+  },
+  networkError: {
+    label: "Network error",
+    group: "Failures",
+    description: "Connection failure.",
+  },
+  clientError: {
+    label: "HTTP 400",
+    group: "Failures",
+    description: "Not retried.",
+  },
+  serverError: {
+    label: "HTTP 500",
+    group: "Failures",
+    description: "Retried with backoff.",
+  },
+  rankingDown: {
+    label: "Ranking read fails",
+    group: "Failures",
+    description: "Ranking returns 503.",
+  },
+  historyDown: {
+    label: "History read fails",
+    group: "Failures",
+    description: "History returns 503.",
+  },
+  timeoutAfterWrite: {
+    label: "Save times out",
+    group: "Saving a match",
+    description: "Stored, but the reply is lost.",
+  },
+  downAtMatchEnd: {
+    label: "Save fails",
+    group: "Saving a match",
+    description: "503; the match stays pending.",
+  },
+} as const satisfies Record<string, ScenarioInfo>;
 
 export type ScenarioId = keyof typeof SCENARIOS;
 export type Endpoint = "ranking" | "history" | "submit";

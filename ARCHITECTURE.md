@@ -55,7 +55,7 @@ Hard rules:
 
 **Screens.** `app/App.tsx` holds a typed screen state (`menu` | `options` | `log` | `match`). There is no router, so a refresh always lands on the menu and abandons any match.
 
-- **Menu:** Play, Options, a one-line controls summary (first key of each action from `KEY_BINDINGS`; on touch screens, a note on the on-screen buttons), Captain's Log shortcuts, last result, pending-save status.
+- **Menu:** Play, Options, a **Controls** button (opens the same `ControlsList` as Options in a modal), Captain's Log shortcuts, last result, pending-save status.
 - **Options:** steppers for session time and spawn interval (saved on change), a global **Sound** toggle, and a **Controls** list built from `KEY_BINDINGS`.
 - **Captain's Log:** `Ranking` and `Match History` tabs (WAI-ARIA tabs), 5 rows per page.
 - **Player name:** asked once in a native `<dialog>` (2–16 chars). `playerId` is always `local-player`.
@@ -243,7 +243,7 @@ Invalid input returns `400` with an `ApiError`. The PUT is an idempotent upsert:
 - `main.tsx` renders the app at once and starts the worker in parallel; an Axios interceptor holds requests until it is ready. If the worker fails, only the Captain's Log shows errors — game, options and menu keep working.
 - `mockDb.ts` = deterministic fixtures (~40 matches, 3 configs) + confirmed records persisted in `localStorage`.
 - `simulateNetwork(endpoint)` runs at the start of every handler and applies the active scenario (delay or failure). Scenario list: [README.md](README.md#network-scenarios-msw). Latency is driven by the seeded RNG, so it repeats on every load.
-- **Selection:** `?scenario=<id>` or the `ScenarioPanel`; the page reloads so cache and in-memory state start clean. **Reset mock data** clears records, pending queue, last result and scenario.
+- **Selection:** `?scenario=<id>` or the **Network** menu (`ScenarioPanel`: a chip at the bottom left, framed with the HUD's `counter_panel`, that opens a wide `Modal` with the scenarios grouped as Data, Latency, Failures and Saving a match, each with a one-line description and the active one highlighted); the page reloads so cache and in-memory state start clean. **Reset mock data** clears records, pending queue, last result and scenario.
 
 ## 10. Testing and profiling
 
@@ -254,7 +254,7 @@ Invalid input returns `400` with an `ApiError`. The PUT is an idempotent upsert:
 
 | Test | Spec                       | Covers                                                         |
 | ---- | -------------------------- | -------------------------------------------------------------- |
-| 1    | `options.spec.ts`          | limits, persistence, invalid storage, mid-match changes        |
+| 1    | `options.spec.ts`          | menu Controls, limits, persistence, invalid storage, mid-match |
 | 2    | `assets-loading.spec.ts`   | progress, failure, **Retry**                                   |
 | 3    | `movement.spec.ts`         | forward, rotations, arena bounds, islands                      |
 | 4    | `combat.spec.ts`           | front/broadside, cooldowns, damage, one point per kill         |
@@ -267,7 +267,7 @@ Invalid input returns `400` with an `ApiError`. The PUT is an idempotent upsert:
 | 11   | `submission.spec.ts`       | one record in both tabs, pending after failure, resend on load |
 | 12   | `retry-race.spec.ts`       | resend after write timeout, late page ignored                  |
 
-- **Bugs the suite found:** late progress callbacks hid the **Retry** button after an asset failure; `showModal()` focused the scroll panel instead of the primary button on mobile (`Modal` now focuses `data-autofocus`).
+- **Bugs the suite found:** late progress callbacks hid the **Retry** button after an asset failure; `showModal()` focused the scroll panel instead of the primary button on mobile (`Modal` now focuses `data-autofocus`); closing a `Modal` left focus on `<body>`, because the `<dialog>` was already detached when the effect cleanup called `close()` (`Modal` now uses a layout effect, so focus returns to the opener); and game keys stayed captured after the match ended, so `Space` could not activate the result dialog's buttons.
 - **Profiling** (`npm run profile`, report in [`docs/profiling/`](docs/profiling/README.md)): production build, 3-minute match at 180 s / 3 s, then 5 play-and-exit cycles with forced GC. On an i5-10210U (UHD Graphics), Chromium 153, 1280×720: **60 FPS, p95 16.8 ms, up to 44 enemies**; DOM nodes, listeners and canvases stay flat across cycles.
 
 ## 11. Balancing decisions

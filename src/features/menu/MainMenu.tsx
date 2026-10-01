@@ -1,13 +1,13 @@
 import { useState } from "react";
-import type { Action } from "../../game/input/actions";
-import { KEY_BINDINGS } from "../../game/input/bindings";
 import { usePendingSubmissions } from "../../hooks/usePendingSubmissions";
 import { MenuButton } from "../../shared/components/MenuButton";
+import { Modal } from "../../shared/components/Modal";
 import { Panel } from "../../shared/components/Panel";
 import { pngAsset } from "../../shared/utils/assets";
 import { formatDuration, formatEndReason } from "../../shared/utils/format";
 import { readLastResult } from "../../storage/lastResultStorage";
 import type { LogTab } from "../../constants/ui";
+import { ControlsList } from "../options/ControlsList";
 
 interface MainMenuProps {
   onPlay: () => void;
@@ -18,20 +18,9 @@ interface MainMenuProps {
 const title = pngAsset("ui/menu/title_pirate_battle.png");
 const ship = pngAsset("ships/ship_2.png");
 
-// One-line summary with each action's first key; the full list is in Options.
-const CONTROL_SUMMARY: readonly { label: string; actions: Action[] }[] = [
-  { label: "sail", actions: ["forward"] },
-  { label: "turn", actions: ["rotateLeft", "rotateRight"] },
-  { label: "fire", actions: ["fireFront"] },
-  { label: "broadsides", actions: ["fireLeft", "fireRight"] },
-  { label: "pause", actions: ["pause"] },
-];
-
-const firstKey = (action: Action) =>
-  KEY_BINDINGS.find((binding) => binding.action === action)?.keys[0]?.display;
-
 export function MainMenu({ onPlay, onOptions, onOpenLog }: MainMenuProps) {
   const [lastResult] = useState(readLastResult);
+  const [showControls, setShowControls] = useState(false);
   const { pending, saving, resend } = usePendingSubmissions();
 
   return (
@@ -49,23 +38,14 @@ export function MainMenu({ onPlay, onOptions, onOpenLog }: MainMenuProps) {
       <div className="menu__actions">
         <MenuButton onClick={onPlay}>Play</MenuButton>
         <MenuButton onClick={onOptions}>Options</MenuButton>
+        <MenuButton
+          variant="secondary"
+          size="sm"
+          onClick={() => setShowControls(true)}
+        >
+          Controls
+        </MenuButton>
       </div>
-      <p className="menu__hint menu__controls">
-        <span className="menu__controls-keys">
-          {CONTROL_SUMMARY.map(({ label, actions }, index) => (
-            <span key={label}>
-              {index > 0 && " · "}
-              {actions.map((action) => (
-                <kbd key={action}>{firstKey(action)}</kbd>
-              ))}{" "}
-              {label}
-            </span>
-          ))}
-        </span>
-        <span className="menu__controls-touch">
-          Hold the on-screen buttons to sail, turn and fire.
-        </span>
-      </p>
       <img
         className="menu__ship"
         src={ship.src}
@@ -114,6 +94,20 @@ export function MainMenu({ onPlay, onOptions, onOpenLog }: MainMenuProps) {
           Match History
         </MenuButton>
       </div>
+      {showControls && (
+        <Modal
+          labelledBy="controls-title"
+          onClose={() => setShowControls(false)}
+        >
+          <h2 id="controls-title" className="panel__title">
+            Controls
+          </h2>
+          <ControlsList />
+          <MenuButton autoFocus onClick={() => setShowControls(false)}>
+            Back
+          </MenuButton>
+        </Modal>
+      )}
     </Panel>
   );
 }

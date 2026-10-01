@@ -133,7 +133,7 @@ The ranking and history APIs are mocked with MSW, also in the published build. Y
 
 **Select a scenario** in either way:
 
-- open the **Scenario panel** at the bottom left of any screen (except during a match), or
+- click the **Network** chip at the bottom left of any screen (except during a match) and pick a scenario from the menu, or
 - add `?scenario=<id>` to the URL, e.g. `http://localhost:8080/?scenario=slow`.
 
 The page reloads and the choice is remembered.
@@ -155,7 +155,7 @@ The page reloads and the choice is remembered.
 | `timeoutAfterWrite` | Match is saved, but the response never arrives |
 | `downAtMatchEnd`    | Saving a match always fails                    |
 
-**Reset:** click **Reset mock data** in the Scenario panel. It clears saved matches, the pending queue, the last result and the scenario.
+**Reset:** click **Reset mock data** in the Network menu. It clears saved matches, the pending queue, the last result and the scenario.
 
 ### Reproducing failures
 
@@ -168,7 +168,7 @@ The page reloads and the choice is remembered.
 
 End-to-end tests use Playwright on Chromium, desktop and mobile (touch). Matches use a fixed seed and a manually controlled clock, so the tests are reproducible. Each failing test keeps a trace and a screenshot, and an HTML report is generated in `playwright-report/`.
 
-**Latest report:** [`docs/test-report/index.html`](docs/test-report/index.html) (download and open it in a browser): 83 passed, 1 skipped (the touch test only runs on the mobile project).
+**Latest report:** [`docs/test-report/index.html`](docs/test-report/index.html) (download and open it in a browser): 87 passed, 1 skipped (the touch test only runs on the mobile project).
 
 ```bash
 npm run test:e2e                          # all tests

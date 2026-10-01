@@ -52,6 +52,33 @@ test("a slow API shows the loading state", async ({ game, page }) => {
   await expect(rows(page)).toHaveCount(5, { timeout: 10_000 });
 });
 
+test("the Network menu switches the scenario and Reset restores it", async ({
+  game,
+  page,
+}) => {
+  await game.open();
+  const chip = (label: string) =>
+    page.getByRole("button", { name: `Network scenario: ${label}` });
+  await chip("Success").click();
+  const menu = page.getByRole("dialog", { name: "Network" });
+  await expect(menu.getByRole("button", { name: "Success" })).toHaveAttribute(
+    "aria-current",
+    "true",
+  );
+  // Escolher um cenário recarrega a página com ele ativo.
+  await menu.getByRole("button", { name: "Empty lists" }).click();
+  await expect(chip("Empty lists")).toBeVisible();
+  await game.openLog("Ranking");
+  await expect(
+    page.getByText("No battles recorded with these options yet."),
+  ).toBeVisible();
+
+  await game.button("Main Menu").click();
+  await chip("Empty lists").click();
+  await page.getByRole("button", { name: "Reset mock data" }).click();
+  await expect(chip("Success")).toBeVisible();
+});
+
 test("empty lists show the empty state", async ({ game, page }) => {
   await game.open({ scenario: "empty" });
   await game.openLog("Ranking");

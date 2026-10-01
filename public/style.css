@@ -797,26 +797,15 @@ img {
   gap: 2px;
 }
 
-/* Tecla do controle, logo abaixo do botão (e no resumo de controles do menu). */
-.touch-control__keys,
-.menu__controls kbd {
+/* Tecla do controle, logo abaixo do botão. */
+.touch-control__keys {
   padding: 1px 6px;
   border-radius: 4px;
   color: var(--color-gold);
-  font-family: inherit;
   font-size: 0.8rem;
   font-weight: 700;
   white-space: nowrap;
   background: var(--color-row);
-}
-
-.menu__controls kbd + kbd {
-  margin-left: 3px;
-}
-
-/* No toque, o menu explica os botões da tela em vez das teclas. */
-.menu__controls-touch {
-  display: none;
 }
 
 .round-button--control {
@@ -853,13 +842,8 @@ img {
 
 /* No toque a legenda de tecla não serve. */
 @media (pointer: coarse) {
-  .touch-control__keys,
-  .menu__controls-keys {
+  .touch-control__keys {
     display: none;
-  }
-
-  .menu__controls-touch {
-    display: inline;
   }
 }
 
@@ -903,53 +887,151 @@ img {
   margin: 0;
 }
 
-/* ---------- Mock API scenario panel ---------- */
-.scenario-panel {
+/* ---------- Network scenarios (mock API) ---------- */
+/* Chip com a moldura dos contadores do HUD, esticada em 9-slice. */
+.network-chip {
   position: absolute;
-  bottom: 16px;
-  left: 16px;
+  bottom: 12px;
+  left: 12px;
   z-index: 5;
-  max-width: min(280px, calc(100vw - 32px));
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: var(--color-row);
+  display: inline-flex;
+  max-width: calc(100vw - 24px);
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px 0 0;
+  border-style: solid;
+  border-width: 14px 16px;
+  border-image-source: url("/assets/png/retina/ui/hud/counter_panel.png");
+  border-image-slice: 28 32 fill;
+  background: none;
   color: var(--color-text);
+  font: inherit;
   font-size: 0.85rem;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+  transition: transform 180ms var(--ease-pop);
 }
 
-.scenario-panel summary {
+.network-chip:hover,
+.network-chip:focus-visible {
+  transform: scale(1.05);
+}
+
+.network-chip:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.network-chip__icon {
+  width: 24px;
+  height: 24px;
+  margin: -4px 0;
+}
+
+.network-chip__label {
+  color: var(--color-muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.network-chip__value {
+  overflow: hidden;
+  color: var(--color-gold);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal.modal--wide {
+  width: min(100% - 32px, 760px);
+}
+
+/* Colunas que se equilibram sozinhas; cada grupo fica inteiro numa coluna. */
+.network-menu {
+  width: 100%;
+  columns: 210px 3;
+  column-gap: 12px;
+  text-align: left;
+}
+
+.network-menu__group {
+  margin-bottom: 12px;
+  break-inside: avoid;
+}
+
+.network-menu__heading {
+  margin: 0 0 6px;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.network-menu__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.network-menu__list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Linhas no estilo das tabelas do Captain's Log. */
+.network-option {
+  display: grid;
+  width: 100%;
+  gap: 2px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--color-row);
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
 
-.scenario-panel__current {
-  color: var(--color-gold);
+.network-option:hover {
+  filter: brightness(1.2);
 }
 
-.scenario-panel[open] {
-  display: grid;
-  gap: 8px;
+.network-option:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
-.scenario-panel__field {
-  display: grid;
-  gap: 4px;
+.network-option[aria-current="true"] {
+  background: var(--color-row-you);
+  box-shadow: inset 0 0 0 2px var(--color-gold);
+  cursor: default;
 }
 
-.scenario-panel select,
-.scenario-panel button {
-  font: inherit;
-  padding: 4px 8px;
+.network-option__title {
+  color: var(--color-cream);
+  font-weight: 700;
 }
 
-.scenario-panel__note {
-  margin: 0;
+.network-option__desc {
   color: var(--color-muted);
   font-size: 0.8rem;
 }
 
-.scenario-panel :focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 2px;
+@media (prefers-reduced-motion: reduce) {
+  .network-chip {
+    transition: none;
+  }
+
+  .network-chip:hover,
+  .network-chip:focus-visible {
+    transform: none;
+  }
 }
 
 /* ---------- Mobile ---------- */
