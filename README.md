@@ -7,7 +7,6 @@ A 2D top-down naval shooter that runs entirely in the browser. Sail between isla
 ![PixiJS](https://img.shields.io/badge/PixiJS-8-E72264)
 ![TanStack Query](https://img.shields.io/badge/TanStack_Query-5-FF4154?logo=reactquery&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-E2E-2EAD33?logo=playwright&logoColor=white)
-![Status](https://img.shields.io/badge/status-in_development-yellow)
 
 **🔗 Play it:** https://piratebattle.pedroestevao.cyou
 
