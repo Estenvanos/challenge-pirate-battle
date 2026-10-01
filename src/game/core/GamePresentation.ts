@@ -31,15 +31,17 @@ export class GamePresentation {
   private readonly projectilesView: ProjectilesView;
   private readonly effects: EffectsView;
   private readonly fxTextures = createFxTextures();
-  private readonly sounds = new SoundManager();
+  private readonly sounds: SoundManager;
   private foamClock = 0;
   private smokeClock = 0;
 
   constructor(
     private readonly renderer: PixiRenderer,
     private readonly config: MatchConfig,
+    isMuted: () => boolean,
     debugIslands?: boolean,
   ) {
+    this.sounds = new SoundManager(isMuted);
     this.mapView = new TileMapView(ARENA_MAP, { debugIslands });
     this.effects = new EffectsView(this.fxTextures);
     const reducedMotion = window.matchMedia(

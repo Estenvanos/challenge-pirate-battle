@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { useGameSnapshot } from "../../game/bridge/useGameSnapshot";
+import { useGameSnapshot } from "../../hooks/useGameSnapshot";
 import { pngAsset } from "../../shared/utils/assets";
 import { formatDuration } from "../../shared/utils/format";
 

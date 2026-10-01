@@ -66,20 +66,25 @@ function collideWithArena(
     }
   }
 
+  // Every hull circle stays inside the arena, so the bow never leaves the screen.
   const { width, height } = world.arena;
   const { radius } = ship;
-  if (ship.x < radius) {
-    ship.x = radius;
-    absorbImpact(ship, 1, 0);
-  } else if (ship.x > width - radius) {
-    ship.x = width - radius;
-    absorbImpact(ship, -1, 0);
-  }
-  if (ship.y < radius) {
-    ship.y = radius;
-    absorbImpact(ship, 0, 1);
-  } else if (ship.y > height - radius) {
-    ship.y = height - radius;
-    absorbImpact(ship, 0, -1);
+  for (const along of [-reach, 0, reach]) {
+    const x = ship.x + dirX * along;
+    const y = ship.y + dirY * along;
+    if (x < radius) {
+      ship.x += radius - x;
+      absorbImpact(ship, 1, 0);
+    } else if (x > width - radius) {
+      ship.x -= x - (width - radius);
+      absorbImpact(ship, -1, 0);
+    }
+    if (y < radius) {
+      ship.y += radius - y;
+      absorbImpact(ship, 0, 1);
+    } else if (y > height - radius) {
+      ship.y -= y - (height - radius);
+      absorbImpact(ship, 0, -1);
+    }
   }
 }

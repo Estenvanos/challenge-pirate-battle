@@ -78,6 +78,8 @@ export interface ShipViewOptions {
   readonly reducedMotion: boolean;
   readonly phase?: number;
   readonly fadeInSec?: number;
+  /** Enemy bars are always red; the player's turns red only at low HP. */
+  readonly enemy?: boolean;
 }
 
 interface WakeSide {
@@ -100,6 +102,7 @@ export class ShipView {
   private readonly scale: number;
   private readonly reducedMotion: boolean;
   private readonly fadeInSec: number;
+  private readonly enemy: boolean;
   private swayPhase: number;
   private swayTime = 0;
   private wakeClock = 0;
@@ -120,6 +123,7 @@ export class ShipView {
     this.scale = options.scale;
     this.reducedMotion = options.reducedMotion;
     this.fadeInSec = options.fadeInSec ?? 0;
+    this.enemy = options.enemy ?? false;
     this.swayPhase = options.phase ?? 0;
 
     this.hull = new Sprite(texture);
@@ -206,10 +210,11 @@ export class ShipView {
 
     bar.visible = !sinking;
     bar.alpha = body.alpha;
-    bar.position.set(
-      x,
-      y - (this.hull.texture.height / 2) * this.scale - BAR.gap,
-    );
+    // Above the hull, or below it when it would cross the arena's top edge (y = 0).
+    const barOffset = (this.hull.texture.height / 2) * this.scale + BAR.gap;
+    const barHalfHeight = (this.barTextures.frame.height * BAR.scale) / 2;
+    const fitsAbove = y - barOffset - barHalfHeight >= 0;
+    bar.position.set(x, fitsAbove ? y - barOffset : y + barOffset);
     this.syncBar(ship.hp, ship.maxHp);
 
     shadow.position.set(body.x + SHADOW.x, body.y + SHADOW.y);
@@ -296,7 +301,8 @@ export class ShipView {
     this.shownHp = hp;
     const ratio = hp / maxHp;
     const { green, red } = this.barTextures;
-    this.fillTexture.source = (ratio <= BAR.lowHp ? red : green).source;
+    const useRed = this.enemy || ratio <= BAR.lowHp;
+    this.fillTexture.source = (useRed ? red : green).source;
     this.fillTexture.frame.width = lerp(BAR.fillFrom, BAR.fillTo, ratio);
     this.fillTexture.update();
   }

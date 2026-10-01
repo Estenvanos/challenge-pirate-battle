@@ -1,5 +1,4 @@
 import { GAME_SOUND_URLS, GAME_SOUND_VOLUME } from "../../constants/audio";
-import { isMuted } from "../../shared/audio/mute";
 
 export type GameSound = keyof typeof GAME_SOUND_URLS;
 
@@ -24,8 +23,11 @@ export class SoundManager {
   private readonly playing = new Set<HTMLAudioElement>();
   private readonly nextVariant = new Map<GameSound, number>();
 
+  /** The global mute lives in the UI; the game only asks before each sound. */
+  constructor(private readonly isMuted: () => boolean) {}
+
   play(sound: GameSound): void {
-    if (isMuted()) return;
+    if (this.isMuted()) return;
     const variants = GAME_SOUND_URLS[sound];
     const index = this.nextVariant.get(sound) ?? 0;
     this.nextVariant.set(sound, (index + 1) % variants.length);

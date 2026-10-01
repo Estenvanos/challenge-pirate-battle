@@ -1,4 +1,4 @@
-import { useGameSnapshot } from "../../game/bridge/useGameSnapshot";
+import { useGameSnapshot } from "../../hooks/useGameSnapshot";
 
 const TIME_MARKS_SEC = [10, 30, 60] as const;
 const LOW_HEALTH_RATIO = 1 / 3;

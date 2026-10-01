@@ -27,12 +27,12 @@ Single-player 2D naval shooter, entirely in the browser. The game core is plain 
 | ----------- | ----------------- | --------------------------------------------------------------------------- |
 | App shell   | `src/app`         | Screen state, providers, global styles                                      |
 | Screens     | `src/features`    | Menu, options, match (HUD, touch controls, pause), result, ranking, history |
-| Bridge      | `src/game/bridge` | Game → React snapshot (`useSyncExternalStore`)                              |
+| Bridge      | `src/game/bridge` | `gameStore`: game → UI snapshot, read by `useGameSnapshot` in `src/hooks`   |
 | Game core   | `src/game`        | Simulation, physics, arena, input, rendering, assets, audio                 |
 | Config      | `src/config`      | Typed balancing values and option limits                                    |
 | Constants   | `src/constants`   | Storage keys, API routes/timings, sound URLs, UI labels                     |
 | Schemas     | `src/schemas`     | Zod contracts; types come from `z.infer`                                    |
-| Hooks       | `src/hooks`       | The only place that calls `useQuery` / `useMutation`                        |
+| Hooks       | `src/hooks`       | `useQuery` / `useMutation` (only here) and `useGameSnapshot`                |
 | Remote data | `src/api`         | Axios client, QueryClient, services, pending queue                          |
 | Mocks       | `src/mocks`       | MSW handlers, fixtures, scenarios                                           |
 | Persistence | `src/storage`     | Typed, validated `localStorage`                                             |
@@ -71,7 +71,7 @@ Hard rules:
 **Game → UI sync (no per-frame React render).**
 
 - `Game` reports discrete changes through `GameInitOptions` callbacks: `onPlayerHealth` (on hit/repair), `onScore` (on kill), `onTimeLeft` (once per second), `onCooldowns` (only when a value changes), `onMatchEnd` (once).
-- `GameCanvas` writes them to `gameStore`; React reads it with `useGameSnapshot` (`useSyncExternalStore`).
+- `GameCanvas` writes them to `gameStore`; React reads it with `useGameSnapshot` (`src/hooks`, `useSyncExternalStore`), so `src/game` has no React import.
 - Weapon cooldown veils are CSS variables (`--cooldown-*`) written straight to the DOM, not React state.
 - `MatchAnnouncer` is a hidden `role="status"` region. It only speaks on score changes, time marks (1 min, 30 s, 10 s) and low health.
 
@@ -141,7 +141,7 @@ There is no separate event bus: the simulation pushes `WorldEvent`s, `Game` drai
 | ship ↔ island              | 3 circles along the hull (stern, centre, bow) vs convex polygons (SAT) |
 | projectile ↔ ship          | circle vs hull capsule                                                 |
 | projectile ↔ island        | circle vs convex polygon; projectile removed                           |
-| ship / projectile ↔ bounds | ship clamped (centre circle); projectile removed                       |
+| ship / projectile ↔ bounds | ship clamped (all three hull circles); projectile removed              |
 
 - Islands resolve along the minimum translation vector (`physics/collision.ts`), so ships slide instead of sticking. The three hull circles keep the bow out of the coast on a head-on hit.
 - The player and a Chaser are not pushed apart: the Chaser must touch to explode.
@@ -162,14 +162,14 @@ There is no separate event bus: the simulation pushes `WorldEvent`s, `Game` drai
 
 **Views** read `World` every frame and own no gameplay state. `Game` passes the frame time to them, so pausing the loop freezes them all.
 
-- `ShipView`: hull sprite by HP stage (damage deterioration), hit flash, recoil, sea sway, wake, health bar above every ship (player included), sinking animation.
+- `ShipView`: hull sprite by HP stage (damage deterioration), hit flash, recoil, sea sway, wake, health bar above every ship (player included; red for enemies, green for the player until 1/3 HP; drawn below the hull at the arena's top edge), sinking animation.
 - `EnemiesView`: keeps a destroyed enemy's view until it has sunk, then destroys it.
 - `ProjectilesView`, `EffectsView`: **pooled** sprites (effects capped at 700). Effects cover muzzle flash, impacts, explosions, smoke/fire on damaged ships, crew overboard.
 - `prefers-reduced-motion` disables sway, recoil and screen shake.
 
 **Viewport** (`render/PixiRenderer.ts`): `resolution`/`autoDensity` from the DPR (capped at 2: sharper is barely visible and costs fill rate on phones), contain-fit of the whole arena (aspect ratio preserved), recomputed by a `ResizeObserver`. The letterbox shows scenery only. `screenToArena` maps pointer coordinates to arena coordinates.
 
-**Audio.** `SoundManager` plays match sounds from `WorldEvent`s (cloned `HTMLAudioElement`s, so shots overlap). Menu sounds and the ambience loop live in `shared/audio`; a global mute applies everywhere.
+**Audio.** `SoundManager` plays match sounds from `WorldEvent`s (cloned `HTMLAudioElement`s, so shots overlap). Menu sounds and the ambience loop live in `shared/audio`; a global mute applies everywhere (`GameCanvas` passes `isMuted` to `Game`, so the core never imports `shared/`).
 
 **Cleanup.** `Game.destroy()` stops the loop and input, then `GamePresentation` releases match audio, views and generated textures before the renderer destroys the Pixi application. Shared asset textures remain cached. Verified over 5 play cycles (section 10).
 

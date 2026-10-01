@@ -50,6 +50,8 @@ export interface GameInitOptions {
   readonly onMatchEnd?: (result: MatchResult) => void;
   /** Remaining weapon cooldown: 1 just fired, 0 ready; emitted on change. */
   readonly onCooldowns?: (ratios: Readonly<CooldownRatios>) => void;
+  /** Checked before each sound; never muted when omitted. */
+  readonly isMuted?: () => boolean;
   /** Draw island collision polygons. */
   readonly debugIslands?: boolean;
   /**
@@ -122,6 +124,7 @@ export class Game {
     const presentation = new GamePresentation(
       renderer,
       config,
+      options.isMuted ?? (() => false),
       options.debugIslands,
     );
     this.presentation = presentation;

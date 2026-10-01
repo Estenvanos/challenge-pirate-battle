@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { GameOptions } from "../../config/options";
 import { gameStore } from "../../game/bridge/gameStore";
 import { Game, type MatchResult } from "../../game/core/Game";
+import { isMuted } from "../../shared/audio/mute";
 import {
   exposeGameForTests,
   testManualClock,
@@ -69,6 +70,7 @@ function GameCanvasHost({
         debugIslands: DEBUG_ISLANDS,
         seed: testSeed(),
         manualClock: testManualClock(),
+        isMuted,
         onPlayerHealth: gameStore.setPlayerHealth,
         onScore: gameStore.setScore,
         onTimeLeft: gameStore.setTimeLeft,

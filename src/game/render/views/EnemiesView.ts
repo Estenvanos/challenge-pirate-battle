@@ -32,6 +32,7 @@ export class EnemiesView {
           reducedMotion: this.reducedMotion,
           phase: this.created++ * SWAY_PHASE_STEP,
           fadeInSec: FADE_IN_SEC,
+          enemy: true,
         });
         this.views.set(enemy.id, { enemy, view });
       }
