@@ -6,6 +6,8 @@ export interface ArenaSize {
 }
 
 const KICK_DECAY = 16;
+// Above 2x the extra pixels are barely visible but cost fill rate on phones.
+const MAX_RESOLUTION = 2;
 
 /** Owns the Pixi application and fits the fixed arena into the host. */
 export class PixiRenderer {
@@ -26,7 +28,7 @@ export class PixiRenderer {
     const app = new Application();
     await app.init({
       resizeTo: host,
-      resolution: window.devicePixelRatio || 1,
+      resolution: Math.min(window.devicePixelRatio || 1, MAX_RESOLUTION),
       autoDensity: true,
       backgroundAlpha: 0,
       antialias: false,

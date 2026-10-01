@@ -7,11 +7,11 @@ A 2D top-down naval shooter that runs entirely in the browser. Sail between isla
 ![PixiJS](https://img.shields.io/badge/PixiJS-8-E72264)
 ![TanStack Query](https://img.shields.io/badge/TanStack_Query-5-FF4154?logo=reactquery&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-E2E-2EAD33?logo=playwright&logoColor=white)
-![Status](https://img.shields.io/badge/status-in_development-yellow)
+![Status](https://img.shields.io/badge/status-complete-brightgreen)
 
 **🔗 Play it:** <!-- TODO: deploy URL --> _coming soon_
 
-[![Gameplay demo — click to watch the video](public/assets/demo/gameplay.png)](public/assets/demo/demo.mp4)
+[![Gameplay demo — click to watch the video](docs/media/gameplay.png)](docs/media/demo.mp4)
 
 ▶️ [Watch the gameplay video](https://github.com/user-attachments/assets/723cad0c-c828-4875-9c52-938144300c1e)
 
@@ -37,7 +37,7 @@ A 2D top-down naval shooter that runs entirely in the browser. Sail between isla
 
 Pirate Battle was built for a front-end game development challenge. The game core (simulation, physics, rendering) is plain TypeScript + PixiJS, and the menus, HUD and screens are React. The ranking and match history are REST APIs mocked with MSW, so the whole app, including its "backend", runs in the browser with no server.
 
-**Status:** ✅ core gameplay complete · 🚧 deploy pending
+**Status:** ✅ complete · 🌐 deployed
 
 ## Features
 
@@ -54,13 +54,13 @@ Pirate Battle was built for a front-end game development challenge. The game cor
 
 ## Screenshots
 
-| Main menu                                 | Gameplay                                             |
-| ----------------------------------------- | ---------------------------------------------------- |
-| ![Menu](public/assets/demo/main_menu.png) | ![Gameplay](public/assets/demo/gameplay.png)         |
-| **Result**                                | **Captain's Log (ranking / history)**                |
-| ![Result](public/assets/demo/result.png)  | ![Captain's Log](public/assets/demo/captain_log.png) |
-| **Mobile**                                |                                                      |
-| ![Mobile](public/assets/demo/mobile.png)  |                                                      |
+| Main menu                         | Gameplay                                     |
+| --------------------------------- | -------------------------------------------- |
+| ![Menu](docs/media/main_menu.png) | ![Gameplay](docs/media/gameplay.png)         |
+| **Result**                        | **Captain's Log (ranking / history)**        |
+| ![Result](docs/media/result.png)  | ![Captain's Log](docs/media/captain_log.png) |
+| **Mobile**                        |                                              |
+| ![Mobile](docs/media/mobile.png)  |                                              |
 
 ## Controls
 
@@ -167,6 +167,8 @@ The page reloads and the choice is remembered.
 ## Tests
 
 End-to-end tests use Playwright on Chromium, desktop and mobile (touch). Matches use a fixed seed and a manually controlled clock, so the tests are reproducible. Each failing test keeps a trace and a screenshot, and an HTML report is generated in `playwright-report/`.
+
+**Latest report:** [`docs/test-report/index.html`](docs/test-report/index.html) (download and open it in a browser): 83 passed, 1 skipped (the touch test only runs on the mobile project).
 
 ```bash
 npm run test:e2e                          # all tests

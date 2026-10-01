@@ -797,15 +797,26 @@ img {
   gap: 2px;
 }
 
-/* Tecla do controle, logo abaixo do botão. */
-.touch-control__keys {
+/* Tecla do controle, logo abaixo do botão (e no resumo de controles do menu). */
+.touch-control__keys,
+.menu__controls kbd {
   padding: 1px 6px;
   border-radius: 4px;
   color: var(--color-gold);
+  font-family: inherit;
   font-size: 0.8rem;
   font-weight: 700;
   white-space: nowrap;
   background: var(--color-row);
+}
+
+.menu__controls kbd + kbd {
+  margin-left: 3px;
+}
+
+/* No toque, o menu explica os botões da tela em vez das teclas. */
+.menu__controls-touch {
+  display: none;
 }
 
 .round-button--control {
@@ -842,8 +853,13 @@ img {
 
 /* No toque a legenda de tecla não serve. */
 @media (pointer: coarse) {
-  .touch-control__keys {
+  .touch-control__keys,
+  .menu__controls-keys {
     display: none;
+  }
+
+  .menu__controls-touch {
+    display: inline;
   }
 }
 

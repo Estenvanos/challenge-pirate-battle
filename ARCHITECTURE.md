@@ -55,7 +55,7 @@ Hard rules:
 
 **Screens.** `app/App.tsx` holds a typed screen state (`menu` | `options` | `log` | `match`). There is no router, so a refresh always lands on the menu and abandons any match.
 
-- **Menu:** Play, Options, Captain's Log shortcuts, last result, pending-save status.
+- **Menu:** Play, Options, a one-line controls summary (first key of each action from `KEY_BINDINGS`; on touch screens, a note on the on-screen buttons), Captain's Log shortcuts, last result, pending-save status.
 - **Options:** steppers for session time and spawn interval (saved on change), a global **Sound** toggle, and a **Controls** list built from `KEY_BINDINGS`.
 - **Captain's Log:** `Ranking` and `Match History` tabs (WAI-ARIA tabs), 5 rows per page.
 - **Player name:** asked once in a native `<dialog>` (2–16 chars). `playerId` is always `local-player`.
@@ -167,7 +167,7 @@ There is no separate event bus: the simulation pushes `WorldEvent`s, `Game` drai
 - `ProjectilesView`, `EffectsView`: **pooled** sprites (effects capped at 700). Effects cover muzzle flash, impacts, explosions, smoke/fire on damaged ships, crew overboard.
 - `prefers-reduced-motion` disables sway, recoil and screen shake.
 
-**Viewport** (`render/PixiRenderer.ts`): `resolution`/`autoDensity` from the DPR, contain-fit of the whole arena (aspect ratio preserved), recomputed by a `ResizeObserver`. The letterbox shows scenery only. `screenToArena` maps pointer coordinates to arena coordinates.
+**Viewport** (`render/PixiRenderer.ts`): `resolution`/`autoDensity` from the DPR (capped at 2: sharper is barely visible and costs fill rate on phones), contain-fit of the whole arena (aspect ratio preserved), recomputed by a `ResizeObserver`. The letterbox shows scenery only. `screenToArena` maps pointer coordinates to arena coordinates.
 
 **Audio.** `SoundManager` plays match sounds from `WorldEvent`s (cloned `HTMLAudioElement`s, so shots overlap). Menu sounds and the ambience loop live in `shared/audio`; a global mute applies everywhere.
 
@@ -177,7 +177,7 @@ There is no separate event bus: the simulation pushes `WorldEvent`s, `Game` drai
 
 - Abstract actions: `forward`, `rotateLeft`, `rotateRight`, `fireFront`, `fireLeft`, `fireRight`, `pause`. Moving and firing work at the same time.
 - `KEY_BINDINGS` (`input/bindings.ts`, by `KeyboardEvent.code`) is the single source for the `InputManager`, the on-screen hints and the Controls list. Keys are in [README.md](README.md#controls).
-- `InputManager` listens on `window`, only while gameplay is active and not paused. It calls `preventDefault` only for bound keys, ignores form fields, and clears state on `blur` / hidden tab.
+- `InputManager` listens on `window`, only while gameplay is active: not paused and not after the match ends (so `Space` still activates the result dialog's buttons). It calls `preventDefault` only for bound keys, ignores form fields, and clears state on `blur` / hidden tab.
 - **Touch:** each on-screen button captures its pointer and holds its action until release, so multi-touch works (move, turn and fire together). `.game-canvas` uses `touch-action: none`.
 - **Mobile:** landscape recommended (the arena is 16:9); portrait works without clipping. Compact HUD and controls under `(max-width: 600px), (max-height: 480px)`.
 
@@ -224,7 +224,7 @@ Invalid input returns `400` with an `ApiError`. The PUT is an idempotent upsert:
 
 **Cache (TanStack Query):**
 
-- `staleTime` 30 s; refetch when the tab becomes visible again.
+- `staleTime` 30 s; refetch when the browser tab becomes visible again and whenever the Ranking or Match History tab is shown again (`refetchOnMount: "always"`), keeping the cached page on screen meanwhile.
 - Up to 3 retries with exponential backoff (500 ms → 8 s), never on 4xx.
 - Pagination keeps the previous page on screen while the next loads.
 - Abort signals + per-page query keys: a late response never overwrites newer data.
@@ -247,7 +247,7 @@ Invalid input returns `400` with an `ApiError`. The PUT is an idempotent upsert:
 
 ## 10. Testing and profiling
 
-- **Playwright:** projects `desktop` (1280×720) and `mobile` (Pixel 7 landscape, touch). Each test uses a fresh context and fails on any `pageerror` or `console.error`. HTML report + traces on failure.
+- **Playwright:** projects `desktop` (1280×720) and `mobile` (Pixel 7 landscape, touch). Each test uses a fresh context and fails on any `pageerror` or `console.error`. HTML report + traces on failure; the report of the latest full run is versioned in `docs/test-report/`.
 - **Test hooks** (`src/testing/testHooks.ts`, only with `VITE_GAME_TEST=true`): `?seed=N`, a manual clock (`__GAME_TEST__.advance(sec)` runs fixed steps) and a read-only `state()`. Movement and combat go through real keyboard and touch events.
 - **Seeds** (`SEEDS` in `tests/helpers/game.ts`, measured with 60 s / 10 s options): `survivor` (3) survives the session while fighting back; `shooterFirst` (1) spawns a Shooter first; `mixed` (7) brings a Chaser then Shooters.
 - **Visual regression:** menu, arena (seeded, frozen) and result, per project, baselines in `tests/visual/__snapshots__/`.
@@ -279,7 +279,8 @@ All values live in `src/config/gameConfig.ts` (`GAME_CONFIG`, frozen) and `src/c
 | Player speed / accel / drag  | 210 px/s, 320 / 240 px/s²                  | Crosses the arena in ~10 s; ~0.7 s to full speed, ~0.9 s to stop |
 | Player turn                  | 2.5 rad/s                                  | Turn radius ~84 px, under one tile; can turn in place            |
 | Chaser speed / turn          | 150 px/s, 2.0 rad/s                        | Can be outrun, but catches a player who turns a lot              |
-| Shooter speed / turn         | 125 px/s, 1.7 rad/s                        | Slowest turner: the player can sail out of its aim               |
+| Shooter speed / turn         | 125 px/s, 1.7 rad/s                        | Turns slower than the Chaser: the player can sail out of its aim |
+| Big Shooter speed / turn     | 115 px/s, 1.5 rad/s                        | Slowest and heaviest: the easiest one to outturn                 |
 | Shooter hold / attack range  | 380 / 560 px                               | Stops well inside its range and fires from a distance            |
 | Shooter aim / cooldown       | 0.14 rad / 2.2 s                           | Fires only when well aligned, not often                          |
 | Enemy projectile             | 400 px/s, 620 px                           | ~1.5 s of flight: dodgeable                                      |
@@ -288,9 +289,9 @@ All values live in `src/config/gameConfig.ts` (`GAME_CONFIG`, frozen) and `src/c
 | Front cannon                 | 0.45 s, 720 px/s, 720 px                   | One fast, long shot, fired often                                 |
 | Broadside                    | 1.2 s per side, 620 px/s, 460 px, 3 shots  | More damage per volley, so slower and shorter                    |
 | Player HP / shot damage      | 100 / 5.75                                 | A full broadside is worth 17.25                                  |
-| Chaser HP / ram              | 30 / 10                                    | Two broadsides kill it; ten rams sink the player                 |
-| Shooter HP / shot            | 45 / 5                                     | 8 shots to sink; 20 hits sink the player                         |
-| Big Shooter HP / shot        | 55 / 4                                     | Toughest hull, weakest shot                                      |
+| Chaser HP / ram              | 15 / 10                                    | One broadside kills it; ten rams sink the player                 |
+| Shooter HP / shot            | 20 / 5                                     | 4 shots to sink; 20 hits sink the player                         |
+| Big Shooter HP / shot        | 30 / 4                                     | Toughest hull (6 shots), weakest shot (25 hits sink the player)  |
 | Repair                       | +10 HP every 3 kills                       | Capped at `maxHp`; never revives a sunk player                   |
 | Collision radius / hull half | 34 / 67 px (sprite scale 1.35)             | Fits one-tile (128 px) channels                                  |
 

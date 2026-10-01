@@ -9,3 +9,4 @@ docs/profiling/*.json
 package-lock.json
 public/assets
 proposta.md
+docs/test-report

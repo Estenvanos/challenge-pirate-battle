@@ -16,7 +16,8 @@ test("time up ends the match and freezes the simulation", async ({
   const ended = await game.state();
   expect(ended.endReason).toBe("timeUp");
   await game.hold("w", 2);
-  await game.tap("Space");
+  // Q (bordada), não Espaço: Espaço ativaria o botão focado do resultado.
+  await game.tap("q");
   const later = await game.state();
   expect(later.elapsedSec).toBe(ended.elapsedSec);
   expect(later.player).toEqual(ended.player);
