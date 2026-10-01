@@ -7,9 +7,8 @@ A 2D top-down naval shooter that runs entirely in the browser. Sail between isla
 ![PixiJS](https://img.shields.io/badge/PixiJS-8-E72264)
 ![TanStack Query](https://img.shields.io/badge/TanStack_Query-5-FF4154?logo=reactquery&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-E2E-2EAD33?logo=playwright&logoColor=white)
-![Status](https://img.shields.io/badge/status-complete-brightgreen)
 
-**🔗 Play it:** <!-- TODO: deploy URL --> _coming soon_
+**🔗 Play it:** https://piratebattle.pedroestevao.cyou
 
 [![Gameplay demo — click to watch the video](docs/media/gameplay.png)](docs/media/demo.mp4)
 
@@ -36,8 +35,6 @@ A 2D top-down naval shooter that runs entirely in the browser. Sail between isla
 ## About
 
 Pirate Battle was built for a front-end game development challenge. The game core (simulation, physics, rendering) is plain TypeScript + PixiJS, and the menus, HUD and screens are React. The ranking and match history are REST APIs mocked with MSW, so the whole app, including its "backend", runs in the browser with no server.
-
-**Status:** ✅ complete · 🌐 deployed
 
 ## Features
 
