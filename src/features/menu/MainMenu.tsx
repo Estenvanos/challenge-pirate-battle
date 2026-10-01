@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { usePendingSubmissions } from "../../hooks/usePendingSubmissions";
 import { MenuButton } from "../../shared/components/MenuButton";
+import { Modal } from "../../shared/components/Modal";
 import { Panel } from "../../shared/components/Panel";
 import { pngAsset } from "../../shared/utils/assets";
 import { formatDuration, formatEndReason } from "../../shared/utils/format";
 import { readLastResult } from "../../storage/lastResultStorage";
 import type { LogTab } from "../../constants/ui";
+import { ControlsList } from "../options/ControlsList";
 
 interface MainMenuProps {
   onPlay: () => void;
@@ -18,6 +20,7 @@ const ship = pngAsset("ships/ship_2.png");
 
 export function MainMenu({ onPlay, onOptions, onOpenLog }: MainMenuProps) {
   const [lastResult] = useState(readLastResult);
+  const [showControls, setShowControls] = useState(false);
   const { pending, saving, resend } = usePendingSubmissions();
 
   return (
@@ -34,13 +37,15 @@ export function MainMenu({ onPlay, onOptions, onOpenLog }: MainMenuProps) {
       <p className="menu__tagline">Set sail. Take command.</p>
       <div className="menu__actions">
         <MenuButton onClick={onPlay}>Play</MenuButton>
-        <MenuButton onClick={onOptions} aria-describedby="menu-controls-hint">
-          Options
+        <MenuButton onClick={onOptions}>Options</MenuButton>
+        <MenuButton
+          variant="secondary"
+          size="sm"
+          onClick={() => setShowControls(true)}
+        >
+          Controls
         </MenuButton>
       </div>
-      <p id="menu-controls-hint" className="menu__hint">
-        Controls are in Options → Controls.
-      </p>
       <img
         className="menu__ship"
         src={ship.src}
@@ -89,6 +94,20 @@ export function MainMenu({ onPlay, onOptions, onOpenLog }: MainMenuProps) {
           Match History
         </MenuButton>
       </div>
+      {showControls && (
+        <Modal
+          labelledBy="controls-title"
+          onClose={() => setShowControls(false)}
+        >
+          <h2 id="controls-title" className="panel__title">
+            Controls
+          </h2>
+          <ControlsList />
+          <MenuButton autoFocus onClick={() => setShowControls(false)}>
+            Back
+          </MenuButton>
+        </Modal>
+      )}
     </Panel>
   );
 }

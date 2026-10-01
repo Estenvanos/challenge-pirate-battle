@@ -76,7 +76,7 @@ export class Game {
     if (!this.input) return;
     // Clear input both ways so paused key presses cannot accumulate.
     this.input.clear();
-    this.input.enabled = !paused;
+    this.input.enabled = !paused && !this.world?.endReason;
   }
 
   /** Advances active play time with the manual test clock. */
@@ -156,8 +156,11 @@ export class Game {
           timeLeftSec = left;
           options.onTimeLeft?.(left);
         }
-        if (running && world.endReason === "timeUp") {
-          presentation.playGameComplete();
+        if (running && world.endReason) {
+          // Gameplay is over: release game keys for the result dialog.
+          input.enabled = false;
+          input.clear();
+          if (world.endReason === "timeUp") presentation.playGameComplete();
         }
         if (world.endReason && resultDelay !== null) {
           resultDelay -= dt;

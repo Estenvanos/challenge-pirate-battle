@@ -17,6 +17,8 @@ export function createQueryClient(): QueryClient {
     defaultOptions: {
       queries: {
         staleTime: staleTimeMs,
+        // Ranking and history refetch whenever their tab is shown again.
+        refetchOnMount: "always",
         refetchOnWindowFocus: true,
         retry: (failureCount, error) =>
           !isPermanentError(error) && failureCount < maxRetries,

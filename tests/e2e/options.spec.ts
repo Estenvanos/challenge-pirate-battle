@@ -10,6 +10,19 @@ function field(page: import("@playwright/test").Page, name: string) {
   };
 }
 
+test("the main menu opens the controls list", async ({ game }) => {
+  const { page } = game;
+  await game.open();
+  await game.button("Controls").click();
+  const dialog = page.getByRole("dialog", { name: "Controls" });
+  await expect(dialog).toContainText("Fire front cannon");
+  await expect(dialog.getByRole("button", { name: "Back" })).toBeFocused();
+  // Esc fecha e o foco volta para o botão do menu.
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(game.button("Controls")).toBeFocused();
+});
+
 test("options are validated, saved and survive a refresh", async ({ game }) => {
   const { page } = game;
   await game.open();

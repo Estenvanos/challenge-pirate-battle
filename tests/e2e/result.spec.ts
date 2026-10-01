@@ -31,3 +31,14 @@ test("the result shows score, time, reason and save status, and survives a refre
   await expect(last).toContainText("01:00");
   await expect(last).toContainText("Time up");
 });
+
+test("game keys are released once the match ends", async ({ game }) => {
+  await game.open({ seed: SEEDS.shooterFirst });
+  await game.play();
+  await game.finishByDeath();
+  await expect(game.button("Play Again")).toBeFocused();
+  // Espaço é o canhão frontal na partida; no resultado, ativa o botão focado.
+  await game.page.keyboard.press("Space");
+  await expect(game.resultDialog).toBeHidden();
+  await game.waitForNewMatch();
+});
